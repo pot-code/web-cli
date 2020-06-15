@@ -34,6 +34,7 @@ type GenerateCommand struct {
 	AppName   string
 	Templates []*TemplateEntry
 	cwd       string
+	verbose   bool   // verbose outpout
 	root      string // cwd/<app name>/
 }
 
@@ -50,13 +51,13 @@ func (gc GenerateCommand) Init() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "generate NAME(project name)",
-		Short: "generate en empty project from template",
+		Short: "generate an empty project based on templates",
 		Args:  cobra.MinimumNArgs(1), // requires a name argument
 		Run:   gc.run,
 	}
 	cmd.Flags().String("dirname", "", "project folder name")
 	cmd.Flags().StringP("module", "M", "", "go module name (required)")
-	cmd.Flags().String("env-prefix", "GO_WEB", "env variables prefix")
+	cmd.Flags().String("env-prefix", "GO_WEB", "env variable prefix")
 	cmd.Flags().String("config", "", "yaml config for additional config fields")
 	cmd.Flags().StringP("desc-short", "D", "", "project binary short description")
 	cmd.MarkFlagRequired("module")
@@ -65,6 +66,14 @@ func (gc GenerateCommand) Init() *cobra.Command {
 
 // run run function for cobra command run
 func (gc *GenerateCommand) run(cmd *cobra.Command, args []string) {
+	debug, _ := cmd.Flags().GetBool("debug")
+	if debug {
+		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+	}
+
+	verbose, _ := cmd.Flags().GetBool("verbose")
+	gc.verbose = verbose
+
 	gc.AppName = args[0]
 	folderName, _ := cmd.Flags().GetString("dirname")
 	if folderName != "" {
@@ -83,14 +92,14 @@ func (gc *GenerateCommand) run(cmd *cobra.Command, args []string) {
 	waitDone := make(chan struct{})
 	waitGroup.Add(2)
 	go func() {
-		log.Println("Cloning FE repo...")
+		// log.Println("Cloning FE repo...")
 		if err := gc.cloneFrontend(ctx); err != nil {
 			errch <- err
 		}
 		waitGroup.Done()
 	}()
 	go func() {
-		log.Println("Cloning BE repo...")
+		// log.Println("Cloning BE repo...")
 		if err := gc.cloneBackend(ctx); err != nil {
 			errch <- err
 		}
@@ -112,8 +121,10 @@ func (gc *GenerateCommand) run(cmd *cobra.Command, args []string) {
 	log.Println("Generating template...")
 	gc.generateTemplate(cmd, args)
 
-	log.Println("Init module")
+	log.Println("Init module...")
 	gc.initModule(cmd, args)
+
+	log.Println("Clean up .git")
 	gc.cleanGit(nil)
 }
 
@@ -142,9 +153,11 @@ func (gc *GenerateCommand) registerTemplateEntry() {
 func (gc GenerateCommand) cloneFrontend(ctx context.Context) error {
 	// env := gc.Env
 	destName := path.Join(gc.root, FrontendPrefix)
-	if err := Clone(ctx, FrontendURL, []string{destName} /* , env.ToArgs() */); err != nil {
-		// log.Fatalf("Error while cloning frontend repo: %s", err)
+	if console, err := Clone(ctx, FrontendURL, []string{destName}); err != nil {
+		log.Print(string(console))
 		return fmt.Errorf("Error while cloning frontend repo: %w", err)
+	} else if gc.verbose {
+		log.Print(string(console))
 	}
 	return nil
 }
@@ -154,9 +167,11 @@ func (gc GenerateCommand) cloneFrontend(ctx context.Context) error {
 func (gc GenerateCommand) cloneBackend(ctx context.Context) error {
 	// env := gc.Env
 	destName := path.Join(gc.root, BackendPrefix)
-	if err := Clone(ctx, BackendURL, []string{destName} /* , env.ToArgs() */); err != nil {
-		// log.Fatalf("Error while cloning backend repo: %s", err)
+	if console, err := Clone(ctx, BackendURL, []string{destName}); err != nil {
+		log.Print(string(console))
 		return fmt.Errorf("Error while cloning backend repo: %w", err)
+	} else if gc.verbose {
+		log.Print(string(console))
 	}
 	return nil
 }
@@ -172,6 +187,7 @@ func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
 	data := NewTemplateData(envPrefix, moduleName, appName)
 	data.Short = short
 	if yamlConfig != "" {
+		log.Printf("Loading template data from '%s'...\n", yamlConfig)
 		if err := data.LoadFromYaml(yamlConfig); err != nil {
 			log.Fatal(err)
 		}
@@ -186,9 +202,11 @@ func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
 }
 
 // initModule run go mod init, go mod tidy, etc.
+// TODO: extract go mod command to functions
 func (gc GenerateCommand) initModule(cmd *cobra.Command, args []string) {
 	moduleName, _ := cmd.Flags().GetString("module")
 	cwd := path.Join(gc.root, BackendPrefix)
+	verbose := gc.verbose
 
 	// init
 	init := exec.Command("go", "mod", "init", moduleName)
@@ -198,23 +216,32 @@ func (gc GenerateCommand) initModule(cmd *cobra.Command, args []string) {
 		if errors.Is(err, exec.ErrNotFound) {
 			log.Fatal("Go is not installed(https://golang.org/dl/) or not exists in PATH")
 		}
-		log.Fatalf("Error while doing 'go mod init': %s, %s", string(out), err)
+		log.Fatalf("Error while doing 'go mod init': %s, %s\n", string(out), err)
 	}
-	log.Println(string(out))
+	if verbose {
+		log.Print(string(out))
+	}
 
 	// format code(auto import)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	Goimports(ctx, cwd)
+	if console, err := Goimports(ctx, cwd); err != nil {
+		log.Print(string(console))
+		log.Fatalf("Error while executing goimports: %s, %s\n", console, err)
+	} else if verbose && len(console) > 0 {
+		log.Print(string(console))
+	}
 
 	// tidy
 	tidy := exec.Command("go", "mod", "tidy")
 	tidy.Dir = cwd
 	out, err = tidy.CombinedOutput()
 	if err != nil {
-		log.Fatalf("Error while doing 'go mod tidy': %s, %s", string(out), err)
+		log.Fatalf("Error while doing 'go mod tidy': %s, %s\n", string(out), err)
 	}
-	log.Println(string(out))
+	if verbose {
+		log.Print(string(out))
+	}
 }
 
 func (gc GenerateCommand) cleanGit(ctx context.Context) error {
@@ -225,7 +252,7 @@ func (gc GenerateCommand) cleanGit(ctx context.Context) error {
 		return fmt.Errorf("Error while removing frontend git dir: %w", err)
 	}
 	if err := os.RemoveAll(backend); err != nil {
-		return fmt.Errorf("Error while removing frontend git dir: %w", err)
+		return fmt.Errorf("Error while removing backend git dir: %w", err)
 	}
 	return nil
 }

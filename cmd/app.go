@@ -10,6 +10,12 @@ import (
 var root = &cobra.Command{
 	Use:   "web-cli",
 	Short: "CLI tool to generate FE/BE project based on template",
+	Run: func(cmd *cobra.Command, args []string) {
+		debug, _ := cmd.PersistentFlags().GetBool("debug")
+		if debug {
+			log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+		}
+	},
 }
 
 func init() {
@@ -19,6 +25,8 @@ func init() {
 	}
 	generate := NewGenerateCommand(cwd).Init()
 	root.AddCommand(generate)
+	root.PersistentFlags().BoolP("verbose", "V", false, "verbose output")
+	root.PersistentFlags().Bool("debug", false, "debug output")
 }
 
 // Run execute root command
