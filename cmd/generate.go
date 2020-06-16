@@ -2,14 +2,11 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"sync"
-	"time"
 
 	"github.com/pot-code/web-cli/template/backend"
 	"github.com/spf13/cobra"
@@ -216,30 +213,21 @@ func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
 }
 
 // initModule run go mod init, go mod tidy, etc.
-// TODO: extract go mod commands to functions
 func (gc GenerateCommand) initModule(cmd *cobra.Command, args []string) {
 	moduleName, _ := cmd.Flags().GetString("module")
 	cwd := path.Join(gc.root, BackendPrefix)
 	verbose := gc.verbose
 
 	// init
-	init := exec.Command("go", "mod", "init", moduleName)
-	init.Dir = cwd
-	out, err := init.CombinedOutput()
-	if err != nil {
-		if errors.Is(err, exec.ErrNotFound) {
-			log.Fatal("Go is not installed(https://golang.org/dl/) or not exists in PATH")
-		}
-		log.Fatalf("Error while doing 'go mod init': %s, %s\n", string(out), err)
-	}
-	if verbose {
-		log.Print(string(out))
+	if console, err := GoModInit(context.Background(), moduleName, cwd); err != nil {
+		log.Print(string(console))
+		log.Fatalf("Error while doing 'go mod init': %s, %s\n", string(console), err)
+	} else if verbose && console != nil {
+		log.Print(string(console))
 	}
 
 	// format code(auto import)
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	if console, err := Goimports(ctx, cwd); err != nil {
+	if console, err := Goimports(context.Background(), cwd); err != nil {
 		log.Print(string(console))
 		log.Fatalf("Error while executing goimports: %s, %s\n", console, err)
 	} else if verbose && console != nil {
@@ -247,14 +235,11 @@ func (gc GenerateCommand) initModule(cmd *cobra.Command, args []string) {
 	}
 
 	// tidy
-	tidy := exec.Command("go", "mod", "tidy")
-	tidy.Dir = cwd
-	out, err = tidy.CombinedOutput()
-	if err != nil {
-		log.Fatalf("Error while doing 'go mod tidy': %s, %s\n", string(out), err)
-	}
-	if verbose {
-		log.Print(string(out))
+	if console, err := GoModTidy(context.Background(), cwd); err != nil {
+		log.Print(string(console))
+		log.Fatalf("Error while doing 'go mod tidy': %s, %s\n", string(console), err)
+	} else if verbose && console != nil {
+		log.Print(string(console))
 	}
 }
 

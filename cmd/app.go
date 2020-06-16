@@ -25,7 +25,7 @@ func init() {
 	}
 	generate := NewGenerateCommand(cwd).Init()
 	root.AddCommand(generate)
-	root.PersistentFlags().BoolP("verbose", "V", false, "verbose output")
+	root.PersistentFlags().Bool("verbose", false, "verbose output")
 	root.PersistentFlags().Bool("debug", false, "debug output")
 }
 
