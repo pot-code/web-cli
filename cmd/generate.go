@@ -31,11 +31,19 @@ const (
 
 // GenerateCommand TODO
 type GenerateCommand struct {
-	AppName   string
-	Templates []*TemplateEntry
+	appName   string
+	templates []*TemplateEntry
+	repos     []*GithubRepository
 	cwd       string
 	verbose   bool   // verbose outpout
 	root      string // cwd/<app name>/
+}
+
+// GithubRepository TODO
+type GithubRepository struct {
+	Name   string
+	URL    string
+	Output string // clone destination
 }
 
 // NewGenerateCommand create GenerateCommand instance
@@ -47,8 +55,6 @@ func NewGenerateCommand(cwd string) *GenerateCommand {
 
 // Init init GenerateCommand
 func (gc GenerateCommand) Init() *cobra.Command {
-	// gc.registerEnvVariables()
-
 	cmd := &cobra.Command{
 		Use:   "generate NAME(project name)",
 		Short: "generate an empty project based on templates",
@@ -74,49 +80,20 @@ func (gc *GenerateCommand) run(cmd *cobra.Command, args []string) {
 	verbose, _ := cmd.Flags().GetBool("verbose")
 	gc.verbose = verbose
 
-	gc.AppName = args[0]
+	gc.appName = args[0]
 	folderName, _ := cmd.Flags().GetString("dirname")
 	if folderName != "" {
 		gc.root = folderName
 	} else {
-		gc.root = path.Join(gc.cwd, gc.AppName)
+		gc.root = path.Join(gc.cwd, gc.appName)
 	}
 
-	log.Println("Loading template...")
 	gc.registerTemplateEntry()
+	gc.registerGithubRepo()
 
 	// clone boilerplate
-	ctx, cancel := context.WithCancel(context.Background())
-	waitGroup := new(sync.WaitGroup)
-	errch := make(chan error)
-	waitDone := make(chan struct{})
-	waitGroup.Add(2)
-	go func() {
-		// log.Println("Cloning FE repo...")
-		if err := gc.cloneFrontend(ctx); err != nil {
-			errch <- err
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		// log.Println("Cloning BE repo...")
-		if err := gc.cloneBackend(ctx); err != nil {
-			errch <- err
-		}
-		waitGroup.Done()
-	}()
-	go func() {
-		waitGroup.Wait()
-		close(waitDone)
-	}()
-
-	select {
-	case <-waitDone:
-		cancel()
-	case err := <-errch:
-		cancel()
-		log.Fatal(err)
-	}
+	log.Println("Cloning templates...")
+	gc.cloneTemplates()
 
 	log.Println("Generating template...")
 	gc.generateTemplate(cmd, args)
@@ -145,40 +122,77 @@ func (gc *GenerateCommand) registerTemplateEntry() {
 			Output:   path.Join(root, BackendPrefix, "main.go"),
 		},
 	)
-	gc.Templates = entries
+	gc.templates = entries
 }
 
-// cloneFrontend clone frontend template from
-// https://github.com/pot-code/react-boilerplate
-func (gc GenerateCommand) cloneFrontend(ctx context.Context) error {
-	// env := gc.Env
-	destName := path.Join(gc.root, FrontendPrefix)
-	if console, err := Clone(ctx, FrontendURL, []string{destName}); err != nil {
-		log.Print(string(console))
-		return fmt.Errorf("Error while cloning frontend repo: %w", err)
-	} else if gc.verbose {
-		log.Print(string(console))
-	}
-	return nil
+// registerGithubRepo TODO
+func (gc *GenerateCommand) registerGithubRepo() {
+	var repos []*GithubRepository
+
+	root := gc.root
+	repos = append(repos,
+		&GithubRepository{
+			Name:   "backend",
+			URL:    BackendURL,
+			Output: path.Join(root, BackendPrefix),
+		},
+		&GithubRepository{
+			Name:   "frontend",
+			URL:    FrontendURL,
+			Output: path.Join(root, FrontendPrefix),
+		},
+	)
+	gc.repos = repos
 }
 
-// cloneBackend clone backend template from
-// https://github.com/pot-code/go-boilerplate
-func (gc GenerateCommand) cloneBackend(ctx context.Context) error {
-	// env := gc.Env
-	destName := path.Join(gc.root, BackendPrefix)
-	if console, err := Clone(ctx, BackendURL, []string{destName}); err != nil {
-		log.Print(string(console))
-		return fmt.Errorf("Error while cloning backend repo: %w", err)
-	} else if gc.verbose {
-		log.Print(string(console))
+// cloneTemplates TODO
+func (gc GenerateCommand) cloneTemplates() {
+	ctx, cancel := context.WithCancel(context.Background())
+	repos := gc.repos
+	waitGroup := new(sync.WaitGroup)
+	errch := make(chan error)
+	waitDone := make(chan struct{})
+	goroutines := make([]func() error, len(repos))
+
+	waitGroup.Add(len(repos))
+	for i, v := range repos {
+		func(idx int, repo *GithubRepository) {
+			goroutines[idx] = func() error {
+				if console, err := Clone(ctx, repo.URL, []string{repo.Output}); err != nil {
+					log.Print(string(console))
+					return fmt.Errorf("Error while cloning %s repo: %w", repo.Name, err)
+				} else if gc.verbose && console != nil {
+					log.Print(string(console))
+				}
+				return nil
+			}
+		}(i, v)
 	}
-	return nil
+	for _, v := range goroutines {
+		go func(fn func() error) {
+			if err := fn(); err != nil {
+				errch <- err
+			}
+			waitGroup.Done()
+		}(v)
+	}
+	go func() {
+		waitGroup.Wait()
+		close(waitDone)
+	}()
+
+	select {
+	case <-waitDone:
+		cancel()
+	case err := <-errch:
+		cancel()
+		log.Fatal(err)
+	}
 }
 
 // generateTemplate generate files from templates
 func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
-	appName := gc.AppName
+	appName := gc.appName
 	moduleName, _ := cmd.Flags().GetString("module")
 	envPrefix, _ := cmd.Flags().GetString("env-prefix")
 	yamlConfig, _ := cmd.Flags().GetString("config")
@@ -193,7 +207,7 @@ func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	entries := gc.Templates
+	entries := gc.templates
 	for _, entry := range entries {
 		if err := CreateFromTemplate(entry, data); err != nil {
 			log.Fatal(err)
@@ -202,7 +216,7 @@ func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
 }
 
 // initModule run go mod init, go mod tidy, etc.
-// TODO: extract go mod command to functions
+// TODO: extract go mod commands to functions
 func (gc GenerateCommand) initModule(cmd *cobra.Command, args []string) {
 	moduleName, _ := cmd.Flags().GetString("module")
 	cwd := path.Join(gc.root, BackendPrefix)
@@ -228,7 +242,7 @@ func (gc GenerateCommand) initModule(cmd *cobra.Command, args []string) {
 	if console, err := Goimports(ctx, cwd); err != nil {
 		log.Print(string(console))
 		log.Fatalf("Error while executing goimports: %s, %s\n", console, err)
-	} else if verbose && len(console) > 0 {
+	} else if verbose && console != nil {
 		log.Print(string(console))
 	}
 
