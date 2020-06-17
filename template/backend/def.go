@@ -1,15 +1,13 @@
 package backend
 
 // ConfigTemplate template for <repo>/config/config.go
-var ConfigTemplate = `
-package main
+var ConfigTemplate = `package main
 
 import (
 	"fmt"
 	"log"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/spf13/cobra"
@@ -27,6 +25,9 @@ type AppConfig struct {
 	Host           string        ` + "`" + `mapstructure:"host" json:"host" yaml:"host"` + "`" + `                                               // bind host address
 	Port           int           ` + "`" + `mapstructure:"port" json:"port" yaml:"port" validate:"required"` + "`" + `                           // bind listen port
 	Env            string        ` + "`" + `mapstructure:"env" json:"env" yaml:"env" validate:"oneof=development production,required"` + "`" + ` // runtime enviroment, development or production
+	{{- range .ConfigGlobal}}
+	{{Title .Name}} {{.Type}} ` + "`" + `mapstructure:"{{.Name}}" json:"{{.Name}}" yaml:"{{.Name}}"{{if .Required}} validate:"required"{{end}}` + "`" + ` // {{.Usage}}
+	{{- end}}
 	Database       struct {
 		Driver   string ` + "`" + `mapstructure:"driver" json:"driver" yaml:"driver" validate:"required"` + "`" + `                      // driver name
 		Host     string ` + "`" + `mapstructure:"host" json:"host" yaml:"host" validate:"required"` + "`" + `                            // server host
@@ -41,9 +42,15 @@ type AppConfig struct {
 	Logging struct {
 		FilePath string ` + "`" + `mapstructure:"filePath" json:"filePath" yaml:"filePath"` + "`" + `                               // log file path
 		Level    string ` + "`" + `mapstructure:"level" json:"level" yaml:"level" validate:"oneof=debug info warn error"` + "`" + ` // global logging level
+		{{- range .ConfigLogging}}
+		{{Title .Name}} {{.Type}} ` + "`" + `mapstructure:"{{.Name}}" json:"{{.Name}}" yaml:"{{.Name}}"{{if .Required}} validate:"required"{{end}}` + "`" + ` // {{.Usage}}
+		{{- end}}
 	} ` + "`" + `mapstructure:"logging" json:"logging" yaml:"logging"` + "`" + `
 	Security struct {
 		IDLength  int      ` + "`" + `mapstructure:"idLength" json:"idLength" yaml:"idLength" validate:"required"` + "`" + ` // length of generated ID for entities
+		{{- range .ConfigSecurity}}
+		{{Title .Name}} {{.Type}} ` + "`" + `mapstructure:"{{.Name}}" json:"{{.Name}}" yaml:"{{.Name}}"{{if .Required}} validate:"required"{{end}}` + "`" + ` // {{.Usage}}
+		{{- end}}
 	} ` + "`" + `mapstructure:"security" json:"security" yaml:"security"` + "`" + `
 	APM struct {
 		Enabled bool ` + "`" + `mapstructure:"enabled" json:"enabled" yaml:"enabled"` + "`" + `
@@ -87,10 +94,13 @@ func InitConfig(cb InitCallback) *cobra.Command {
 		},
 	}
 
-	// app
+	// global
 	rootCmd.Flags().StringVar(&config.Host, "host", "", "binding address")
 	rootCmd.Flags().StringVar(&config.Env, "env", "development", "runtime enviroment, can be 'development' or 'production'")
 	rootCmd.Flags().IntVar(&config.Port, "port", 8081, "host port")
+	{{- range .ConfigGlobal}}
+	rootCmd.Flags().{{GoTypeToCobra .Type}}(&config.{{Title .Name}}, "{{ToKebabCase .Name}}", {{GetValueString .Type .DefaultValue}}, "{{.Usage}}")
+	{{- end}}
 
 	// database
 	rootCmd.Flags().StringVar(&config.Database.Driver, "database.driver", "mysql", "database driver to use")
@@ -108,9 +118,15 @@ increasing the max_connection value of your db server, or lower this value` + "`
 	// logging
 	rootCmd.Flags().StringVar(&config.Logging.Level, "logging.level", "info", "logging level")
 	rootCmd.Flags().StringVar(&config.Logging.FilePath, "logging.file-path", "", "log to file")
+	{{- range .ConfigLogging}}
+	rootCmd.Flags().{{GoTypeToCobra .Type}}(&config.Logging.{{Title .Name}}, "logging.{{ToKebabCase .Name}}", {{GetValueString .Type .DefaultValue}}, "{{.Usage}}")
+	{{- end}}
 
 	// security
 	rootCmd.Flags().IntVar(&config.Security.IDLength, "security.id-length", 24, "set length of generated ID for entities")
+	{{- range .ConfigSecurity}}
+	rootCmd.Flags().{{GoTypeToCobra .Type}}(&config.Security.{{Title .Name}}, "security.{{ToKebabCase .Name}}", {{GetValueString .Type .DefaultValue}}, "{{.Usage}}")
+	{{- end}}
 
 	// register viper config
 	registerEnvVariables("{{.EnvPrefix}}")
@@ -195,12 +211,12 @@ func extractFieldsDFS(namespace []string, field *reflect.StructField, result *[]
 }`
 
 // MainTemplate template for <repo>/cmd/main.go
-var MainTemplate = `
-package main
+var MainTemplate = `package main
 
 import (
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/labstack/echo/v4"
 	"github.com/pot-code/go-injection"

@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/pot-code/web-cli/template/backend"
 )
@@ -13,7 +15,9 @@ func TestConfigTemplate(t *testing.T) {
 		Name:     "config",
 		Output:   "./config.go",
 		Template: backend.ConfigTemplate,
-	}, model); err != nil {
+	}, model, template.FuncMap{
+		"Title": strings.Title,
+	}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -25,7 +29,7 @@ func TestMainTemplate(t *testing.T) {
 		Name:     "main",
 		Output:   "./main.go",
 		Template: backend.MainTemplate,
-	}, model); err != nil {
+	}, model, nil); err != nil {
 		t.Fatal(err)
 	}
 }

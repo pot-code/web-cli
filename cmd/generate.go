@@ -6,7 +6,9 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"sync"
+	"text/template"
 
 	"github.com/pot-code/web-cli/template/backend"
 	"github.com/spf13/cobra"
@@ -206,7 +208,12 @@ func (gc GenerateCommand) generateTemplate(cmd *cobra.Command, args []string) {
 
 	entries := gc.templates
 	for _, entry := range entries {
-		if err := CreateFromTemplate(entry, data); err != nil {
+		if err := CreateFromTemplate(entry, data, template.FuncMap{
+			"Title":          strings.Title,
+			"GoTypeToCobra":  GoTypeToCobra,
+			"GetValueString": GetValueString,
+			"ToKebabCase":    ToKebabCase,
+		}); err != nil {
 			log.Fatal(err)
 		}
 	}
