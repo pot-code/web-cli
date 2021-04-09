@@ -5,12 +5,15 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var AppVersion string
+
 var RootCmd = &cli.App{
 	Name:  "web-cli",
 	Usage: "web utils",
 	Commands: []*cli.Command{
 		Generate,
 	},
+	Version: AppVersion,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:        "debug",

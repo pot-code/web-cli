@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/pot-code/web-cli/generate"
 	"github.com/pot-code/web-cli/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -54,7 +55,11 @@ var genBE = &cli.Command{
 		}
 
 		if config.GenType == "go" {
-			gen := NewGolangBackendGenerator(config)
+			gen := generate.NewGolangBackendGenerator(&generate.GolangBackendConfig{
+				ProjectName: config.ProjectName,
+				Author:      config.Author,
+				Version:     config.Version,
+			})
 			if err := gen.Gen(); err != nil {
 				gen.Cleanup()
 				return err
@@ -73,10 +78,9 @@ func getGenBEConfig(c *cli.Context) (*GenBEConfig, error) {
 		return nil, util.NewCommandError(CmdBackendName, errors.Wrap(err, "invalid NAME"))
 	}
 
-	genType := strings.ToLower(c.String("type"))
 	author := c.String("author")
 	version := c.String("version")
-
+	genType := strings.ToLower(c.String("type"))
 	if genType == "" {
 		return nil, util.NewCommandError(CmdBackendName, fmt.Errorf("type is empty"))
 	} else if genType == "go" {
@@ -86,19 +90,16 @@ func getGenBEConfig(c *cli.Context) (*GenBEConfig, error) {
 		if err := util.ValidateUserName(author); err != nil {
 			return nil, util.NewCommandError(CmdBackendName, errors.Wrap(err, "invalid author name"))
 		}
-	} else if genType == "nest" {
-		panic("not implemented") // TODO:
-	} else {
-		return nil, util.NewCommandError(CmdBackendName, fmt.Errorf("unsupported type %s", genType))
-	}
-
-	if genType == "go" {
 		if version == "" {
 			return nil, util.NewCommandError(CmdBackendName, fmt.Errorf("version is empty when type is 'go'"))
 		}
 		if err := util.ValidateVersion(version); err != nil {
 			return nil, util.NewCommandError(CmdBackendName, errors.Wrap(err, "invalid version"))
 		}
+	} else if genType == "nest" {
+		panic("not implemented") // TODO:
+	} else {
+		return nil, util.NewCommandError(CmdBackendName, fmt.Errorf("unsupported type %s", genType))
 	}
 
 	log.WithFields(log.Fields{"author": author, "project": name, "version": version, "type": genType}).Debugf("parsed meta data")

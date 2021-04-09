@@ -1,4 +1,4 @@
-package cmd
+package generate
 
 import (
 	"bytes"
@@ -12,8 +12,14 @@ import (
 )
 
 type golangBackendGenerator struct {
-	config *GenBEConfig
+	config *GolangBackendConfig
 	gen    core.Generator
+}
+
+type GolangBackendConfig struct {
+	ProjectName string // project name
+	Author      string // project author name
+	Version     string // version number
 }
 
 var _ core.Generator = golangBackendGenerator{}
@@ -30,7 +36,7 @@ var _ core.Generator = golangBackendGenerator{}
 // 		|-api
 // 			|-api.go
 // 		go.mod
-func NewGolangBackendGenerator(config *GenBEConfig) *golangBackendGenerator {
+func NewGolangBackendGenerator(config *GolangBackendConfig) *golangBackendGenerator {
 	recipe := util.NewGenerationRecipe(
 		config.ProjectName,
 		&util.GenerationMaterial{

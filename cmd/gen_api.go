@@ -6,6 +6,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
+	"github.com/pot-code/web-cli/generate"
 	"github.com/pot-code/web-cli/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -50,7 +51,13 @@ var genAPI = &cli.Command{
 		}
 
 		if config.GenType == "go" {
-			gen := NewGolangApiGenerator(config)
+			gen := generate.NewGolangApiGenerator(&generate.GolangApiConfig{
+				PackageName: config.PackageName,
+				Project:     config.Project,
+				Author:      config.Author,
+				Model:       config.Model,
+				Root:        config.Root,
+			})
 			if err := gen.Gen(); err != nil {
 				gen.Cleanup()
 				return err

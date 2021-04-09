@@ -1,4 +1,4 @@
-package cmd
+package generate
 
 import (
 	"bytes"
@@ -13,8 +13,16 @@ import (
 )
 
 type golangApiGenerator struct {
-	config *GenApiConfig
+	config *GolangApiConfig
 	gen    core.Generator
+}
+
+type GolangApiConfig struct {
+	PackageName string // go pkg name
+	Project     string
+	Author      string
+	Model       string
+	Root        string // path root under which to generate ap
 }
 
 var _ core.Generator = golangApiGenerator{}
@@ -30,7 +38,7 @@ var _ core.Generator = golangApiGenerator{}
 // 		repo.go
 // 		service.go
 // 		model.go
-func NewGolangApiGenerator(config *GenApiConfig) *golangApiGenerator {
+func NewGolangApiGenerator(config *GolangApiConfig) *golangApiGenerator {
 	recipe := util.NewGenerationRecipe(
 		path.Join(config.Root, config.PackageName),
 		&util.GenerationMaterial{
