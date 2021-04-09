@@ -32,7 +32,7 @@ func (gr *GenerationRecipe) AddMaterial(m *GenerationMaterial) *GenerationRecipe
 	return gr
 }
 
-// AddMaterial add material, chainable
+// MakeGenerator map to a multi-task generator
 func (gr *GenerationRecipe) MakeGenerator() core.Generator {
 	tasks := make([]core.Generator, len(gr.materials))
 

@@ -20,8 +20,8 @@ func NewParallelGenerator(subtasks ...Generator) *ParallelGenerator {
 	return &ParallelGenerator{subtasks, false}
 }
 
-func (mg ParallelGenerator) Gen() error {
-	subtasks := mg.subtasks
+func (pg ParallelGenerator) Gen() error {
+	subtasks := pg.subtasks
 	errChan := make(chan error)
 	doneChan := make(chan struct{})
 	start := time.Now()
@@ -51,13 +51,13 @@ func (mg ParallelGenerator) Gen() error {
 	}
 }
 
-func (mg ParallelGenerator) Cleanup() error {
-	if mg.cleaned {
+func (pg ParallelGenerator) Cleanup() error {
+	if pg.cleaned {
 		return nil
 	}
-	mg.cleaned = true
+	pg.cleaned = true
 
-	for _, task := range mg.subtasks {
+	for _, task := range pg.subtasks {
 		if ce := task.Cleanup(); ce != nil {
 			return errors.WithStack(ce)
 		}
@@ -66,6 +66,6 @@ func (mg ParallelGenerator) Cleanup() error {
 	return nil
 }
 
-func (mg ParallelGenerator) String() string {
-	return fmt.Sprintf("[ModuleGenerator]tasks=%d", len(mg.subtasks))
+func (pg ParallelGenerator) String() string {
+	return fmt.Sprintf("[ModuleGenerator]tasks=%d", len(pg.subtasks))
 }
