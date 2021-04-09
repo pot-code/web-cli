@@ -50,7 +50,9 @@ var genAPI = &cli.Command{
 		}
 
 		if config.GenType == "go" {
-			if err := NewGolangApiGenerator(config).Gen(); err != nil {
+			gen := NewGolangApiGenerator(config)
+			if err := gen.Gen(); err != nil {
+				gen.Cleanup()
 				return err
 			}
 		}

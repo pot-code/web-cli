@@ -54,7 +54,9 @@ var genBE = &cli.Command{
 		}
 
 		if config.GenType == "go" {
-			if err := NewGolangBackendGenerator(config).Gen(); err != nil {
+			gen := NewGolangBackendGenerator(config)
+			if err := gen.Gen(); err != nil {
+				gen.Cleanup()
 				return err
 			}
 		}

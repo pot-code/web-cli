@@ -44,7 +44,6 @@ func (mg ParallelGenerator) Gen() error {
 
 	select {
 	case err := <-errChan:
-		mg.Cleanup()
 		return err
 	case <-doneChan:
 		log.WithField("duration", time.Since(start)).Info("module generation finished")

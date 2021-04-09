@@ -45,9 +45,6 @@ func (gt *FileGenerator) Gen() error {
 		return nil
 	}
 	err := gt.write(file, provider())
-	if err != nil {
-		gt.Cleanup()
-	}
 	if err == nil {
 		log.Infof("emit '%s'", gt.file)
 	}
