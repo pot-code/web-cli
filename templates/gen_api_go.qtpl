@@ -1,0 +1,80 @@
+{% func GoApiModel(pkg, model string) %}
+package {%v pkg %}
+
+import (
+	"context"
+)
+
+type {%v model %} struct {
+}
+
+type {%v model %}UseCase interface {
+}
+
+type {%v model %}Repository interface {
+	Save{%v model %}(ctx context.Context, entity *{%v model %}) error
+	Update{%v model %}Status(ctx context.Context, id string, status int) error
+	Get{%v model %}ById(ctx context.Context, id string) (*{%v model %}, error)
+}
+{% endfunc %}
+
+{% func GoApiRepo(pkg, model string) %}
+package {%v pkg %}
+
+import (
+	"context"
+)
+
+type {%v model %}Store struct {
+}
+
+var _ {%v model %}Repository = &{%v model %}Store{}
+
+func New{%v model %}Repository() *{%v model %}Store {
+	return &{%v model %}Store{}
+}
+
+func (repo {%v model %}Store) Save{%v model %}(ctx context.Context, entity *{%v model %}) error {
+}
+
+func (repo {%v model %}Store) Update{%v model %}Status(ctx context.Context, id string, status int) error {
+}
+
+func (repo {%v model %}Store) Get{%v model %}ById(ctx context.Context, id string) (*{%v model %}, error) {
+}
+{% endfunc %}
+
+{% func GoApiService(pkg, model string) %}
+package {%v pkg %}
+
+type {%v model %}Service struct {
+	{%v model %}Repository {%v model %}Repository
+}
+
+var _ {%v model %}UseCase = &{%v model %}Service{}
+
+func New{%v model %}Service(repo {%v model %}Repository) *{%v model %}Service {
+	return &{%v model %}Service{repo}
+}
+{% endfunc %}
+
+{% func GoApiHttp(project, author, pkg, model string) %}
+package transport
+
+import (
+	"github.com/{%v author %}/{%v project %}/api/{%v pkg %}"
+)
+
+type {%v model %}Handler struct {
+	svc 	{%v pkg %}.{%v model %}UseCase
+	repo  {%v pkg %}.{%v model %}Repository
+}
+
+func New{%v model %}Handler(
+	svc  {%v pkg %}.{%v model %}UseCase,
+	repo {%v pkg %}.{%v model %}Repository,
+) *{%v model %}Handler {
+	handler := &{%v model %}Handler{svc, repo}
+	return handler
+}
+{% endfunc %}

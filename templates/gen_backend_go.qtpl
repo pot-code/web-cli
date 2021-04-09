@@ -1,0 +1,240 @@
+{% func GoBackendApi(name string, author string) %}
+package api
+
+import (
+	"fmt"
+	"io/ioutil"
+	"log"
+	"strings"
+
+	"github.com/dgrijalva/jwt-go"
+	"github.com/labstack/echo/v4"
+	echo_middleware "github.com/labstack/echo/v4/middleware"
+	cfg "github.com/{%s author %}/{%s name %}/config"
+	gopot "github.com/pot-code/gopot/pkg"
+	"github.com/pot-code/gopot/pkg/db"
+	"github.com/pot-code/gopot/pkg/middleware"
+	"github.com/pot-code/gopot/pkg/util"
+	"github.com/pot-code/gopot/pkg/uuid"
+	"go.uber.org/zap"
+	"golang.org/x/text/language"
+)
+
+// Serve create http transport server
+func Serve(
+	option *cfg.AppConfig,
+	conn db.SqlxInterface,
+	logger *zap.Logger,
+) *echo.Echo {
+	var (
+		app       = echo.New()
+		uid       = uuid.NewGoUUIDGenerator()
+	)
+
+	jwtValidateKey, err := ioutil.ReadFile(option.Security.PublicKey)
+	if err != nil {
+		log.Fatal("failed to load public key: ", err)
+	}
+
+	if option.Env == gopot.EnvDevelop {
+		util.RegisterProfileEndpoints(app)
+	}
+
+	app.Use(middleware.Logging(logger, middleware.LoggingConfig{
+		Skipper: func(e echo.Context) bool {
+			return strings.HasPrefix(e.Request().RequestURI, "/healthz")
+		},
+	}))
+
+	accessTokenMiddleware := middleware.VerifyAccessToken(middleware.ValidateTokenOption{
+		Secret:    jwtValidateKey,
+		Algorithm: jwt.SigningMethodRS256,
+	})
+
+	util.CreateEndpoint(app,
+		&util.Endpoint{
+			ApiVersion: "api",
+			Middlewares: []echo.MiddlewareFunc{
+				middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 4}),
+				echo_middleware.Secure(),
+				echo_middleware.CORSWithConfig(echo_middleware.CORSConfig{
+					AllowOrigins: option.Security.CORS,
+				}),
+				accessTokenMiddleware,
+				echo_middleware.RequestID(),
+				middleware.ParseAcceptLanguage([]language.Tag{
+					language.English,
+					language.Chinese,
+				}),
+			},
+			Groups: []*util.ApiGroup{},
+		})
+
+	util.PrintRoutes(app, logger)
+	go func() {
+		if err := app.Start(fmt.Sprintf("%s:%d", option.Host, option.Port)); err != nil {
+			log.Fatal(err)
+		}
+	}()
+	return app
+}
+{% endfunc %}
+
+{% func GoBackendConfig(name string) %}
+package cfg
+
+import (
+	"runtime"
+
+	gopot "github.com/pot-code/gopot/pkg"
+	"github.com/spf13/pflag"
+)
+
+// AppConfig App option object
+type AppConfig struct {
+	AppID    string `mapstructure:"app_id" yaml:"app_id" validate:"required"`           // Application ID
+	Host     string `mapstructure:"host" yaml:"host"`                                   // bind host address
+	Port     int    `mapstructure:"port" yaml:"port"`                                   // bind listen port
+	Env      string `mapstructure:"env" yaml:"env" validate:"oneof=develop production"` // runtime environment
+	Database struct {
+		Driver   string   `mapstructure:"driver" yaml:"driver" validate:"required"`                    // driver name
+		Host     string   `mapstructure:"host" yaml:"host" validate:"required"`                        // server host
+		MaxConn  int32    `mapstructure:"maxconn" yaml:"maxconn" validate:"min=1"`                     // maximum opening connections number
+		Password string   `mapstructure:"password" yaml:"password" validate:"required"`                // db password
+		Port     int      `mapstructure:"port" yaml:"port"`                                            // server port
+		Protocol string   `mapstructure:"protocol" yaml:"protocol" validate:"omitempty,oneof=tcp udp"` // connection protocol, eg.tcp
+		Query    []string `mapstructure:"query" yaml:"query"`                                          // DSN query parameter
+		Schema   string   `mapstructure:"schema" yaml:"schema" validate:"required"`                    // use schema
+		User     string   `mapstructure:"username" yaml:"username" validate:"required"`                // db username
+	} `mapstructure:"database" yaml:"database"`
+	Logging struct {
+		FilePath string `mapstructure:"file_path" yaml:"file_path"`                                // log file path
+		Level    string `mapstructure:"level" yaml:"level" validate:"oneof=debug info warn error"` // global logging level
+	} `mapstructure:"logging" yaml:"logging"`
+	Security struct {
+		PublicKey string   `mapstructure:"public_key" yaml:"public_key" validate:"required"` // jwt public key path
+		CORS      []string `mapstructure:"cors" yaml:"cors"`                                 // cors domains
+	} `mapstructure:"security" yaml:"security"`
+}
+
+func RegisterFlags() {
+	// common
+	pflag.String("host", "", "binding address")
+	pflag.String("app_id", "{%s name %}", "application identifier (required)")
+	pflag.String("env", gopot.EnvDevelop, "runtime environment, can be 'develop' or 'production'")
+	pflag.Int("port", 8081, "listening port")
+
+	// database
+	pflag.String("database.driver", "mysql", "database driver to use")
+	pflag.String("database.host", "127.0.0.1", "database host")
+	pflag.Int("database.port", 3306, "database server port")
+	pflag.String("database.protocol", "", "connection protocol(if mysql is used, this flag must be set), eg.tcp")
+	pflag.String("database.username", "", "database username (required)")
+	pflag.String("database.password", "", "database password (required)")
+	pflag.String("database.schema", "", "database schema (required)")
+	pflag.StringSlice("database.query", nil, `additional DSN query parameters('?' is auto prefixed), if you work with mysql and wish to
+	work with time.Time, you may add an entry "parseTime=true"`)
+	pflag.Int32("database.maxconn", int32(runtime.NumCPU()), `max connection count, if you encounter a "too many connections" error, please consider
+	increasing the max_connection value of your db server, or lower this value`)
+
+	// logging
+	pflag.String("logging.level", "info", "logging level")
+	pflag.String("logging.file_path", "", "log to file")
+
+	// security
+	pflag.String("security.public_key", "", "jwt public key path (required)")
+	pflag.StringSlice("security.cors", []string{"*"}, "cors domains")
+}
+{% endfunc %}
+
+{% func GoBackendMain(name string, author string) %}
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+	"os/signal"
+	"time"
+
+	"github.com/{%s author %}/{%s name %}/api"
+	cfg "github.com/{%s author %}/{%s name %}/config"
+	gopot "github.com/pot-code/gopot/pkg"
+	"github.com/pot-code/gopot/pkg/db"
+	"github.com/pot-code/gopot/pkg/logging"
+	"github.com/pot-code/gopot/pkg/util"
+	"go.uber.org/zap"
+)
+
+// EnvPrefix env prefix for viper, injected by build flags
+var EnvPrefix string
+
+func main() {
+	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
+	option := new(cfg.AppConfig)
+	cfg.RegisterFlags()
+	if err := util.InitConfig(EnvPrefix, option); err != nil {
+		log.Fatal(err)
+	}
+
+	logger, err := logging.NewLogger(&logging.LoggerConfig{
+		FilePath: option.Logging.FilePath,
+		Level:    option.Logging.Level,
+		AppID:    option.AppID,
+		Env:      option.Env,
+	})
+	if err != nil {
+		log.Fatalf("failed to create logger::%s", err)
+	}
+
+	dbConn, err := db.GetSqlxDB(&db.DBConfig{
+		User:     option.Database.User,
+		Password: option.Database.Password,
+		MaxConn:  option.Database.MaxConn,
+		Protocol: option.Database.Protocol,
+		Driver:   option.Database.Driver,
+		Host:     option.Database.Host,
+		Port:     option.Database.Port,
+		Query:    append(option.Database.Query, "application_name="+option.AppID),
+		Schema:   option.Database.Schema,
+		Debug:    option.Env == gopot.EnvDevelop,
+	}, logger)
+	if err != nil {
+		log.Fatalf("failed to create DB connection::%s", err)
+	}
+	logger.Info("connected to database", zap.String("db.driver", option.Database.Driver),
+		zap.String("db.schema", option.Database.Schema),
+		zap.String("db.host", option.Database.Host),
+		zap.Int("db.port", option.Database.Port),
+	)
+
+	server := api.Serve(option, dbConn, logger)
+
+	// clean up
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	go func() {
+		<-ctx.Done()
+		cancel()
+		os.Exit(1)
+	}()
+
+	logger.Sync()
+	dbConn.Close(ctx)
+	if err := server.Shutdown(ctx); err != nil {
+		log.Fatal(err)
+	}
+}
+{% endfunc %}
+
+{% func GoBackendMod(name string, author string, version string) %}
+module github.com/{%s author %}/{%s name %}
+
+go {%s version %}
+
+require (
+)
+{% endfunc %}
