@@ -18,3 +18,4 @@ tmp
 .vscode
 .DS_Store
 templates/*.go
+dist/
