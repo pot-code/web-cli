@@ -89,7 +89,7 @@ func (gbg golangBackendGenerator) Cleanup() error {
 	gbg.gen.Cleanup()
 
 	root := gbg.config.ProjectName
-	log.Debug("removing folder '%s'", root)
+	log.Debugf("removing folder '%s'", root)
 	err := os.RemoveAll(root)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err.Error(), "folder": root}).Debug("[cleanup]failed to cleanup")

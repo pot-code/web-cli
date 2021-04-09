@@ -15,20 +15,14 @@ type DataProvider = func() []byte
 
 type FileGenerator struct {
 	file    string // file path to be generated
-	folder  string // folder path to be generated
 	data    DataProvider
 	cleaned bool
 }
 
 func NewFileGenerator(path string, data DataProvider) Generator {
 	file := strings.TrimPrefix(path, "/")
-	segments := strings.Split(file, "/")
-	folder := ""
-	if len(segments) > 0 {
-		folder = segments[0]
-	}
 	log.Trace("registered file: ", file)
-	return &FileGenerator{file, folder, data, false}
+	return &FileGenerator{file, data, false}
 }
 
 func (gt *FileGenerator) Gen() error {
@@ -58,18 +52,13 @@ func (gt *FileGenerator) Cleanup() error {
 	gt.cleaned = true
 
 	log.Debugf("removing file '%s'", gt.file)
-	if err := os.Remove(gt.file); err != nil {
+	err := os.Remove(gt.file)
+	if err != nil {
 		if !os.IsNotExist(err) {
 			log.WithFields(log.Fields{"error": err.Error(), "file": gt.file}).Debug("[cleanup]failed to cleanup")
-			return errors.WithStack(err)
 		}
 	}
 
-	log.Debugf("removing folder '%s'", gt.folder)
-	err := os.RemoveAll(gt.folder)
-	if err != nil {
-		log.WithFields(log.Fields{"error": err.Error(), "folder": gt.folder}).Debug("[cleanup]failed to cleanup")
-	}
 	return errors.WithStack(err)
 }
 
@@ -83,8 +72,5 @@ func (gt *FileGenerator) write(file string, data []byte) error {
 }
 
 func (gt *FileGenerator) String() string {
-	if gt.folder == "" {
-		return fmt.Sprintf("[FileGenerator]path=%s", gt.file)
-	}
-	return fmt.Sprintf("[FileGenerator]folder=%s, path=%s", gt.folder, gt.file)
+	return fmt.Sprintf("[FileGenerator]path=%s", gt.file)
 }

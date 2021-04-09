@@ -90,7 +90,7 @@ func (gag golangApiGenerator) Cleanup() error {
 	gag.gen.Cleanup()
 
 	root := gag.config.PackageName
-	log.Debug("removing folder '%s'", root)
+	log.Debugf("removing folder '%s'", root)
 	err := os.RemoveAll(root)
 	if err != nil {
 		log.WithFields(log.Fields{"error": err.Error(), "folder": root}).Debug("[cleanup]failed to cleanup")
