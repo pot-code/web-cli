@@ -15,6 +15,7 @@ import (
 type golangApiGenerator struct {
 	config *GolangApiConfig
 	gen    core.Generator
+	recipe *util.GenerationRecipe
 }
 
 type GolangApiConfig struct {
@@ -78,15 +79,17 @@ func NewGolangApiGenerator(config *GolangApiConfig) *golangApiGenerator {
 			},
 		},
 	)
-	log.Debugf("generation tree:\n%s", recipe.GetGenerationTree())
-	return &golangApiGenerator{config, recipe.MakeGenerator()}
+	return &golangApiGenerator{config: config, recipe: recipe}
 }
 
 func (gag golangApiGenerator) Gen() error {
+	log.Debugf("generation tree:\n%s", gag.recipe.GetGenerationTree())
 	dir := path.Join(gag.config.Root, gag.config.PackageName)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		return errors.Wrap(gag.gen.Gen(), "failed to generate go api")
+		gen := gag.recipe.MakeGenerator()
+		gag.gen = gen
+		return errors.Wrap(gen.Gen(), "failed to generate go api")
 	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", dir)
@@ -95,7 +98,9 @@ func (gag golangApiGenerator) Gen() error {
 }
 
 func (gag golangApiGenerator) Cleanup() error {
-	gag.gen.Cleanup()
+	if gag.gen != nil {
+		gag.gen.Cleanup()
+	}
 
 	root := gag.config.PackageName
 	log.Debugf("removing folder '%s'", root)

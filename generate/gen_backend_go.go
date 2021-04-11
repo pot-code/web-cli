@@ -14,6 +14,7 @@ import (
 type golangBackendGenerator struct {
 	config *GolangBackendConfig
 	gen    core.Generator
+	recipe *util.GenerationRecipe
 }
 
 type GolangBackendConfig struct {
@@ -76,14 +77,16 @@ func NewGolangBackendGenerator(config *GolangBackendConfig) *golangBackendGenera
 			},
 		},
 	)
-	log.Debugf("generation tree:\n%s", recipe.GetGenerationTree())
-	return &golangBackendGenerator{config, recipe.MakeGenerator()}
+	return &golangBackendGenerator{config: config, recipe: recipe}
 }
 
 func (gbg golangBackendGenerator) Gen() error {
+	log.Debugf("generation tree:\n%s", gbg.recipe.GetGenerationTree())
 	_, err := os.Stat(gbg.config.ProjectName)
 	if os.IsNotExist(err) {
-		return errors.Wrap(gbg.gen.Gen(), "failed to generate go backend")
+		gen := gbg.recipe.MakeGenerator()
+		gbg.gen = gen
+		return errors.Wrap(gen.Gen(), "failed to generate go backend")
 	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", gbg.config.ProjectName)
@@ -92,7 +95,9 @@ func (gbg golangBackendGenerator) Gen() error {
 }
 
 func (gbg golangBackendGenerator) Cleanup() error {
-	gbg.gen.Cleanup()
+	if gbg.gen != nil {
+		gbg.gen.Cleanup()
+	}
 
 	root := gbg.config.ProjectName
 	log.Debugf("removing folder '%s'", root)

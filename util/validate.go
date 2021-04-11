@@ -7,20 +7,20 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-var NameRegexp = `^[_\w][-_\w]*$`
+var NameExp = `^[_\w][-_\w]*$`
+
+var NameReg = regexp.MustCompile(NameExp)
 
 func ValidateProjectName(name string) error {
-	reg := regexp.MustCompile(NameRegexp)
-	if !reg.MatchString(name) {
-		return fmt.Errorf("input must be adhere to %s", NameRegexp)
+	if !NameReg.MatchString(name) {
+		return fmt.Errorf("input must be adhere to %s", NameExp)
 	}
 	return nil
 }
 
 func ValidateUserName(name string) error {
-	reg := regexp.MustCompile(NameRegexp)
-	if !reg.MatchString(name) {
-		return fmt.Errorf("input must be adhere to %s", NameRegexp)
+	if !NameReg.MatchString(name) {
+		return fmt.Errorf("input must be adhere to %s", NameExp)
 	}
 	return nil
 }
