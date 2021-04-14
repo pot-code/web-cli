@@ -20,7 +20,7 @@ type GenBEConfig struct {
 	Version     string // version number
 }
 
-var genBE = &cli.Command{
+var generateBECmd = &cli.Command{
 	Name:      CmdBackendName,
 	Aliases:   []string{"be"},
 	Usage:     "generate backends",

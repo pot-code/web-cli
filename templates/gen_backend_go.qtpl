@@ -153,8 +153,6 @@ package main
 import (
 	"context"
 	"log"
-	"os"
-	"os/signal"
 	"time"
 
 	"github.com/{%s author %}/{%s name %}/api"
@@ -170,10 +168,9 @@ import (
 var EnvPrefix string
 
 func main() {
-	log.SetFlags(log.Lshortfile | log.Ldate | log.Ltime)
 	option := new(cfg.AppConfig)
 	cfg.RegisterFlags()
-	if err := util.InitConfig(EnvPrefix, option); err != nil {
+	if err := util.ParseConfig(EnvPrefix, option); err != nil {
 		log.Fatal(err)
 	}
 
@@ -211,22 +208,13 @@ func main() {
 	server := api.Serve(option, dbConn, logger)
 
 	// clean up
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	go func() {
-		<-ctx.Done()
-		cancel()
-		os.Exit(1)
-	}()
-
-	logger.Sync()
-	dbConn.Close(ctx)
-	if err := server.Shutdown(ctx); err != nil {
-		log.Fatal(err)
-	}
+	util.CleanUp(10*time.Second, func(ctx context.Context) {
+		logger.Sync()
+		dbConn.Close(ctx)
+		if err := server.Shutdown(ctx); err != nil {
+			log.Fatal(err)
+		}
+	})
 }
 {% endfunc %}
 

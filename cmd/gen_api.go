@@ -23,7 +23,7 @@ type GenApiConfig struct {
 	Root        string // path root under which to generate api
 }
 
-var genAPI = &cli.Command{
+var genAPICmd = &cli.Command{
 	Name:      CmdApiName,
 	Usage:     "generate an api producer",
 	ArgsUsage: "NAME",
@@ -45,7 +45,7 @@ var genAPI = &cli.Command{
 		config, err := getGenApiConfig(c)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, CmdBackendName)
+				cli.ShowCommandHelp(c, CmdApiName)
 			}
 			return err
 		}
