@@ -11,11 +11,11 @@ import (
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	cfg "github.com/{%s author %}/{%s name %}/config"
-	gopot "github.com/pot-code/gopot/pkg"
-	"github.com/pot-code/gopot/pkg/db"
-	"github.com/pot-code/gopot/pkg/middleware"
-	"github.com/pot-code/gopot/pkg/util"
-	"github.com/pot-code/gopot/pkg/uuid"
+	gobit "github.com/pot-code/gobit/pkg"
+	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/middleware"
+	"github.com/pot-code/gobit/pkg/util"
+	"github.com/pot-code/gobit/pkg/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 )
@@ -27,8 +27,8 @@ func Serve(
 	logger *zap.Logger,
 ) *echo.Echo {
 	var (
-		app       = echo.New()
-		uid       = uuid.NewGoUUIDGenerator()
+		app = echo.New()
+		uid = uuid.NewGoUUIDGenerator()
 	)
 
 	jwtValidateKey, err := ioutil.ReadFile(option.Security.PublicKey)
@@ -36,7 +36,7 @@ func Serve(
 		log.Fatal("failed to load public key: ", err)
 	}
 
-	if option.Env == gopot.EnvDevelop {
+	if option.Env == gobit.EnvDevelop {
 		util.RegisterProfileEndpoints(app)
 	}
 
@@ -55,7 +55,7 @@ func Serve(
 		&util.Endpoint{
 			ApiVersion: "api",
 			Middlewares: []echo.MiddlewareFunc{
-				middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 4}),
+				middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 3}),
 				echo_middleware.Secure(),
 				echo_middleware.CORSWithConfig(echo_middleware.CORSConfig{
 					AllowOrigins: option.Security.CORS,
@@ -86,7 +86,7 @@ package cfg
 import (
 	"runtime"
 
-	gopot "github.com/pot-code/gopot/pkg"
+	gobit "github.com/pot-code/gobit/pkg"
 	"github.com/spf13/pflag"
 )
 
@@ -121,7 +121,7 @@ func RegisterFlags() {
 	// common
 	pflag.String("host", "", "binding address")
 	pflag.String("app_id", "{%s name %}", "application identifier (required)")
-	pflag.String("env", gopot.EnvDevelop, "runtime environment, can be 'develop' or 'production'")
+	pflag.String("env", gobit.EnvDevelop, "runtime environment, can be 'develop' or 'production'")
 	pflag.Int("port", 8081, "listening port")
 
 	// database
@@ -157,10 +157,10 @@ import (
 
 	"github.com/{%s author %}/{%s name %}/api"
 	cfg "github.com/{%s author %}/{%s name %}/config"
-	gopot "github.com/pot-code/gopot/pkg"
-	"github.com/pot-code/gopot/pkg/db"
-	"github.com/pot-code/gopot/pkg/logging"
-	"github.com/pot-code/gopot/pkg/util"
+	gobit "github.com/pot-code/gobit/pkg"
+	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/logging"
+	"github.com/pot-code/gobit/pkg/util"
 	"go.uber.org/zap"
 )
 
@@ -194,7 +194,7 @@ func main() {
 		Port:     option.Database.Port,
 		Query:    append(option.Database.Query, "application_name="+option.AppID),
 		Schema:   option.Database.Schema,
-		Debug:    option.Env == gopot.EnvDevelop,
+		Debug:    option.Env == gobit.EnvDevelop,
 	}, logger)
 	if err != nil {
 		log.Fatalf("failed to create DB connection::%s", err)
