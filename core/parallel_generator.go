@@ -46,7 +46,7 @@ func (pg ParallelGenerator) Run() error {
 	case err := <-errChan:
 		return err
 	case <-doneChan:
-		log.WithField("duration", time.Since(start)).Info("module generation finished")
+		log.WithField("duration", time.Since(start)).Info("parallel generation finished")
 		return nil
 	}
 }
@@ -67,5 +67,5 @@ func (pg ParallelGenerator) Cleanup() error {
 }
 
 func (pg ParallelGenerator) String() string {
-	return fmt.Sprintf("[ModuleGenerator]tasks=%d", len(pg.subtasks))
+	return fmt.Sprintf("[ParallelGenerator]tasks=%d", len(pg.subtasks))
 }
