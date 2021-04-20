@@ -25,7 +25,7 @@ func NewFileGenerator(path string, data DataProvider) Generator {
 	return &FileGenerator{file, data, false}
 }
 
-func (gt *FileGenerator) Gen() error {
+func (gt *FileGenerator) Run() error {
 	file := gt.file
 	provider := gt.data
 

@@ -37,9 +37,12 @@ func (gr *GenerationRecipe) MakeGenerator() core.Generator {
 	tasks := make([]core.Generator, len(gr.materials))
 
 	for i, m := range gr.materials {
-		tasks[i] = core.NewFileGenerator(path.Join(gr.root, m.Path), m.Provider)
+		dst := m.Path
+		if gr.root != "" {
+			dst = path.Join(gr.root, dst)
+		}
+		tasks[i] = core.NewFileGenerator(dst, m.Provider)
 	}
-
 	return core.NewParallelGenerator(tasks...)
 }
 

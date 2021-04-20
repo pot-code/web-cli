@@ -80,13 +80,13 @@ func NewGolangBackendGenerator(config *GolangBackendConfig) *golangBackendGenera
 	return &golangBackendGenerator{config: config, recipe: recipe}
 }
 
-func (gbg golangBackendGenerator) Gen() error {
+func (gbg golangBackendGenerator) Run() error {
 	log.Debugf("generation tree:\n%s", gbg.recipe.GetGenerationTree())
 	_, err := os.Stat(gbg.config.ProjectName)
 	if os.IsNotExist(err) {
 		gen := gbg.recipe.MakeGenerator()
 		gbg.gen = gen
-		return errors.Wrap(gen.Gen(), "failed to generate go backend")
+		return errors.Wrap(gen.Run(), "failed to generate go backend")
 	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", gbg.config.ProjectName)

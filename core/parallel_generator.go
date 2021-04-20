@@ -20,7 +20,7 @@ func NewParallelGenerator(subtasks ...Generator) *ParallelGenerator {
 	return &ParallelGenerator{subtasks, false}
 }
 
-func (pg ParallelGenerator) Gen() error {
+func (pg ParallelGenerator) Run() error {
 	subtasks := pg.subtasks
 	errChan := make(chan error)
 	doneChan := make(chan struct{})
@@ -30,8 +30,8 @@ func (pg ParallelGenerator) Gen() error {
 	for i := range subtasks {
 		wg.Add(1)
 		go func(task Generator) {
-			if err := task.Gen(); err != nil {
-				errChan <- task.Gen()
+			if err := task.Run(); err != nil {
+				errChan <- task.Run()
 			} else {
 				wg.Done()
 			}

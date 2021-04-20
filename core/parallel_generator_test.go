@@ -37,7 +37,7 @@ func TestParallelGenerator_Gen(t *testing.T) {
 				subtasks: tt.fields.subtasks,
 				cleaned:  tt.fields.cleaned,
 			}
-			if err := pg.Gen(); (err != nil) != tt.wantErr {
+			if err := pg.Run(); (err != nil) != tt.wantErr {
 				t.Errorf("ParallelGenerator.Gen() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			pg.Cleanup()

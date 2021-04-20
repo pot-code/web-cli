@@ -27,7 +27,7 @@ func TestFileGenerator_Gen(t *testing.T) {
 				data:    tt.fields.data,
 				cleaned: tt.fields.cleaned,
 			}
-			if err := gt.Gen(); (err != nil) != tt.wantErr {
+			if err := gt.Run(); (err != nil) != tt.wantErr {
 				t.Errorf("FileGenerator.Gen() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			gt.Cleanup()

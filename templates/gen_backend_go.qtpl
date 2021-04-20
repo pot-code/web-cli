@@ -21,7 +21,7 @@ import (
 )
 
 // Serve create http transport server
-func Serve(
+func Http(
 	option *cfg.AppConfig,
 	conn db.SqlxInterface,
 	logger *zap.Logger,
@@ -205,7 +205,7 @@ func main() {
 		zap.Int("db.port", option.Database.Port),
 	)
 
-	server := api.Serve(option, dbConn, logger)
+	server := api.Http(option, dbConn, logger)
 
 	// clean up
 	util.CleanUp(10*time.Second, func(ctx context.Context) {

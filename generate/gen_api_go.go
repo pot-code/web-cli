@@ -82,14 +82,14 @@ func NewGolangApiGenerator(config *GolangApiConfig) *golangApiGenerator {
 	return &golangApiGenerator{config: config, recipe: recipe}
 }
 
-func (gag golangApiGenerator) Gen() error {
+func (gag golangApiGenerator) Run() error {
 	log.Debugf("generation tree:\n%s", gag.recipe.GetGenerationTree())
 	dir := path.Join(gag.config.Root, gag.config.PackageName)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
 		gen := gag.recipe.MakeGenerator()
 		gag.gen = gen
-		return errors.Wrap(gen.Gen(), "failed to generate go api")
+		return errors.Wrap(gen.Run(), "failed to generate go api")
 	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", dir)

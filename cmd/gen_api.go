@@ -58,7 +58,7 @@ var genAPICmd = &cli.Command{
 				Model:       config.Model,
 				Root:        config.Root,
 			})
-			if err := gen.Gen(); err != nil {
+			if err := gen.Run(); err != nil {
 				gen.Cleanup()
 				return err
 			}

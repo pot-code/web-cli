@@ -1,6 +1,10 @@
 package core
 
 type Generator interface {
-	Gen() error
+	Executor
 	Cleanup() error
+}
+
+type Executor interface {
+	Run() error
 }

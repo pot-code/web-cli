@@ -60,7 +60,7 @@ var generateBECmd = &cli.Command{
 				Author:      config.Author,
 				Version:     config.Version,
 			})
-			if err := gen.Gen(); err != nil {
+			if err := gen.Run(); err != nil {
 				gen.Cleanup()
 				return err
 			}
