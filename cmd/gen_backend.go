@@ -32,7 +32,7 @@ var generateBECmd = &cli.Command{
 		&cli.StringFlag{
 			Name:    "type",
 			Aliases: []string{"t"},
-			Usage:   "backend type (nest/go)",
+			Usage:   "backend type (go)",
 			Value:   "go",
 		},
 		&cli.StringFlag{
@@ -143,8 +143,6 @@ func getGenBEConfig(c *cli.Context) (*genBEConfig, error) {
 		if err := util.ValidateVersion(version); err != nil {
 			return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid version"))
 		}
-	} else if genType == "nest" {
-		panic("not implemented") // TODO:
 	} else {
 		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("unsupported type %s", genType))
 	}

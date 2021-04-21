@@ -35,7 +35,7 @@ var genAPICmd = &cli.Command{
 		&cli.StringFlag{
 			Name:    "type",
 			Aliases: []string{"T"},
-			Usage:   "api type (nest/go)",
+			Usage:   "api type (go)",
 			Value:   "go",
 		},
 		&cli.StringFlag{
@@ -141,8 +141,6 @@ func getGenApiConfig(c *cli.Context) (*genApiConfig, error) {
 		config.Model = strcase.ToCamel(name)
 		config.Author = meta.Author
 		config.Project = meta.ProjectName
-	} else if genType == "nest" {
-		panic("not implemented") // TODO:
 	} else {
 		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("unsupported type %s", genType))
 	}
