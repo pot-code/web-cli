@@ -48,7 +48,11 @@ func (gr *GenerationRecipe) MakeGenerator() core.Generator {
 
 func (gr *GenerationRecipe) GetGenerationTree() tp.Tree {
 	tree := tp.New()
-	root := tree.AddBranch(gr.root)
+	root := tree
+	if gr.root != "" {
+		root = tree.AddBranch(gr.root)
+	}
+
 	pathMap := make(map[string]tp.Tree)
 
 	for _, m := range gr.materials {

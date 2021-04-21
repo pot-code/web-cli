@@ -20,7 +20,7 @@ var _ core.Executor = AddTypescriptToReact{}
 func NewAddTypescriptToReact() *AddTypescriptToReact {
 	recipe := util.NewGenerationRecipe("",
 		&util.GenerationMaterial{
-			Path: "./.eslintrc.js",
+			Path: ".eslintrc.js",
 			Provider: func() []byte {
 				var buf bytes.Buffer
 
@@ -29,7 +29,7 @@ func NewAddTypescriptToReact() *AddTypescriptToReact {
 			},
 		},
 		&util.GenerationMaterial{
-			Path: "./tsconfig.json",
+			Path: "tsconfig.json",
 			Provider: func() []byte {
 				var buf bytes.Buffer
 

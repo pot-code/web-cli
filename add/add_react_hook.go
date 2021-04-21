@@ -21,7 +21,7 @@ var _ core.Executor = AddReactHook{}
 func NewAddReactHook(name string) *AddReactHook {
 	recipe := util.NewGenerationRecipe("",
 		&util.GenerationMaterial{
-			Path: fmt.Sprintf("./%s.%s", name, "ts"),
+			Path: fmt.Sprintf("%s.%s", name, "ts"),
 			Provider: func() []byte {
 				var buf bytes.Buffer
 

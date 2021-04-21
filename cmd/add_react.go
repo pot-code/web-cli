@@ -13,7 +13,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const cmdReactName = "React"
+const cmdReactName = "react"
 
 type addReactConfig struct {
 	Hook bool

@@ -20,7 +20,7 @@ var _ core.Executor = AddTypescriptToNode{}
 func NewAddTypescriptToNode() *AddTypescriptToNode {
 	recipe := util.NewGenerationRecipe("",
 		&util.GenerationMaterial{
-			Path: "./.eslintrc.js",
+			Path: ".eslintrc.js",
 			Provider: func() []byte {
 				var buf bytes.Buffer
 
@@ -29,7 +29,7 @@ func NewAddTypescriptToNode() *AddTypescriptToNode {
 			},
 		},
 		&util.GenerationMaterial{
-			Path: "./tsconfig.json",
+			Path: "tsconfig.json",
 			Provider: func() []byte {
 				var buf bytes.Buffer
 

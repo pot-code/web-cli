@@ -21,7 +21,7 @@ var _ core.Executor = AddReactComponent{}
 func NewAddReactComponent(name string) *AddReactComponent {
 	recipe := util.NewGenerationRecipe("",
 		&util.GenerationMaterial{
-			Path: fmt.Sprintf("./%s.%s", name, "tsx"),
+			Path: fmt.Sprintf("%s.%s", name, "tsx"),
 			Provider: func() []byte {
 				var buf bytes.Buffer
 
