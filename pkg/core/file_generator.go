@@ -34,9 +34,9 @@ func NewFileGenerator(fd *FileDesc) Generator {
 	return &FileGenerator{file, fd.Data, false}
 }
 
-func (gt *FileGenerator) Run() error {
-	file := gt.file
-	provider := gt.data
+func (fg *FileGenerator) Run() error {
+	file := fg.file
+	provider := fg.data
 
 	if file == "" {
 		log.Info("[skipped]no path specified")
@@ -44,34 +44,34 @@ func (gt *FileGenerator) Run() error {
 	}
 
 	if provider == nil {
-		log.Infof("[skipped]no provider for '%s'", gt.file)
+		log.Infof("[skipped]no provider for '%s'", fg.file)
 		return nil
 	}
-	err := gt.write(file, provider())
+	err := fg.write(file, provider())
 	if err == nil {
-		log.Infof("emit '%s'", gt.file)
+		log.Infof("emit '%s'", fg.file)
 	}
 	return errors.Wrapf(err, "failed to generate '%s'", file)
 }
 
-func (gt *FileGenerator) Cleanup() error {
-	if gt.cleaned {
+func (fg *FileGenerator) Cleanup() error {
+	if fg.cleaned {
 		return nil
 	}
-	gt.cleaned = true
+	fg.cleaned = true
 
-	log.Debugf("removing file '%s'", gt.file)
-	err := os.Remove(gt.file)
+	log.Debugf("removing file '%s'", fg.file)
+	err := os.Remove(fg.file)
 	if err != nil {
 		if !os.IsNotExist(err) {
-			log.WithFields(log.Fields{"error": err.Error(), "file": gt.file}).Debug("[cleanup]failed to cleanup")
+			log.WithFields(log.Fields{"error": err.Error(), "file": fg.file}).Debug("[cleanup]failed to cleanup")
 		}
 	}
 
 	return errors.WithStack(err)
 }
 
-func (gt *FileGenerator) write(file string, data []byte) error {
+func (fg *FileGenerator) write(file string, data []byte) error {
 	if dir := path.Dir(file); dir != "" {
 		if err := os.MkdirAll(dir, fs.ModePerm); err != nil {
 			return errors.Wrapf(err, "failed to make '%s'", dir)
@@ -80,6 +80,6 @@ func (gt *FileGenerator) write(file string, data []byte) error {
 	return errors.Wrapf(os.WriteFile(file, data, fs.ModePerm), "failed to write file '%s'", file)
 }
 
-func (gt *FileGenerator) String() string {
-	return fmt.Sprintf("[FileGenerator]path=%s", gt.file)
+func (fg *FileGenerator) String() string {
+	return fmt.Sprintf("[FileGenerator]path=%s", fg.file)
 }

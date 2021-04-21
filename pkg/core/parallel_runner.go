@@ -33,14 +33,14 @@ func NewParallelRunner(tasks ...Executor) *ParallelRunner {
 	return &ParallelRunner{commands, files, false}
 }
 
-func (pg ParallelRunner) Run() error {
+func (pr ParallelRunner) Run() error {
 	start := time.Now()
 
-	if err := pg.runCommands(); err != nil {
+	if err := pr.runCommands(); err != nil {
 		return err
 	}
 
-	if err := pg.runGenerators(); err != nil {
+	if err := pr.runGenerators(); err != nil {
 		return err
 	}
 
@@ -48,8 +48,8 @@ func (pg ParallelRunner) Run() error {
 	return nil
 }
 
-func (pg ParallelRunner) runCommands() error {
-	for _, cmd := range pg.commands {
+func (pr ParallelRunner) runCommands() error {
+	for _, cmd := range pr.commands {
 		if err := cmd.Run(); err != nil {
 			return err
 		}
@@ -57,8 +57,8 @@ func (pg ParallelRunner) runCommands() error {
 	return nil
 }
 
-func (pg ParallelRunner) runGenerators() error {
-	files := pg.files
+func (pr ParallelRunner) runGenerators() error {
+	files := pr.files
 	errChan := make(chan error)
 	doneChan := make(chan struct{})
 	wg := sync.WaitGroup{}
@@ -86,13 +86,13 @@ func (pg ParallelRunner) runGenerators() error {
 	}
 }
 
-func (pg ParallelRunner) Cleanup() error {
-	if pg.cleaned {
+func (pr ParallelRunner) Cleanup() error {
+	if pr.cleaned {
 		return nil
 	}
-	pg.cleaned = true
+	pr.cleaned = true
 
-	for _, task := range pg.files {
+	for _, task := range pr.files {
 		if ce := task.Cleanup(); ce != nil {
 			return errors.WithStack(ce)
 		}
@@ -101,6 +101,6 @@ func (pg ParallelRunner) Cleanup() error {
 	return nil
 }
 
-func (pg ParallelRunner) String() string {
-	return fmt.Sprintf("[ParallelRunner]tasks=%d", len(pg.commands))
+func (pr ParallelRunner) String() string {
+	return fmt.Sprintf("[ParallelRunner]tasks=%d", len(pr.commands))
 }

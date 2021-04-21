@@ -9,7 +9,9 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-// ParseConfig return validation error or parse error
+// ParseConfig parse and return validation error or parse error
+//
+// config: receiver
 func ParseConfig(c *cli.Context, config interface{}) error {
 	t := reflect.TypeOf(config)
 	if t.Kind() != reflect.Ptr {
