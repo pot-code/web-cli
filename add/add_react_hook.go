@@ -8,12 +8,10 @@ import (
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
-	log "github.com/sirupsen/logrus"
 )
 
 type AddReactHook struct {
-	composer *util.TaskComposer
-	runner   core.Generator
+	runner core.Generator
 }
 
 var _ core.Executor = AddReactHook{}
@@ -30,12 +28,9 @@ func NewAddReactHook(name string) *AddReactHook {
 			},
 		},
 	)
-	return &AddReactHook{composer: composer}
+	return &AddReactHook{runner: composer}
 }
 
-func (atn AddReactHook) Run() error {
-	log.Debugf("runnereration tree:\n%s", atn.composer.GetGenerationTree())
-	runner := atn.composer.MakeRunner()
-	atn.runner = runner
-	return errors.Wrap(runner.Run(), "failed to runnererate react hook")
+func (arh AddReactHook) Run() error {
+	return errors.Wrap(arh.runner.Run(), "failed to generate react hook")
 }

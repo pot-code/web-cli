@@ -7,12 +7,10 @@ import (
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
-	log "github.com/sirupsen/logrus"
 )
 
 type AddTypescriptToNode struct {
-	composer *util.TaskComposer
-	runner   core.Generator
+	runner core.Generator
 }
 
 var _ core.Generator = AddTypescriptToNode{}
@@ -50,14 +48,11 @@ func NewAddTypescriptToNode() *AddTypescriptToNode {
 			"eslint-plugin-import",
 		},
 	})
-	return &AddTypescriptToNode{composer: composer}
+	return &AddTypescriptToNode{runner: composer}
 }
 
 func (atn AddTypescriptToNode) Run() error {
-	log.Debugf("generation tree:\n%s", atn.composer.GetGenerationTree())
-	runner := atn.composer.MakeRunner()
-	atn.runner = runner
-	return errors.Wrap(runner.Run(), "failed to generate typescript config")
+	return errors.Wrap(atn.runner.Run(), "failed to generate typescript config")
 }
 
 func (atn AddTypescriptToNode) Cleanup() error {

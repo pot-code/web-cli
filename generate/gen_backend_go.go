@@ -12,9 +12,8 @@ import (
 )
 
 type golangBackendGenerator struct {
-	config   *GolangBackendConfig
-	runner   core.Generator
-	composer *util.TaskComposer
+	config *GolangBackendConfig
+	runner core.Generator
 }
 
 type GolangBackendConfig struct {
@@ -77,28 +76,22 @@ func NewGolangBackendGenerator(config *GolangBackendConfig) *golangBackendGenera
 			},
 		},
 	)
-	return &golangBackendGenerator{config: config, composer: composer}
+	return &golangBackendGenerator{config: config, runner: composer}
 }
 
 func (gbg golangBackendGenerator) Run() error {
-	log.Debugf("generation tree:\n%s", gbg.composer.GetGenerationTree())
 	_, err := os.Stat(gbg.config.ProjectName)
-	if os.IsNotExist(err) {
-		runner := gbg.composer.MakeRunner()
-		gbg.runner = runner
-		return errors.Wrap(runner.Run(), "failed to generate go backend")
-	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", gbg.config.ProjectName)
+		return nil
+	}
+	if os.IsNotExist(err) {
+		err = gbg.runner.Run()
 	}
 	return errors.Wrap(err, "failed to generate go backend")
 }
 
 func (gbg golangBackendGenerator) Cleanup() error {
-	if gbg.runner != nil {
-		gbg.runner.Cleanup()
-	}
-
 	root := gbg.config.ProjectName
 	log.Debugf("removing folder '%s'", root)
 	err := os.RemoveAll(root)

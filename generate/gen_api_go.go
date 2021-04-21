@@ -13,9 +13,8 @@ import (
 )
 
 type golangApiGenerator struct {
-	config   *GolangApiConfig
-	runner   core.Generator
-	composer *util.TaskComposer
+	config *GolangApiConfig
+	runner core.Generator
 }
 
 type GolangApiConfig struct {
@@ -79,29 +78,23 @@ func NewGolangApiGenerator(config *GolangApiConfig) *golangApiGenerator {
 			},
 		},
 	)
-	return &golangApiGenerator{config: config, composer: composer}
+	return &golangApiGenerator{config: config, runner: composer}
 }
 
 func (gag golangApiGenerator) Run() error {
-	log.Debugf("generation tree:\n%s", gag.composer.GetGenerationTree())
 	dir := path.Join(gag.config.Root, gag.config.PackageName)
 	_, err := os.Stat(dir)
-	if os.IsNotExist(err) {
-		runner := gag.composer.MakeRunner()
-		gag.runner = runner
-		return errors.Wrap(runner.Run(), "failed to generate go api")
-	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", dir)
+		return nil
+	}
+	if os.IsNotExist(err) {
+		err = gag.runner.Run()
 	}
 	return errors.Wrap(err, "failed to generate go api")
 }
 
 func (gag golangApiGenerator) Cleanup() error {
-	if gag.runner != nil {
-		gag.runner.Cleanup()
-	}
-
 	root := gag.config.PackageName
 	log.Debugf("removing folder '%s'", root)
 	err := os.RemoveAll(root)

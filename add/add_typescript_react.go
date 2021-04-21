@@ -7,12 +7,10 @@ import (
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
-	log "github.com/sirupsen/logrus"
 )
 
 type AddTypescriptToReact struct {
-	composer *util.TaskComposer
-	runner   core.Generator
+	runner core.Generator
 }
 
 var _ core.Generator = AddTypescriptToReact{}
@@ -57,14 +55,11 @@ func NewAddTypescriptToReact() *AddTypescriptToReact {
 			"typescript",
 		},
 	})
-	return &AddTypescriptToReact{composer: composer}
+	return &AddTypescriptToReact{runner: composer}
 }
 
 func (atr AddTypescriptToReact) Run() error {
-	log.Debugf("runnereration tree:\n%s", atr.composer.GetGenerationTree())
-	runner := atr.composer.MakeRunner()
-	atr.runner = runner
-	return errors.Wrap(runner.Run(), "failed to runnererate typescript config")
+	return errors.Wrap(atr.runner.Run(), "failed to generate typescript config")
 }
 
 func (atr AddTypescriptToReact) Cleanup() error {

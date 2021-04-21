@@ -37,13 +37,18 @@ var addTypescriptCmd = &cli.Command{
 			return err
 		}
 
-		var cmd core.Executor
+		var cmd core.Generator
 		if config.Target == "node" {
 			cmd = add.NewAddTypescriptToNode()
 		} else {
 			cmd = add.NewAddTypescriptToReact()
 		}
-		return cmd.Run()
+
+		err = cmd.Run()
+		if err != nil {
+			cmd.Cleanup()
+		}
+		return err
 	},
 }
 

@@ -16,7 +16,10 @@ type Command struct {
 }
 
 func (c Command) String() string {
-	return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
+	if len(c.Args) > 0 {
+		return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
+	}
+	return c.Bin
 }
 
 type CmdExecutor struct {

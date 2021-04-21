@@ -8,12 +8,10 @@ import (
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
-	log "github.com/sirupsen/logrus"
 )
 
 type AddReactComponent struct {
-	composer *util.TaskComposer
-	runner   core.Generator
+	runner core.Generator
 }
 
 var _ core.Executor = AddReactComponent{}
@@ -30,12 +28,9 @@ func NewAddReactComponent(name string) *AddReactComponent {
 			},
 		},
 	)
-	return &AddReactComponent{composer: composer}
+	return &AddReactComponent{runner: composer}
 }
 
-func (atn AddReactComponent) Run() error {
-	log.Debugf("runnereration tree:\n%s", atn.composer.GetGenerationTree())
-	runner := atn.composer.MakeRunner()
-	atn.runner = runner
-	return errors.Wrap(runner.Run(), "failed to runnererate react component")
+func (arc AddReactComponent) Run() error {
+	return errors.Wrap(arc.runner.Run(), "failed to generate react component")
 }
