@@ -52,7 +52,7 @@ var addReactCmd = &cli.Command{
 			if !strings.HasPrefix(name, "use") {
 				name = "use" + strcase.ToCamel(name)
 			}
-			cmd = newAddReactHook(name)
+			cmd = newAddReactHook(strcase.ToLowerCamel(name))
 		} else {
 			cmd = newAddReactComponent(strcase.ToCamel(name))
 		}
