@@ -5,7 +5,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pot-code/web-cli/core"
+	"github.com/pot-code/web-cli/pkg/core"
 	log "github.com/sirupsen/logrus"
 	tp "github.com/xlab/treeprint"
 )

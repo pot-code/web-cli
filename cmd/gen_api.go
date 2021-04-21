@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/core"
+	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
-	"github.com/pot-code/web-cli/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

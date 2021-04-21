@@ -5,7 +5,7 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/cmd"
-	"github.com/pot-code/web-cli/util"
+	"github.com/pot-code/web-cli/pkg/util"
 	log "github.com/sirupsen/logrus"
 )
 
