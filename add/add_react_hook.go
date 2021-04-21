@@ -12,17 +12,17 @@ import (
 )
 
 type AddReactHook struct {
-	recipe *util.GenerationRecipe
-	gen    core.Generator
+	composer *util.TaskComposer
+	runner   core.Generator
 }
 
 var _ core.Executor = AddReactHook{}
 
 func NewAddReactHook(name string) *AddReactHook {
-	recipe := util.NewGenerationRecipe("",
-		&util.GenerationMaterial{
+	composer := util.NewTaskComposer("",
+		&core.FileDesc{
 			Path: fmt.Sprintf("%s.%s", name, "ts"),
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteReactHook(&buf, name)
@@ -30,12 +30,12 @@ func NewAddReactHook(name string) *AddReactHook {
 			},
 		},
 	)
-	return &AddReactHook{recipe: recipe}
+	return &AddReactHook{composer: composer}
 }
 
 func (atn AddReactHook) Run() error {
-	log.Debugf("generation tree:\n%s", atn.recipe.GetGenerationTree())
-	gen := atn.recipe.MakeGenerator()
-	atn.gen = gen
-	return errors.Wrap(gen.Run(), "failed to generate react hook")
+	log.Debugf("runnereration tree:\n%s", atn.composer.GetGenerationTree())
+	runner := atn.composer.MakeRunner()
+	atn.runner = runner
+	return errors.Wrap(runner.Run(), "failed to runnererate react hook")
 }

@@ -11,26 +11,26 @@ import (
 )
 
 type AddTypescriptToNode struct {
-	recipe *util.GenerationRecipe
-	gen    core.Generator
+	composer *util.TaskComposer
+	runner   core.Generator
 }
 
-var _ core.Executor = AddTypescriptToNode{}
+var _ core.Generator = AddTypescriptToNode{}
 
 func NewAddTypescriptToNode() *AddTypescriptToNode {
-	recipe := util.NewGenerationRecipe("",
-		&util.GenerationMaterial{
+	composer := util.NewTaskComposer("",
+		&core.FileDesc{
 			Path: ".eslintrc.js",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteNodeEslintrc(&buf)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "tsconfig.json",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteNodeTsConfig(&buf)
@@ -38,26 +38,28 @@ func NewAddTypescriptToNode() *AddTypescriptToNode {
 			},
 		},
 	)
-	return &AddTypescriptToNode{recipe: recipe}
+	composer.AddCommand(&core.Command{
+		Bin: "npm",
+		Args: []string{"i", "-D",
+			"typescript",
+			"eslint",
+			"@typescript-eslint/eslint-plugin",
+			"eslint-plugin-prettier",
+			"@typescript-eslint/parser",
+			"eslint-config-prettier",
+			"eslint-plugin-import",
+		},
+	})
+	return &AddTypescriptToNode{composer: composer}
 }
 
 func (atn AddTypescriptToNode) Run() error {
-	cmd := core.NewCmdExecutor("npm", "i", "-D",
-		"typescript",
-		"eslint",
-		"@typescript-eslint/eslint-plugin",
-		"eslint-plugin-prettier",
-		"@typescript-eslint/parser",
-		"eslint-config-prettier",
-		"eslint-plugin-import",
-	)
+	log.Debugf("generation tree:\n%s", atn.composer.GetGenerationTree())
+	runner := atn.composer.MakeRunner()
+	atn.runner = runner
+	return errors.Wrap(runner.Run(), "failed to generate typescript config")
+}
 
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "failed to install dependencies")
-	}
-
-	log.Debugf("generation tree:\n%s", atn.recipe.GetGenerationTree())
-	gen := atn.recipe.MakeGenerator()
-	atn.gen = gen
-	return errors.Wrap(gen.Run(), "failed to generate typescript config")
+func (atn AddTypescriptToNode) Cleanup() error {
+	return atn.runner.Cleanup()
 }

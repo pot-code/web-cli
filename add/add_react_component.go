@@ -12,17 +12,17 @@ import (
 )
 
 type AddReactComponent struct {
-	recipe *util.GenerationRecipe
-	gen    core.Generator
+	composer *util.TaskComposer
+	runner   core.Generator
 }
 
 var _ core.Executor = AddReactComponent{}
 
 func NewAddReactComponent(name string) *AddReactComponent {
-	recipe := util.NewGenerationRecipe("",
-		&util.GenerationMaterial{
+	composer := util.NewTaskComposer("",
+		&core.FileDesc{
 			Path: fmt.Sprintf("%s.%s", name, "tsx"),
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteReactComponent(&buf, name)
@@ -30,12 +30,12 @@ func NewAddReactComponent(name string) *AddReactComponent {
 			},
 		},
 	)
-	return &AddReactComponent{recipe: recipe}
+	return &AddReactComponent{composer: composer}
 }
 
 func (atn AddReactComponent) Run() error {
-	log.Debugf("generation tree:\n%s", atn.recipe.GetGenerationTree())
-	gen := atn.recipe.MakeGenerator()
-	atn.gen = gen
-	return errors.Wrap(gen.Run(), "failed to generate react component")
+	log.Debugf("runnereration tree:\n%s", atn.composer.GetGenerationTree())
+	runner := atn.composer.MakeRunner()
+	atn.runner = runner
+	return errors.Wrap(runner.Run(), "failed to runnererate react component")
 }

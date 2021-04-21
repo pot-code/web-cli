@@ -1,6 +1,7 @@
 package core
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"strings"
@@ -9,24 +10,30 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type Command struct {
+	Bin  string
+	Args []string
+}
+
+func (c Command) String() string {
+	return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
+}
+
 type CmdExecutor struct {
-	name string
-	args []string
+	cmd *Command
 }
 
 var _ Executor = CmdExecutor{}
 
-func NewCmdExecutor(bin string, args ...string) *CmdExecutor {
-	return &CmdExecutor{bin, args}
+func NewCmdExecutor(cmd *Command) *CmdExecutor {
+	return &CmdExecutor{cmd}
 }
 
 func (ce CmdExecutor) Run() error {
-	log.WithFields(log.Fields{
-		"bin":  ce.name,
-		"args": ce.args,
-	}).Debug("execute command")
-	cmd := exec.Command(ce.name, ce.args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stdout
-	return errors.Wrapf(cmd.Run(), "failed to execute command '%s %s'", ce.name, strings.Join(ce.args, " "))
+	log.WithField("cmd", ce.cmd).Info("execute command")
+	cmd := ce.cmd
+	proc := exec.Command(cmd.Bin, cmd.Args...)
+	proc.Stdout = os.Stdout
+	proc.Stderr = os.Stdout
+	return errors.Wrapf(proc.Run(), "failed to execute command '%s'", cmd)
 }

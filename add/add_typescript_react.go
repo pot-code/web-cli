@@ -11,26 +11,26 @@ import (
 )
 
 type AddTypescriptToReact struct {
-	recipe *util.GenerationRecipe
-	gen    core.Generator
+	composer *util.TaskComposer
+	runner   core.Generator
 }
 
-var _ core.Executor = AddTypescriptToReact{}
+var _ core.Generator = AddTypescriptToReact{}
 
 func NewAddTypescriptToReact() *AddTypescriptToReact {
-	recipe := util.NewGenerationRecipe("",
-		&util.GenerationMaterial{
+	composer := util.NewTaskComposer("",
+		&core.FileDesc{
 			Path: ".eslintrc.js",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteReactEslintrc(&buf)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "tsconfig.json",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteReactTsConfig(&buf)
@@ -38,33 +38,35 @@ func NewAddTypescriptToReact() *AddTypescriptToReact {
 			},
 		},
 	)
-	return &AddTypescriptToReact{recipe: recipe}
+	composer.AddCommand(&core.Command{
+		Bin: "npm",
+		Args: []string{"i", "-D",
+			"@typescript-eslint/eslint-plugin",
+			"@typescript-eslint/parser",
+			"eslint",
+			"eslint-config-airbnb",
+			"eslint-config-prettier",
+			"eslint-import-resolver-typescript",
+			"eslint-plugin-import",
+			"eslint-plugin-jsx-a11y",
+			"eslint-plugin-prettier",
+			"eslint-plugin-react",
+			"eslint-plugin-react-hooks",
+			"prettier",
+			"prettier-eslint",
+			"typescript",
+		},
+	})
+	return &AddTypescriptToReact{composer: composer}
 }
 
 func (atr AddTypescriptToReact) Run() error {
-	cmd := core.NewCmdExecutor("npm", "i", "-D",
-		"@typescript-eslint/eslint-plugin",
-		"@typescript-eslint/parser",
-		"eslint",
-		"eslint-config-airbnb",
-		"eslint-config-prettier",
-		"eslint-import-resolver-typescript",
-		"eslint-plugin-import",
-		"eslint-plugin-jsx-a11y",
-		"eslint-plugin-prettier",
-		"eslint-plugin-react",
-		"eslint-plugin-react-hooks",
-		"prettier",
-		"prettier-eslint",
-		"typescript",
-	)
+	log.Debugf("runnereration tree:\n%s", atr.composer.GetGenerationTree())
+	runner := atr.composer.MakeRunner()
+	atr.runner = runner
+	return errors.Wrap(runner.Run(), "failed to runnererate typescript config")
+}
 
-	if err := cmd.Run(); err != nil {
-		return errors.Wrap(err, "failed to install dependencies")
-	}
-
-	log.Debugf("generation tree:\n%s", atr.recipe.GetGenerationTree())
-	gen := atr.recipe.MakeGenerator()
-	atr.gen = gen
-	return errors.Wrap(gen.Run(), "failed to generate typescript config")
+func (atr AddTypescriptToReact) Cleanup() error {
+	return atr.runner.Cleanup()
 }

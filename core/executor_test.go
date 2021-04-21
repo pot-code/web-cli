@@ -4,8 +4,7 @@ import "testing"
 
 func TestCmdExecutor_Run(t *testing.T) {
 	type fields struct {
-		name string
-		args []string
+		cmd *Command
 	}
 	tests := []struct {
 		name    string
@@ -13,17 +12,22 @@ func TestCmdExecutor_Run(t *testing.T) {
 		wantErr bool
 	}{
 		{"", fields{
-			"ls", []string{"-ahl"},
+			cmd: &Command{
+				Bin:  "ls",
+				Args: []string{"-ahl"},
+			},
 		}, false},
 		{"", fields{
-			"lab", []string{"-ahl"},
+			cmd: &Command{
+				Bin:  "lab",
+				Args: []string{"-ahl"},
+			},
 		}, true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ce := CmdExecutor{
-				name: tt.fields.name,
-				args: tt.fields.args,
+				cmd: tt.fields.cmd,
 			}
 			if err := ce.Run(); (err != nil) != tt.wantErr {
 				t.Errorf("CmdExecutor.Run() error = %v, wantErr %v", err, tt.wantErr)

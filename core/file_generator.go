@@ -11,6 +11,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type FileDesc struct {
+	Path string
+	Data DataProvider
+}
+
+func (fd FileDesc) String() string {
+	return fd.Path
+}
+
 type DataProvider = func() []byte
 
 type FileGenerator struct {
@@ -19,10 +28,10 @@ type FileGenerator struct {
 	cleaned bool
 }
 
-func NewFileGenerator(path string, data DataProvider) Generator {
-	file := strings.TrimPrefix(path, "/")
+func NewFileGenerator(fd *FileDesc) Generator {
+	file := strings.TrimPrefix(fd.Path, "/")
 	log.Trace("registered file: ", file)
-	return &FileGenerator{file, data, false}
+	return &FileGenerator{file, fd.Data, false}
 }
 
 func (gt *FileGenerator) Run() error {

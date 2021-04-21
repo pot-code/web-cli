@@ -12,9 +12,9 @@ import (
 )
 
 type golangBackendGenerator struct {
-	config *GolangBackendConfig
-	gen    core.Generator
-	recipe *util.GenerationRecipe
+	config   *GolangBackendConfig
+	runner   core.Generator
+	composer *util.TaskComposer
 }
 
 type GolangBackendConfig struct {
@@ -38,38 +38,38 @@ var _ core.Generator = golangBackendGenerator{}
 // 			|-api.go
 // 		go.mod
 func NewGolangBackendGenerator(config *GolangBackendConfig) *golangBackendGenerator {
-	recipe := util.NewGenerationRecipe(
+	composer := util.NewTaskComposer(
 		config.ProjectName,
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "api/api.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendApi(&buf, config.ProjectName, config.Author)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "config/def.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendConfig(&buf, config.ProjectName)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "cmd/main.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendMain(&buf, config.ProjectName, config.Author)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "go.mod",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendMod(&buf, config.ProjectName, config.Author, config.Version)
@@ -77,16 +77,16 @@ func NewGolangBackendGenerator(config *GolangBackendConfig) *golangBackendGenera
 			},
 		},
 	)
-	return &golangBackendGenerator{config: config, recipe: recipe}
+	return &golangBackendGenerator{config: config, composer: composer}
 }
 
 func (gbg golangBackendGenerator) Run() error {
-	log.Debugf("generation tree:\n%s", gbg.recipe.GetGenerationTree())
+	log.Debugf("generation tree:\n%s", gbg.composer.GetGenerationTree())
 	_, err := os.Stat(gbg.config.ProjectName)
 	if os.IsNotExist(err) {
-		gen := gbg.recipe.MakeGenerator()
-		gbg.gen = gen
-		return errors.Wrap(gen.Run(), "failed to generate go backend")
+		runner := gbg.composer.MakeRunner()
+		gbg.runner = runner
+		return errors.Wrap(runner.Run(), "failed to generate go backend")
 	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", gbg.config.ProjectName)
@@ -95,8 +95,8 @@ func (gbg golangBackendGenerator) Run() error {
 }
 
 func (gbg golangBackendGenerator) Cleanup() error {
-	if gbg.gen != nil {
-		gbg.gen.Cleanup()
+	if gbg.runner != nil {
+		gbg.runner.Cleanup()
 	}
 
 	root := gbg.config.ProjectName

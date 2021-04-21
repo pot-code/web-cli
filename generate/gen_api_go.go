@@ -13,9 +13,9 @@ import (
 )
 
 type golangApiGenerator struct {
-	config *GolangApiConfig
-	gen    core.Generator
-	recipe *util.GenerationRecipe
+	config   *GolangApiConfig
+	runner   core.Generator
+	composer *util.TaskComposer
 }
 
 type GolangApiConfig struct {
@@ -40,38 +40,38 @@ var _ core.Generator = golangApiGenerator{}
 // 		service.go
 // 		model.go
 func NewGolangApiGenerator(config *GolangApiConfig) *golangApiGenerator {
-	recipe := util.NewGenerationRecipe(
+	composer := util.NewTaskComposer(
 		path.Join(config.Root, config.PackageName),
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "transport/http.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiHttp(&buf, config.Project, config.Author, config.PackageName, config.Model)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "model.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiModel(&buf, config.PackageName, config.Model)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "repo.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiRepo(&buf, config.PackageName, config.Model)
 				return buf.Bytes()
 			},
 		},
-		&util.GenerationMaterial{
+		&core.FileDesc{
 			Path: "service.go",
-			Provider: func() []byte {
+			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiService(&buf, config.PackageName, config.Model)
@@ -79,17 +79,17 @@ func NewGolangApiGenerator(config *GolangApiConfig) *golangApiGenerator {
 			},
 		},
 	)
-	return &golangApiGenerator{config: config, recipe: recipe}
+	return &golangApiGenerator{config: config, composer: composer}
 }
 
 func (gag golangApiGenerator) Run() error {
-	log.Debugf("generation tree:\n%s", gag.recipe.GetGenerationTree())
+	log.Debugf("generation tree:\n%s", gag.composer.GetGenerationTree())
 	dir := path.Join(gag.config.Root, gag.config.PackageName)
 	_, err := os.Stat(dir)
 	if os.IsNotExist(err) {
-		gen := gag.recipe.MakeGenerator()
-		gag.gen = gen
-		return errors.Wrap(gen.Run(), "failed to generate go api")
+		runner := gag.composer.MakeRunner()
+		gag.runner = runner
+		return errors.Wrap(runner.Run(), "failed to generate go api")
 	}
 	if err == nil {
 		log.Infof("[skipped]'%s' already exists", dir)
@@ -98,8 +98,8 @@ func (gag golangApiGenerator) Run() error {
 }
 
 func (gag golangApiGenerator) Cleanup() error {
-	if gag.gen != nil {
-		gag.gen.Cleanup()
+	if gag.runner != nil {
+		gag.runner.Cleanup()
 	}
 
 	root := gag.config.PackageName
