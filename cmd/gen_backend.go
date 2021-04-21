@@ -74,7 +74,7 @@ func getGenBEConfig(c *cli.Context) (*genBEConfig, error) {
 	if name == "" {
 		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("NAME must be specified"))
 	}
-	if err := util.ValidateProjectName(name); err != nil {
+	if err := util.ValidateVarName(name); err != nil {
 		return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid NAME"))
 	}
 

@@ -11,7 +11,7 @@ var NameExp = `^[_\w][-_\w]*$`
 
 var NameReg = regexp.MustCompile(NameExp)
 
-func ValidateProjectName(name string) error {
+func ValidateVarName(name string) error {
 	if !NameReg.MatchString(name) {
 		return fmt.Errorf("input must be adhere to %s", NameExp)
 	}

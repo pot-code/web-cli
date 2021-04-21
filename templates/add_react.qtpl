@@ -1,0 +1,14 @@
+{% func ReactComponent(name string) %}
+import React from 'react';
+
+export interface {%v name %}Props {
+}
+
+export default function {%v name %}({}: {%v name %}Props) {
+}
+{% endfunc %}
+
+{% func ReactHook(name string) %}
+export default function {%v name %}() {
+}
+{% endfunc %}

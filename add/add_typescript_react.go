@@ -41,7 +41,7 @@ func NewAddTypescriptToReact() *AddTypescriptToReact {
 	return &AddTypescriptToReact{recipe: recipe}
 }
 
-func (atn AddTypescriptToReact) Run() error {
+func (atr AddTypescriptToReact) Run() error {
 	cmd := core.NewCmdExecutor("npm", "i", "-D",
 		"@typescript-eslint/eslint-plugin",
 		"@typescript-eslint/parser",
@@ -63,8 +63,8 @@ func (atn AddTypescriptToReact) Run() error {
 		return errors.Wrap(err, "failed to install dependencies")
 	}
 
-	log.Debugf("generation tree:\n%s", atn.recipe.GetGenerationTree())
-	gen := atn.recipe.MakeGenerator()
-	atn.gen = gen
+	log.Debugf("generation tree:\n%s", atr.recipe.GetGenerationTree())
+	gen := atr.recipe.MakeGenerator()
+	atr.gen = gen
 	return errors.Wrap(gen.Run(), "failed to generate typescript config")
 }

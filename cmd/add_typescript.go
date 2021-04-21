@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/pot-code/web-cli/add"
+	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/util"
 	"github.com/urfave/cli/v2"
 )
@@ -36,11 +37,12 @@ var addTypescriptCmd = &cli.Command{
 			return err
 		}
 
+		var cmd core.Executor
 		if config.Target == "node" {
-			cmd := add.NewAddTypescriptToNode()
-			return cmd.Run()
+			cmd = add.NewAddTypescriptToNode()
+		} else {
+			cmd = add.NewAddTypescriptToReact()
 		}
-		cmd := add.NewAddTypescriptToReact()
 		return cmd.Run()
 	},
 }

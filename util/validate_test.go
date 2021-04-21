@@ -44,7 +44,7 @@ func TestValidateProjectName(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ValidateProjectName(tt.args.name); (err != nil) != tt.wantErr {
+			if err := ValidateVarName(tt.args.name); (err != nil) != tt.wantErr {
 				t.Errorf("ValidateProjectName() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})

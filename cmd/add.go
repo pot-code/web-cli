@@ -7,5 +7,6 @@ var addCmd = &cli.Command{
 	Usage: "add framework support",
 	Subcommands: []*cli.Command{
 		addTypescriptCmd,
+		addReactCmd,
 	},
 }
