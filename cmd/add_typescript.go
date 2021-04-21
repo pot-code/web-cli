@@ -9,14 +9,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const CmdTypescriptName = "typescript"
+const cmdTypescriptName = "typescript"
 
-type AddTypescriptConfig struct {
+type addTypescriptConfig struct {
 	Target string
 }
 
 var addTypescriptCmd = &cli.Command{
-	Name:    CmdTypescriptName,
+	Name:    cmdTypescriptName,
 	Usage:   "add typescript support",
 	Aliases: []string{"ts"},
 	Flags: []cli.Flag{
@@ -31,7 +31,7 @@ var addTypescriptCmd = &cli.Command{
 		config, err := getAddTypescriptConfig(c)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, CmdTypescriptName)
+				cli.ShowCommandHelp(c, cmdTypescriptName)
 			}
 			return err
 		}
@@ -45,15 +45,15 @@ var addTypescriptCmd = &cli.Command{
 	},
 }
 
-func getAddTypescriptConfig(c *cli.Context) (*AddTypescriptConfig, error) {
-	config := &AddTypescriptConfig{}
+func getAddTypescriptConfig(c *cli.Context) (*addTypescriptConfig, error) {
+	config := &addTypescriptConfig{}
 	target := strings.ToLower(c.String("target"))
 	if target == "" {
-		return nil, util.NewCommandError(CmdTypescriptName, fmt.Errorf("target is empty"))
+		return nil, util.NewCommandError(cmdTypescriptName, fmt.Errorf("target is empty"))
 	} else if target == "node" || target == "react" {
 		config.Target = target
 	} else {
-		return nil, util.NewCommandError(CmdTypescriptName, fmt.Errorf("unsupported target '%s'", target))
+		return nil, util.NewCommandError(cmdTypescriptName, fmt.Errorf("unsupported target '%s'", target))
 	}
 	return config, nil
 }

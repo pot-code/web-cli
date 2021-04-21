@@ -11,8 +11,8 @@ var RootCmd = &cli.App{
 	Name:  "web-cli",
 	Usage: "web utils",
 	Commands: []*cli.Command{
-		GenerateCmd,
-		AddCmd,
+		generateCmd,
+		addCmd,
 	},
 	Version: AppVersion,
 	Flags: []cli.Flag{
