@@ -2,13 +2,11 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
@@ -19,12 +17,12 @@ import (
 const cmdApiName = "api"
 
 type genApiConfig struct {
-	GenType     string // generation type
-	PackageName string // go pkg name
-	Project     string
+	GenType     string `name:"type" validate:"required,oneof=go"`    // generation type
+	PackageName string `arg:"0" name:"NAME" validate:"required,var"` // go pkg name
+	ProjectName string
 	Author      string
 	Model       string
-	Root        string // path root under which to generate api
+	Root        string `name:"root" validate:"required,dir"` // path root under which to generate api
 }
 
 var genAPICmd = &cli.Command{
@@ -46,7 +44,8 @@ var genAPICmd = &cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		config, err := getGenApiConfig(c)
+		config := new(genApiConfig)
+		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
 				cli.ShowCommandHelp(c, cmdApiName)
@@ -54,9 +53,23 @@ var genAPICmd = &cli.Command{
 			return err
 		}
 
+		name := strings.ToLower(config.PackageName)
+		name = strings.ReplaceAll(name, "-", "_")
+		log.Debug("transformed module name: ", name)
+		config.PackageName = name
+
 		if config.GenType == "go" {
+			meta, err := util.ParseGoMod("go.mod")
+			if err != nil {
+				return err
+			}
+
+			config.Model = strcase.ToCamel(name)
+			config.Author = meta.Author
+			config.ProjectName = meta.ProjectName
+
 			dir := path.Join(config.Root, config.PackageName)
-			_, err := os.Stat(dir)
+			_, err = os.Stat(dir)
 			if err == nil {
 				log.Infof("[skipped]'%s' already exists", dir)
 				return nil
@@ -80,7 +93,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHttp(&buf, config.Project, config.Author, config.PackageName, config.Model)
+				templates.WriteGoApiHttp(&buf, config.ProjectName, config.Author, config.PackageName, config.Model)
 				return buf.Bytes()
 			},
 		},
@@ -112,44 +125,4 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			},
 		},
 	)
-}
-
-func getGenApiConfig(c *cli.Context) (*genApiConfig, error) {
-	config := &genApiConfig{}
-	name := c.Args().Get(0) // module name
-	if name == "" {
-		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("NAME must be specified"))
-	}
-
-	name = strings.ToLower(name)
-	name = strings.ReplaceAll(name, "-", "_")
-	log.Debug("transformed module name: ", name)
-	if err := util.ValidateVarName(name); err != nil {
-		return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid NAME"))
-	}
-
-	genType := strings.ToLower(c.String("type"))
-	if genType == "" {
-		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("type is empty"))
-	} else if genType == "go" {
-		log.Debugf("opening '%s'", "go.mod")
-		meta, err := util.ParseGoMod("go.mod")
-		if err != nil {
-			return nil, err
-		}
-
-		config.Model = strcase.ToCamel(name)
-		config.Author = meta.Author
-		config.Project = meta.ProjectName
-	} else {
-		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("unsupported type %s", genType))
-	}
-
-	root := c.String("root")
-
-	config.PackageName = name
-	config.GenType = genType
-	config.Root = root
-	log.WithFields(log.Fields{"author": config.Author, "project": config.Project, "model": config.Model, "type": genType, "root": root}).Debugf("parsed meta data")
-	return config, nil
 }

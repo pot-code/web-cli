@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
@@ -17,8 +16,8 @@ import (
 const cmdReactName = "react"
 
 type addReactConfig struct {
-	Hook bool
-	Name string
+	Hook bool   `name:"hook"`
+	Name string `arg:"0" name:"NAME" validate:"required,var"`
 }
 
 var addReactCmd = &cli.Command{
@@ -31,10 +30,12 @@ var addReactCmd = &cli.Command{
 			Name:    "hook",
 			Aliases: []string{"H"},
 			Usage:   "add hook",
+			Value:   false,
 		},
 	},
 	Action: func(c *cli.Context) error {
-		config, err := getAddReactConfig(c)
+		config := new(addReactConfig)
+		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
 				cli.ShowCommandHelp(c, cmdReactName)
@@ -42,11 +43,18 @@ var addReactCmd = &cli.Command{
 			return err
 		}
 
+		name := config.Name
+		name = strings.ReplaceAll(name, "-", "_")
+		log.Debug("preprocessed component name: ", name)
+
 		var cmd core.Generator
 		if config.Hook {
-			cmd = newAddReactHook(config.Name)
+			if !strings.HasPrefix(name, "use") {
+				name = "use" + strcase.ToCamel(name)
+			}
+			cmd = newAddReactHook(name)
 		} else {
-			cmd = newAddReactComponent(config.Name)
+			cmd = newAddReactComponent(strcase.ToCamel(name))
 		}
 
 		err = cmd.Run()
@@ -83,26 +91,4 @@ func newAddReactComponent(name string) core.Generator {
 			},
 		},
 	)
-}
-
-func getAddReactConfig(c *cli.Context) (*addReactConfig, error) {
-	name := c.Args().Get(0)
-	if name == "" {
-		return nil, util.NewCommandError(cmdReactName, fmt.Errorf("NAME must be specified"))
-	}
-	if err := util.ValidateVarName(name); err != nil {
-		return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid NAME"))
-	}
-	name = strings.ReplaceAll(name, "-", "_")
-
-	hook := c.Bool("hook")
-	if hook {
-		name = strcase.ToLowerCamel(name)
-	} else {
-		name = strcase.ToCamel(name)
-	}
-	log.Debug("transformed component name: ", name)
-
-	config := &addReactConfig{Hook: hook, Name: name}
-	return config, nil
 }

@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
-	"strings"
 
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
@@ -14,7 +12,7 @@ import (
 const cmdTypescriptName = "typescript"
 
 type addTypescriptConfig struct {
-	Target string
+	Target string `name:"target" validate:"required,oneof=node react"`
 }
 
 var addTypescriptCmd = &cli.Command{
@@ -24,13 +22,14 @@ var addTypescriptCmd = &cli.Command{
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "target",
-			Aliases: []string{"T"},
+			Aliases: []string{"t"},
 			Usage:   "project target (node/react)",
 			Value:   "node",
 		},
 	},
 	Action: func(c *cli.Context) error {
-		config, err := getAddTypescriptConfig(c)
+		config := new(addTypescriptConfig)
+		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
 				cli.ShowCommandHelp(c, cmdTypescriptName)
@@ -126,17 +125,4 @@ func newAddTypescriptToReact() core.Generator {
 			"typescript",
 		},
 	})
-}
-
-func getAddTypescriptConfig(c *cli.Context) (*addTypescriptConfig, error) {
-	config := &addTypescriptConfig{}
-	target := strings.ToLower(c.String("target"))
-	if target == "" {
-		return nil, util.NewCommandError(cmdTypescriptName, fmt.Errorf("target is empty"))
-	} else if target == "node" || target == "react" {
-		config.Target = target
-	} else {
-		return nil, util.NewCommandError(cmdTypescriptName, fmt.Errorf("unsupported target '%s'", target))
-	}
-	return config, nil
 }

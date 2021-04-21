@@ -2,11 +2,8 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
 	"os"
-	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/core"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
@@ -17,10 +14,10 @@ import (
 const cmdBackendName = "backend"
 
 type genBEConfig struct {
-	GenType     string // generation type
-	ProjectName string // project name
-	Author      string // project author name
-	Version     string // version number
+	GenType     string `name:"type" validate:"required,oneof=go"`    // generation type
+	ProjectName string `arg:"0" name:"NAME" validate:"required,var"` // project name
+	Author      string `name:"author" validate:"required,var"`       // project author name
+	Version     string `name:"version" validate:"required,version"`  // version number
 }
 
 var generateBECmd = &cli.Command{
@@ -49,7 +46,8 @@ var generateBECmd = &cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		config, err := getGenBEConfig(c)
+		config := new(genBEConfig)
+		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
 				cli.ShowCommandHelp(c, cmdBackendName)
@@ -114,44 +112,4 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 			},
 		},
 	)
-}
-
-func getGenBEConfig(c *cli.Context) (*genBEConfig, error) {
-	name := c.Args().Get(0)
-	if name == "" {
-		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("NAME must be specified"))
-	}
-	if err := util.ValidateVarName(name); err != nil {
-		return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid NAME"))
-	}
-
-	author := c.String("author")
-	version := c.String("version")
-	genType := strings.ToLower(c.String("type"))
-	if genType == "" {
-		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("type is empty"))
-	} else if genType == "go" {
-		if author == "" {
-			return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("author is empty"))
-		}
-		if err := util.ValidateUserName(author); err != nil {
-			return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid author name"))
-		}
-		if version == "" {
-			return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("version is empty when type is 'go'"))
-		}
-		if err := util.ValidateVersion(version); err != nil {
-			return nil, util.NewCommandError(cmdBackendName, errors.Wrap(err, "invalid version"))
-		}
-	} else {
-		return nil, util.NewCommandError(cmdBackendName, fmt.Errorf("unsupported type %s", genType))
-	}
-
-	log.WithFields(log.Fields{"author": author, "project": name, "version": version, "type": genType}).Debugf("parsed meta data")
-	return &genBEConfig{
-		GenType:     genType,
-		ProjectName: name,
-		Author:      author,
-		Version:     version,
-	}, nil
 }
