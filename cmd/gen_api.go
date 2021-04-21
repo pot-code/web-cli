@@ -22,7 +22,7 @@ type genApiConfig struct {
 	ProjectName string
 	Author      string
 	Model       string
-	Root        string `name:"root" validate:"required,dir"` // path root under which to generate api
+	Root        string `name:"root" validate:"required"` // path root under which to generate api
 }
 
 var genAPICmd = &cli.Command{
