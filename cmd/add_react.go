@@ -1,13 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/add"
 	"github.com/pot-code/web-cli/core"
+	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -41,14 +42,47 @@ var addReactCmd = &cli.Command{
 			return err
 		}
 
-		var cmd core.Executor
+		var cmd core.Generator
 		if config.Hook {
-			cmd = add.NewAddReactHook(config.Name)
+			cmd = newAddReactHook(config.Name)
 		} else {
-			cmd = add.NewAddReactComponent(config.Name)
+			cmd = newAddReactComponent(config.Name)
 		}
-		return cmd.Run()
+
+		err = cmd.Run()
+		if err != nil {
+			cmd.Cleanup()
+		}
+		return err
 	},
+}
+
+func newAddReactHook(name string) core.Generator {
+	return util.NewTaskComposer("",
+		&core.FileDesc{
+			Path: fmt.Sprintf("%s.%s", name, "ts"),
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactHook(&buf, name)
+				return buf.Bytes()
+			},
+		},
+	)
+}
+
+func newAddReactComponent(name string) core.Generator {
+	return util.NewTaskComposer("",
+		&core.FileDesc{
+			Path: fmt.Sprintf("%s.%s", name, "tsx"),
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactComponent(&buf, name)
+				return buf.Bytes()
+			},
+		},
+	)
 }
 
 func getAddReactConfig(c *cli.Context) (*addReactConfig, error) {

@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/generate"
+	"github.com/pot-code/web-cli/core"
+	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -55,11 +58,13 @@ var generateBECmd = &cli.Command{
 		}
 
 		if config.GenType == "go" {
-			gen := generate.NewGolangBackendGenerator(&generate.GolangBackendConfig{
-				ProjectName: config.ProjectName,
-				Author:      config.Author,
-				Version:     config.Version,
-			})
+			_, err := os.Stat(config.ProjectName)
+			if err == nil {
+				log.Infof("[skipped]'%s' already exists", config.ProjectName)
+				return nil
+			}
+
+			gen := newGolangBackendGenerator(config)
 			if err := gen.Run(); err != nil {
 				gen.Cleanup()
 				return err
@@ -67,6 +72,48 @@ var generateBECmd = &cli.Command{
 		}
 		return nil
 	},
+}
+
+func newGolangBackendGenerator(config *genBEConfig) core.Generator {
+	return util.NewTaskComposer(
+		config.ProjectName,
+		&core.FileDesc{
+			Path: "api/api.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendApi(&buf, config.ProjectName, config.Author)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "config/def.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendConfig(&buf, config.ProjectName)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "cmd/main.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendMain(&buf, config.ProjectName, config.Author)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "go.mod",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendMod(&buf, config.ProjectName, config.Author, config.Version)
+				return buf.Bytes()
+			},
+		},
+	)
 }
 
 func getGenBEConfig(c *cli.Context) (*genBEConfig, error) {

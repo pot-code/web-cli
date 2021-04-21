@@ -1,12 +1,16 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"path"
 	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/generate"
+	"github.com/pot-code/web-cli/core"
+	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -51,13 +55,14 @@ var genAPICmd = &cli.Command{
 		}
 
 		if config.GenType == "go" {
-			gen := generate.NewGolangApiGenerator(&generate.GolangApiConfig{
-				PackageName: config.PackageName,
-				Project:     config.Project,
-				Author:      config.Author,
-				Model:       config.Model,
-				Root:        config.Root,
-			})
+			dir := path.Join(config.Root, config.PackageName)
+			_, err := os.Stat(dir)
+			if err == nil {
+				log.Infof("[skipped]'%s' already exists", dir)
+				return nil
+			}
+
+			gen := newGolangApiGenerator(config)
 			if err := gen.Run(); err != nil {
 				gen.Cleanup()
 				return err
@@ -65,6 +70,48 @@ var genAPICmd = &cli.Command{
 		}
 		return nil
 	},
+}
+
+func newGolangApiGenerator(config *genApiConfig) core.Generator {
+	return util.NewTaskComposer(
+		path.Join(config.Root, config.PackageName),
+		&core.FileDesc{
+			Path: "transport/http.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoApiHttp(&buf, config.Project, config.Author, config.PackageName, config.Model)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "model.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoApiModel(&buf, config.PackageName, config.Model)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "repo.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoApiRepo(&buf, config.PackageName, config.Model)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "service.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoApiService(&buf, config.PackageName, config.Model)
+				return buf.Bytes()
+			},
+		},
+	)
 }
 
 func getGenApiConfig(c *cli.Context) (*genApiConfig, error) {

@@ -1,11 +1,12 @@
 package cmd
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
 
-	"github.com/pot-code/web-cli/add"
 	"github.com/pot-code/web-cli/core"
+	"github.com/pot-code/web-cli/templates"
 	"github.com/pot-code/web-cli/util"
 	"github.com/urfave/cli/v2"
 )
@@ -39,9 +40,9 @@ var addTypescriptCmd = &cli.Command{
 
 		var cmd core.Generator
 		if config.Target == "node" {
-			cmd = add.NewAddTypescriptToNode()
+			cmd = newAddTypescriptToNode()
 		} else {
-			cmd = add.NewAddTypescriptToReact()
+			cmd = newAddTypescriptToReact()
 		}
 
 		err = cmd.Run()
@@ -50,6 +51,81 @@ var addTypescriptCmd = &cli.Command{
 		}
 		return err
 	},
+}
+
+func newAddTypescriptToNode() core.Generator {
+	return util.NewTaskComposer("",
+		&core.FileDesc{
+			Path: ".eslintrc.js",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteNodeEslintrc(&buf)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "tsconfig.json",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteNodeTsConfig(&buf)
+				return buf.Bytes()
+			},
+		},
+	).AddCommand(&core.Command{
+		Bin: "npm",
+		Args: []string{"i", "-D",
+			"typescript",
+			"eslint",
+			"@typescript-eslint/eslint-plugin",
+			"eslint-plugin-prettier",
+			"@typescript-eslint/parser",
+			"eslint-config-prettier",
+			"eslint-plugin-import",
+		},
+	})
+}
+
+func newAddTypescriptToReact() core.Generator {
+	return util.NewTaskComposer("",
+		&core.FileDesc{
+			Path: ".eslintrc.js",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactEslintrc(&buf)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "tsconfig.json",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactTsConfig(&buf)
+				return buf.Bytes()
+			},
+		},
+	).AddCommand(&core.Command{
+		Bin: "npm",
+		Args: []string{"i", "-D",
+			"@typescript-eslint/eslint-plugin",
+			"@typescript-eslint/parser",
+			"eslint",
+			"eslint-config-airbnb",
+			"eslint-config-prettier",
+			"eslint-import-resolver-typescript",
+			"eslint-plugin-import",
+			"eslint-plugin-jsx-a11y",
+			"eslint-plugin-prettier",
+			"eslint-plugin-react",
+			"eslint-plugin-react-hooks",
+			"prettier",
+			"prettier-eslint",
+			"typescript",
+		},
+	})
 }
 
 func getAddTypescriptConfig(c *cli.Context) (*addTypescriptConfig, error) {
