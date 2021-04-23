@@ -1,4 +1,4 @@
-{% func GoApiModel(pkg, model string) %}
+{% func GoApiModel(pkg, model string) -%}
 package {%v pkg %}
 
 import (
@@ -18,7 +18,7 @@ type {%v model %}Repository interface {
 }
 {% endfunc %}
 
-{% func GoApiRepo(pkg, model string) %}
+{% func GoApiRepo(pkg, model string) -%}
 package {%v pkg %}
 
 import (
@@ -44,7 +44,7 @@ func (repo {%v model %}Store) Get{%v model %}ById(ctx context.Context, id string
 }
 {% endfunc %}
 
-{% func GoApiService(pkg, model string) %}
+{% func GoApiService(pkg, model string) -%}
 package {%v pkg %}
 
 type {%v model %}Service struct {
@@ -58,7 +58,7 @@ func New{%v model %}Service(repo {%v model %}Repository) *{%v model %}Service {
 }
 {% endfunc %}
 
-{% func GoApiHttp(project, author, pkg, model string) %}
+{% func GoApiHttp(project, author, pkg, model string) -%}
 package transport
 
 import (

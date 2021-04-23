@@ -82,6 +82,8 @@ func newAddTypescriptToNode() core.Generator {
 			"@typescript-eslint/parser",
 			"eslint-config-prettier",
 			"eslint-plugin-import",
+			"prettier",
+			"prettier-eslint",
 		},
 	})
 }

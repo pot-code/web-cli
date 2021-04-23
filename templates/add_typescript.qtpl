@@ -1,4 +1,4 @@
-{% func NodeEslintrc() %}
+{% func NodeEslintrc() -%}
 module.exports = {
   parser: '@typescript-eslint/parser',
   parserOptions: {
@@ -22,15 +22,15 @@ module.exports = {
     'import/order': [
       'error',
       {
-        groups: ['builtin', 'external', 'internal', 'sibling', 'parent'],
-        'newlines-between': 'always-and-inside-groups',
+        groups: ['builtin', 'external', 'internal', 'parent', 'sibling'],
+        'newlines-between': 'always',
       },
     ],
   },
 };
 {% endfunc %}
 
-{% func ReactEslintrc() %}
+{% func ReactEslintrc() -%}
 module.exports = {
   env: {
     browser: true,
@@ -51,11 +51,14 @@ module.exports = {
     // built-in
     'no-unused-vars': 'off',
     'no-use-before-define': 'off',
+    'no-underscore-dangle': 'off',
 
     // react
     'react/jsx-filename-extension': [1, { extensions: ['.tsx', '.jsx', '.js'] }],
     'react/react-in-jsx-scope': 'off',
     'react/jsx-props-no-spreading': 'off',
+    'react/destructuring-assignment': 'off',
+    'react/require-default-props': 'off',
 
     // import
     'import/extensions': 'off',
@@ -91,7 +94,7 @@ module.exports = {
 };
 {% endfunc %}
 
-{% func ReactTsConfig() %}
+{% func ReactTsConfig() -%}
 {
   "compilerOptions": {
     "target": "es5",
@@ -123,7 +126,7 @@ module.exports = {
 }
 {% endfunc %}
 
-{% func NodeTsConfig() %}
+{% func NodeTsConfig() -%}
 {
   "compilerOptions": {
     "module": "commonjs",

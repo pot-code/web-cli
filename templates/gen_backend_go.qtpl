@@ -1,4 +1,4 @@
-{% func GoBackendApi(name string, author string) %}
+{% func GoBackendApi(name string, author string) -%}
 package api
 
 import (
@@ -80,7 +80,7 @@ func Http(
 }
 {% endfunc %}
 
-{% func GoBackendConfig(name string) %}
+{% func GoBackendConfig(name string) -%}
 package cfg
 
 import (
@@ -147,7 +147,7 @@ func RegisterFlags() {
 }
 {% endfunc %}
 
-{% func GoBackendMain(name string, author string) %}
+{% func GoBackendMain(name string, author string) -%}
 package main
 
 import (
@@ -218,7 +218,7 @@ func main() {
 }
 {% endfunc %}
 
-{% func GoBackendMod(name string, author string, version string) %}
+{% func GoBackendMod(name string, author string, version string) -%}
 module github.com/{%s author %}/{%s name %}
 
 go {%s version %}
