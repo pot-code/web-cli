@@ -27,7 +27,7 @@ type genApiConfig struct {
 
 var genAPICmd = &cli.Command{
 	Name:      cmdApiName,
-	Usage:     "generate an api producer",
+	Usage:     "generate an api module",
 	ArgsUsage: "NAME",
 	Flags: []cli.Flag{
 		&cli.StringFlag{

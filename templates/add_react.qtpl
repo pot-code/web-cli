@@ -1,11 +1,21 @@
-{% func ReactComponent(name string) -%}
+{% func ReactComponent(name string, style string) -%}
+{% if style != "" -%}
 import React from 'react';
+
+import './{%v style %}'
+{% else -%}
+import React from 'react';
+{% endif -%}
 
 export interface {%v name %}Props {
 }
 
 export default function {%v name %}({}: {%v name %}Props) {
 }
+{% endfunc %}
+
+{% func ReactSCSS(name string) -%}
+.{%v name %}{}
 {% endfunc %}
 
 {% func ReactHook(name string) -%}

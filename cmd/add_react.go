@@ -16,8 +16,9 @@ import (
 const cmdReactName = "react"
 
 type addReactConfig struct {
-	Hook bool   `name:"hook"`
-	Name string `arg:"0" name:"NAME" validate:"required,var"`
+	Hook  bool   `name:"hook"`
+	Style bool   `name:"style"`
+	Name  string `arg:"0" name:"NAME" validate:"required,var"`
 }
 
 var addReactCmd = &cli.Command{
@@ -30,6 +31,12 @@ var addReactCmd = &cli.Command{
 			Name:    "hook",
 			Aliases: []string{"H"},
 			Usage:   "add hook",
+			Value:   false,
+		},
+		&cli.BoolFlag{
+			Name:    "style",
+			Aliases: []string{"s"},
+			Usage:   "add scss module style",
 			Value:   false,
 		},
 	},
@@ -54,7 +61,7 @@ var addReactCmd = &cli.Command{
 			}
 			cmd = newAddReactHook(strcase.ToLowerCamel(name))
 		} else {
-			cmd = newAddReactComponent(strcase.ToCamel(name))
+			cmd = newAddReactComponent(strcase.ToCamel(name), config.Style)
 		}
 
 		err = cmd.Run()
@@ -79,16 +86,33 @@ func newAddReactHook(name string) core.Generator {
 	)
 }
 
-func newAddReactComponent(name string) core.Generator {
-	return util.NewTaskComposer("",
+func newAddReactComponent(name string, style bool) core.Generator {
+	var (
+		stylePath string
+		desc      []*core.FileDesc
+	)
+	if style {
+		styleName := strcase.ToKebab(name)
+		stylePath = fmt.Sprintf("%s.%s.%s", name, "module", "scss")
+		desc = append(desc, &core.FileDesc{
+			Path: stylePath,
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactSCSS(&buf, styleName)
+				return buf.Bytes()
+			},
+		})
+	}
+	desc = append(desc,
 		&core.FileDesc{
 			Path: fmt.Sprintf("%s.%s", name, "tsx"),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteReactComponent(&buf, name)
+				templates.WriteReactComponent(&buf, name, stylePath)
 				return buf.Bytes()
 			},
-		},
-	)
+		})
+	return util.NewTaskComposer("", desc...)
 }
