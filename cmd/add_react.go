@@ -59,9 +59,9 @@ var addReactCmd = &cli.Command{
 			if !strings.HasPrefix(name, "use") {
 				name = "use" + strcase.ToCamel(name)
 			}
-			cmd = newAddReactHook(strcase.ToLowerCamel(name))
+			cmd = addReactHook(strcase.ToLowerCamel(name))
 		} else {
-			cmd = newAddReactComponent(strcase.ToCamel(name), config.Style)
+			cmd = addReactComponent(strcase.ToCamel(name), config.Style)
 		}
 
 		err = cmd.Run()
@@ -72,7 +72,7 @@ var addReactCmd = &cli.Command{
 	},
 }
 
-func newAddReactHook(name string) core.Generator {
+func addReactHook(name string) core.Generator {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: fmt.Sprintf("%s.%s", name, "ts"),
@@ -86,7 +86,7 @@ func newAddReactHook(name string) core.Generator {
 	)
 }
 
-func newAddReactComponent(name string, style bool) core.Generator {
+func addReactComponent(name string, style bool) core.Generator {
 	var (
 		stylePath string
 		desc      []*core.FileDesc
