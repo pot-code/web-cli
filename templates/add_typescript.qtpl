@@ -10,7 +10,6 @@ module.exports = {
   root: true,
   env: {
     node: true,
-    jest: true,
   },
   ignorePatterns: ['.eslintrc.js'],
   rules: {
@@ -34,17 +33,17 @@ module.exports = {
 module.exports = {
   env: {
     browser: true,
-    es2021: true
+    es2021: true,
   },
-  extends: ['airbnb', 'plugin:react/recommended', 'plugin:react-hooks/recommended', 'prettier'],
+  extends: ['airbnb', 'plugin:react-hooks/recommended', 'prettier'],
   parser: '@typescript-eslint/parser',
   ignorePatterns: ['.eslintrc.js'],
   parserOptions: {
     ecmaFeatures: {
-      jsx: true
+      jsx: true,
     },
     ecmaVersion: 12,
-    sourceType: 'module'
+    sourceType: 'module',
   },
   plugins: ['react', '@typescript-eslint', 'import'],
   rules: {
@@ -52,16 +51,24 @@ module.exports = {
     'no-unused-vars': 'off',
     'no-use-before-define': 'off',
     'no-underscore-dangle': 'off',
+    'no-param-reassign': 'off',
+    'no-bitwise': 'off',
+    'no-plusplus': 'off',
+    'no-shadow': 'off',
+
+    '@typescript-eslint/no-shadow': ['error'],
 
     // react
     'react/jsx-filename-extension': [1, { extensions: ['.tsx', '.jsx', '.js'] }],
     'react/react-in-jsx-scope': 'off',
     'react/jsx-props-no-spreading': 'off',
-    'react/destructuring-assignment': 'off',
     'react/require-default-props': 'off',
+    'react/prop-types': 'off',
+    'react/no-array-index-key': 'warn',
 
     // import
     'import/extensions': 'off',
+    'import/no-extraneous-dependencies': 'off',
     'import/order': [
       'error',
       {
@@ -70,27 +77,27 @@ module.exports = {
         pathGroups: [
           {
             pattern: 'react',
-            group: 'builtin'
+            group: 'builtin',
           },
           {
             pattern: 'next/**',
-            group: 'builtin'
-          }
+            group: 'builtin',
+          },
         ],
-        pathGroupsExcludedImportTypes: ['builtin', 'object']
-      }
-    ]
+        pathGroupsExcludedImportTypes: ['builtin', 'object'],
+      },
+    ],
   },
   settings: {
     'import/parsers': {
-      '@typescript-eslint/parser': ['.ts', '.tsx']
+      '@typescript-eslint/parser': ['.ts', '.tsx'],
     },
     'import/resolver': {
       typescript: {
-        project: 'tsconfig.json'
-      }
-    }
-  }
+        project: 'tsconfig.json',
+      },
+    },
+  },
 };
 {% endfunc %}
 

@@ -24,7 +24,7 @@ var addTypescriptCmd = &cli.Command{
 			Name:    "target",
 			Aliases: []string{"t"},
 			Usage:   "project target (node/react)",
-			Value:   "node",
+			Value:   "react",
 		},
 	},
 	Action: func(c *cli.Context) error {
@@ -39,9 +39,9 @@ var addTypescriptCmd = &cli.Command{
 
 		var cmd core.Generator
 		if config.Target == "node" {
-			cmd = newAddTypescriptToNode()
+			cmd = addTypescriptToNode()
 		} else {
-			cmd = newAddTypescriptToReact()
+			cmd = addTypescriptToReact()
 		}
 
 		err = cmd.Run()
@@ -52,7 +52,7 @@ var addTypescriptCmd = &cli.Command{
 	},
 }
 
-func newAddTypescriptToNode() core.Generator {
+func addTypescriptToNode() core.Generator {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: ".eslintrc.js",
@@ -73,8 +73,8 @@ func newAddTypescriptToNode() core.Generator {
 			},
 		},
 	).AddCommand(&core.Command{
-		Bin: "npm",
-		Args: []string{"i", "-D",
+		Bin: "yarn",
+		Args: []string{"add", "-D",
 			"typescript",
 			"eslint",
 			"@typescript-eslint/eslint-plugin",
@@ -88,7 +88,7 @@ func newAddTypescriptToNode() core.Generator {
 	})
 }
 
-func newAddTypescriptToReact() core.Generator {
+func addTypescriptToReact() core.Generator {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: ".eslintrc.js",
@@ -109,8 +109,9 @@ func newAddTypescriptToReact() core.Generator {
 			},
 		},
 	).AddCommand(&core.Command{
-		Bin: "npm",
-		Args: []string{"i", "-D",
+		Bin: "yarn",
+		Args: []string{"add", "-D",
+			"@types/react",
 			"@typescript-eslint/eslint-plugin",
 			"@typescript-eslint/parser",
 			"eslint",
