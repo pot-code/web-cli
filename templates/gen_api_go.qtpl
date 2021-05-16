@@ -35,12 +35,15 @@ func New{%v model %}Repository() *{%v model %}Store {
 }
 
 func (repo {%v model %}Store) Save{%v model %}(ctx context.Context, entity *{%v model %}) error {
+	panic("not implemented")
 }
 
 func (repo {%v model %}Store) Update{%v model %}Status(ctx context.Context, id string, status int) error {
+	panic("not implemented")
 }
 
 func (repo {%v model %}Store) Get{%v model %}ById(ctx context.Context, id string) (*{%v model %}, error) {
+	panic("not implemented")
 }
 {% endfunc %}
 

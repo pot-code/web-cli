@@ -1,43 +1,86 @@
-{% func GoBackendApi(name string, author string) -%}
-package api
+{% func GoBackendCmdHttp(projectName string, author string) -%}
+package cmd
 
 import (
+	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
+	"time"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
-	cfg "github.com/{%s author %}/{%s name %}/config"
+	cfg "github.com/{%s author %}/{%s projectName %}/config"
 	gobit "github.com/pot-code/gobit/pkg"
+	"github.com/pot-code/gobit/pkg/api"
 	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/logging"
 	"github.com/pot-code/gobit/pkg/middleware"
 	"github.com/pot-code/gobit/pkg/util"
-	"github.com/pot-code/gobit/pkg/uuid"
 	"go.uber.org/zap"
 	"golang.org/x/text/language"
 )
 
-// Serve create http transport server
-func Http(
+func Serve(envPrefix string) {
+	cfg.RegisterFlags()
+	option := new(cfg.AppConfig)
+	if err := util.ParseConfig(envPrefix, option); err != nil {
+		log.Fatal(err)
+	}
+
+	logger, err := logging.NewLogger(&logging.LoggerConfig{
+		FilePath: option.Logging.FilePath,
+		Level:    option.Logging.Level,
+		AppID:    option.AppID,
+		Env:      option.Env,
+	})
+	if err != nil {
+		log.Fatalf("failed to create logger: %s\n", err)
+	}
+	defer logger.Sync()
+
+	dbConn, err := db.GetSqlxDB(&db.DBConfig{
+		User:     option.Database.User,
+		Password: option.Database.Password,
+		MaxConn:  option.Database.MaxConn,
+		Protocol: option.Database.Protocol,
+		Driver:   option.Database.Driver,
+		Host:     option.Database.Host,
+		Port:     option.Database.Port,
+		Query:    append(option.Database.Query, "application_name="+option.AppID),
+		Schema:   option.Database.Schema,
+		Debug:    strings.ToLower(option.Logging.Level) == "debug",
+	}, logger)
+	if err != nil {
+		log.Fatalf("failed to create DB connection: %s\n", err)
+	}
+	logger.Debug("create database instance", zap.String("db.driver", option.Database.Driver),
+		zap.String("db.schema", option.Database.Schema),
+		zap.String("db.host", option.Database.Host),
+		zap.Int("db.port", option.Database.Port),
+	)
+
+	server := newHttpServer(option, dbConn, logger)
+
+	util.CleanUp(10*time.Second, func(ctx context.Context) {
+		logger.Sync()
+		dbConn.Close(ctx)
+		if err := server.Shutdown(ctx); err != nil {
+			log.Fatal(err)
+		}
+	})
+}
+
+// Http create http transport server
+func newHttpServer(
 	option *cfg.AppConfig,
 	conn db.SqlxInterface,
 	logger *zap.Logger,
 ) *echo.Echo {
-	var (
-		app = echo.New()
-		uid = uuid.NewGoUUIDGenerator()
-	)
-
-	jwtValidateKey, err := ioutil.ReadFile(option.Security.PublicKey)
-	if err != nil {
-		log.Fatal("failed to load public key: ", err)
-	}
+	var app = echo.New()
 
 	if option.Env == gobit.EnvDevelop {
-		util.RegisterProfileEndpoints(app)
+		api.RegisterProfileEndpoints(app)
 	}
 
 	app.Use(middleware.Logging(logger, middleware.LoggingConfig{
@@ -46,13 +89,8 @@ func Http(
 		},
 	}))
 
-	accessTokenMiddleware := middleware.VerifyAccessToken(middleware.ValidateTokenOption{
-		Secret:    jwtValidateKey,
-		Algorithm: jwt.SigningMethodRS256,
-	})
-
-	util.CreateEndpoint(app,
-		&util.Endpoint{
+	api.CreateEndpoint(app,
+		&api.Endpoint{
 			ApiVersion: "api",
 			Middlewares: []echo.MiddlewareFunc{
 				middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 3}),
@@ -60,17 +98,24 @@ func Http(
 				echo_middleware.CORSWithConfig(echo_middleware.CORSConfig{
 					AllowOrigins: option.Security.CORS,
 				}),
-				accessTokenMiddleware,
+				middleware.AbortRequest(middleware.AbortRequestOption{
+					Timeout: option.Security.RequestTimeout,
+				}),
 				echo_middleware.RequestID(),
 				middleware.ParseAcceptLanguage([]language.Tag{
 					language.English,
 					language.Chinese,
 				}),
 			},
-			Groups: []*util.ApiGroup{},
+			Groups: []*api.ApiGroup{
+				{
+					Prefix: "/user",
+					Routes: []*api.Route{},
+				},
+			},
 		})
 
-	util.PrintRoutes(app, logger)
+	api.PrintRoutes(app, logger)
 	go func() {
 		if err := app.Start(fmt.Sprintf("%s:%d", option.Host, option.Port)); err != nil {
 			log.Fatal(err)
@@ -80,11 +125,12 @@ func Http(
 }
 {% endfunc %}
 
-{% func GoBackendConfig(name string) -%}
+{% func GoBackendConfig(projectName string) -%}
 package cfg
 
 import (
 	"runtime"
+	"time"
 
 	gobit "github.com/pot-code/gobit/pkg"
 	"github.com/spf13/pflag"
@@ -112,15 +158,16 @@ type AppConfig struct {
 		Level    string `mapstructure:"level" yaml:"level" validate:"oneof=debug info warn error"` // global logging level
 	} `mapstructure:"logging" yaml:"logging"`
 	Security struct {
-		PublicKey string   `mapstructure:"public_key" yaml:"public_key" validate:"required"` // jwt public key path
-		CORS      []string `mapstructure:"cors" yaml:"cors"`                                 // cors domains
+		PublicKey      string        `mapstructure:"public_key" yaml:"public_key" validate:"required"` // jwt public key path
+		CORS           []string      `mapstructure:"cors" yaml:"cors"`                                 // cors domains
+		RequestTimeout time.Duration `mapstructure:"request_timeout" yaml:"request_timeout"`           // request timeout
 	} `mapstructure:"security" yaml:"security"`
 }
 
 func RegisterFlags() {
 	// common
 	pflag.String("host", "", "binding address")
-	pflag.String("app_id", "{%s name %}", "application identifier (required)")
+	pflag.String("app_id", "{%s projectName %}", "application identifier (required)")
 	pflag.String("env", gobit.EnvDevelop, "runtime environment, can be 'develop' or 'production'")
 	pflag.Int("port", 8081, "listening port")
 
@@ -144,82 +191,25 @@ func RegisterFlags() {
 	// security
 	pflag.String("security.public_key", "", "jwt public key path (required)")
 	pflag.StringSlice("security.cors", []string{"*"}, "cors domains")
+	pflag.Duration("security.request_timeout", 30*time.Second, "abort the request after the timeout")
 }
 {% endfunc %}
 
-{% func GoBackendMain(name string, author string) -%}
+{% func GoBackendMain(projectName string, author string) -%}
 package main
 
-import (
-	"context"
-	"log"
-	"time"
-
-	"github.com/{%s author %}/{%s name %}/api"
-	cfg "github.com/{%s author %}/{%s name %}/config"
-	gobit "github.com/pot-code/gobit/pkg"
-	"github.com/pot-code/gobit/pkg/db"
-	"github.com/pot-code/gobit/pkg/logging"
-	"github.com/pot-code/gobit/pkg/util"
-	"go.uber.org/zap"
-)
+import "github.com/{%s author %}/{%s projectName %}/cmd"
 
 // EnvPrefix env prefix for viper, injected by build flags
 var EnvPrefix string
 
 func main() {
-	option := new(cfg.AppConfig)
-	cfg.RegisterFlags()
-	if err := util.ParseConfig(EnvPrefix, option); err != nil {
-		log.Fatal(err)
-	}
-
-	logger, err := logging.NewLogger(&logging.LoggerConfig{
-		FilePath: option.Logging.FilePath,
-		Level:    option.Logging.Level,
-		AppID:    option.AppID,
-		Env:      option.Env,
-	})
-	if err != nil {
-		log.Fatalf("failed to create logger::%s", err)
-	}
-
-	dbConn, err := db.GetSqlxDB(&db.DBConfig{
-		User:     option.Database.User,
-		Password: option.Database.Password,
-		MaxConn:  option.Database.MaxConn,
-		Protocol: option.Database.Protocol,
-		Driver:   option.Database.Driver,
-		Host:     option.Database.Host,
-		Port:     option.Database.Port,
-		Query:    append(option.Database.Query, "application_name="+option.AppID),
-		Schema:   option.Database.Schema,
-		Debug:    option.Env == gobit.EnvDevelop,
-	}, logger)
-	if err != nil {
-		log.Fatalf("failed to create DB connection::%s", err)
-	}
-	logger.Info("connected to database", zap.String("db.driver", option.Database.Driver),
-		zap.String("db.schema", option.Database.Schema),
-		zap.String("db.host", option.Database.Host),
-		zap.Int("db.port", option.Database.Port),
-	)
-
-	server := api.Http(option, dbConn, logger)
-
-	// clean up
-	util.CleanUp(10*time.Second, func(ctx context.Context) {
-		logger.Sync()
-		dbConn.Close(ctx)
-		if err := server.Shutdown(ctx); err != nil {
-			log.Fatal(err)
-		}
-	})
+	cmd.Serve(EnvPrefix)
 }
 {% endfunc %}
 
-{% func GoBackendMod(name string, author string, version string) -%}
-module github.com/{%s author %}/{%s name %}
+{% func GoBackendMod(projectName string, author string, version string) -%}
+module github.com/{%s author %}/{%s projectName %}
 
 go {%s version %}
 

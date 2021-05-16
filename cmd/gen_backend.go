@@ -76,11 +76,11 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 	return util.NewTaskComposer(
 		config.ProjectName,
 		&core.FileDesc{
-			Path: "api/api.go",
+			Path: "cmd/http.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendApi(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendCmdHttp(&buf, config.ProjectName, config.Author)
 				return buf.Bytes()
 			},
 		},
@@ -94,7 +94,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 			},
 		},
 		&core.FileDesc{
-			Path: "cmd/main.go",
+			Path: "main.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
