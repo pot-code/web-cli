@@ -1,0 +1,13 @@
+{% func JestBabelrc() -%}
+{
+	"presets": [
+		"next/babel"
+	]
+}
+{% endfunc %}
+
+{% func JestConfig() -%}
+module.exports = {
+  testPathIgnorePatterns: ['<rootDir>/.next/', '<rootDir>/node_modules/'],
+};
+{% endfunc %}
