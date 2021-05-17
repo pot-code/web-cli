@@ -55,6 +55,7 @@ module.exports = {
     'no-bitwise': 'off',
     'no-plusplus': 'off',
     'no-shadow': 'off',
+    camelcase: 'off',
 
     '@typescript-eslint/no-shadow': ['error'],
 
