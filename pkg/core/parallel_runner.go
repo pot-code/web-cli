@@ -36,11 +36,11 @@ func NewParallelRunner(tasks ...Executor) *ParallelRunner {
 func (pr ParallelRunner) Run() error {
 	start := time.Now()
 
-	if err := pr.runCommands(); err != nil {
+	if err := pr.runGenerators(); err != nil {
 		return err
 	}
 
-	if err := pr.runGenerators(); err != nil {
+	if err := pr.runCommands(); err != nil {
 		return err
 	}
 

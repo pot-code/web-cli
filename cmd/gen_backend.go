@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"os"
+	"path"
 
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
@@ -85,7 +86,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 			},
 		},
 		&core.FileDesc{
-			Path: "config/def.go",
+			Path: "cmd/config.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
@@ -111,5 +112,9 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 				return buf.Bytes()
 			},
 		},
-	)
+	).AddCommand(&core.Command{
+		Bin:  "go",
+		Args: []string{"mod", "tidy"},
+		Dir:  path.Join("./" + config.ProjectName),
+	})
 }
