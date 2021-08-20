@@ -95,7 +95,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHttp(&buf, config.ProjectName, config.Author, config.ModuleName, config.ModelName)
+				templates.WriteGoApiHttp(&buf, config.ProjectName, config.Author, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},
@@ -104,7 +104,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiModel(&buf, config.ModuleName, config.ModelName)
+				templates.WriteGoApiModel(&buf, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},
@@ -113,7 +113,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiRepo(&buf, config.ModuleName, config.ModelName)
+				templates.WriteGoApiRepo(&buf, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},
@@ -122,7 +122,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiService(&buf, config.ModuleName, config.ModelName)
+				templates.WriteGoApiService(&buf, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},
