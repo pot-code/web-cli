@@ -18,17 +18,18 @@ const cmdApiName = "api"
 
 type genApiConfig struct {
 	GenType     string `name:"type" validate:"required,oneof=go"`    // generation type
-	PackageName string `arg:"0" name:"NAME" validate:"required,var"` // go pkg name
+	ModuleName  string `arg:"0" name:"NAME" validate:"required,var"` // go pkg name
+	PackagePath string
 	ProjectName string
+	ModelName   string
 	Author      string
-	Model       string
 	Root        string `name:"root" validate:"required"` // path root under which to generate api
 }
 
 var genAPICmd = &cli.Command{
 	Name:      cmdApiName,
 	Usage:     "generate an api module",
-	ArgsUsage: "NAME",
+	ArgsUsage: "MODULE_NAME",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "type",
@@ -39,7 +40,7 @@ var genAPICmd = &cli.Command{
 		&cli.StringFlag{
 			Name:    "root",
 			Aliases: []string{"r"},
-			Usage:   "generation root",
+			Usage:   "root directory",
 			Value:   "api",
 		},
 	},
@@ -53,10 +54,9 @@ var genAPICmd = &cli.Command{
 			return err
 		}
 
-		name := strings.ToLower(config.PackageName)
-		name = strings.ReplaceAll(name, "-", "_")
-		log.Debug("transformed module name: ", name)
-		config.PackageName = name
+		pkgName := strings.ReplaceAll(config.ModuleName, "-", "_")
+		pkgName = strcase.ToSnake(pkgName)
+		config.PackagePath = pkgName
 
 		if config.GenType == "go" {
 			meta, err := util.ParseGoMod("go.mod")
@@ -64,11 +64,13 @@ var genAPICmd = &cli.Command{
 				return err
 			}
 
-			config.Model = strcase.ToCamel(name)
+			config.ModelName = strcase.ToCamel(pkgName)
+			log.Debug("generated module name: ", config.ModelName)
 			config.Author = meta.Author
 			config.ProjectName = meta.ProjectName
 
-			dir := path.Join(config.Root, config.PackageName)
+			dir := path.Join(config.Root, config.PackagePath)
+			log.Debug("output path: ", dir)
 			_, err = os.Stat(dir)
 			if err == nil {
 				log.Infof("[skipped]'%s' already exists", dir)
@@ -87,13 +89,13 @@ var genAPICmd = &cli.Command{
 
 func newGolangApiGenerator(config *genApiConfig) core.Generator {
 	return util.NewTaskComposer(
-		path.Join(config.Root, config.PackageName),
+		path.Join(config.Root, config.PackagePath),
 		&core.FileDesc{
 			Path: "transport/http.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHttp(&buf, config.ProjectName, config.Author, config.PackageName, config.Model)
+				templates.WriteGoApiHttp(&buf, config.ProjectName, config.Author, config.ModuleName, config.ModelName)
 				return buf.Bytes()
 			},
 		},
@@ -102,7 +104,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiModel(&buf, config.PackageName, config.Model)
+				templates.WriteGoApiModel(&buf, config.ModuleName, config.ModelName)
 				return buf.Bytes()
 			},
 		},
@@ -111,7 +113,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiRepo(&buf, config.PackageName, config.Model)
+				templates.WriteGoApiRepo(&buf, config.ModuleName, config.ModelName)
 				return buf.Bytes()
 			},
 		},
@@ -120,7 +122,7 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiService(&buf, config.PackageName, config.Model)
+				templates.WriteGoApiService(&buf, config.ModuleName, config.ModelName)
 				return buf.Bytes()
 			},
 		},
