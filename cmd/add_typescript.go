@@ -73,7 +73,7 @@ func addTypescriptToNode() core.Generator {
 			},
 		},
 	).AddCommand(&core.Command{
-		Bin: "yarn",
+		Bin: "npm",
 		Args: []string{"add", "-D",
 			"typescript",
 			"eslint",
@@ -109,7 +109,7 @@ func addTypescriptToReact() core.Generator {
 			},
 		},
 	).AddCommand(&core.Command{
-		Bin: "yarn",
+		Bin: "npm",
 		Args: []string{"add", "-D",
 			"@types/react",
 			"@typescript-eslint/eslint-plugin",

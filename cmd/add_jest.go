@@ -56,7 +56,7 @@ func addJestToReact() core.Generator {
 			},
 		},
 	).AddCommand(&core.Command{
-		Bin: "yarn",
+		Bin: "npm",
 		Args: []string{"add", "-D",
 			"@babel/core",
 			"babel-jest",
