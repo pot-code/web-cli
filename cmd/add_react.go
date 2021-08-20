@@ -13,8 +13,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const cmdReactName = "react"
-
 type addReactConfig struct {
 	Hook  bool   `name:"hook"`
 	Style bool   `name:"style"`
@@ -22,7 +20,7 @@ type addReactConfig struct {
 }
 
 var addReactCmd = &cli.Command{
-	Name:      cmdReactName,
+	Name:      "react",
 	Usage:     "add React components",
 	Aliases:   []string{"r"},
 	ArgsUsage: "NAME",
@@ -39,13 +37,28 @@ var addReactCmd = &cli.Command{
 			Usage:   "add scss module style",
 			Value:   false,
 		},
+		&cli.BoolFlag{
+			Name:    "emotion",
+			Aliases: []string{"e"},
+			Usage:   "add @emotion/react",
+			Value:   false,
+		},
 	},
 	Action: func(c *cli.Context) error {
+		if c.Bool("emotion") {
+			cmd := addReactEmotion()
+			err := cmd.Run()
+			if err != nil {
+				cmd.Cleanup()
+			}
+			return err
+		}
+
 		config := new(addReactConfig)
 		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, cmdReactName)
+				cli.ShowCommandHelp(c, c.Command.Name)
 			}
 			return err
 		}
@@ -70,6 +83,26 @@ var addReactCmd = &cli.Command{
 		}
 		return err
 	},
+}
+
+func addReactEmotion() core.Generator {
+	return util.NewTaskComposer("",
+		&core.FileDesc{
+			Path: ".babelrc",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactEmotion(&buf)
+				return buf.Bytes()
+			},
+		},
+	).AddCommand(&core.Command{
+		Bin:  "npm",
+		Args: []string{"i", "@emotion/react"},
+	}).AddCommand(&core.Command{
+		Bin:  "npm",
+		Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
+	})
 }
 
 func addReactHook(name string) core.Generator {

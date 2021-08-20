@@ -22,3 +22,12 @@ export default function {%v name %}({}: {%v name %}Props) {
 export default function {%v name %}() {
 }
 {% endfunc %}
+
+{% func ReactEmotion() -%}
+{
+	"presets": [
+		"next/babel",
+		"@emotion/babel-preset-css-prop"
+	]
+}
+{% endfunc %}
