@@ -1,0 +1,27 @@
+{% func GoConsumers() -%}
+consumers:
+  - file: name.xlsx
+    sheets:
+      - name: Sheet1
+        line: todo
+        category: todo
+        table:
+          - rowId: r1
+            cells:
+              - key: column0
+                axis: A1
+{% endfunc -%}
+
+{% func GoProviders() -%}
+providers:
+  - file: name.xlsx
+    sheets:
+      - name: Sheet1
+        line: todo
+        category: todo
+        table:
+          - rowId: r1
+            cells:
+              - key: column0
+                axis: A1
+{% endfunc -%}

@@ -10,8 +10,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const cmdJestName = "jest"
-
 const eslintPatch = `
 env: {
   'jest/globals': true,
@@ -20,7 +18,7 @@ plugins: ['jest'],
 `
 
 var addJestCmd = &cli.Command{
-	Name:    cmdJestName,
+	Name:    "jest",
 	Usage:   "add Jest support",
 	Aliases: []string{"j"},
 	Action: func(c *cli.Context) error {
@@ -57,7 +55,7 @@ func addJestToReact() core.Generator {
 		},
 	).AddCommand(&core.Command{
 		Bin: "npm",
-		Args: []string{"add", "-D",
+		Args: []string{"i", "-D",
 			"@babel/core",
 			"babel-jest",
 			"babel-loader",

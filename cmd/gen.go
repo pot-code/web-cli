@@ -9,5 +9,6 @@ var generateCmd = &cli.Command{
 	Subcommands: []*cli.Command{
 		generateBECmd,
 		genAPICmd,
+		generateFECmd,
 	},
 }

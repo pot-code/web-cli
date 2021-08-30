@@ -26,15 +26,9 @@ var addReactCmd = &cli.Command{
 	ArgsUsage: "NAME",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
-			Name:    "hook",
-			Aliases: []string{"H"},
-			Usage:   "add hook",
-			Value:   false,
-		},
-		&cli.BoolFlag{
 			Name:    "style",
 			Aliases: []string{"s"},
-			Usage:   "add scss module style",
+			Usage:   "add scss module",
 			Value:   false,
 		},
 		&cli.BoolFlag{
@@ -67,15 +61,7 @@ var addReactCmd = &cli.Command{
 		name = strings.ReplaceAll(name, "-", "_")
 		log.Debug("preprocessed component name: ", name)
 
-		var cmd core.Generator
-		if config.Hook {
-			if !strings.HasPrefix(name, "use") {
-				name = "use" + strcase.ToCamel(name)
-			}
-			cmd = addReactHook(strcase.ToLowerCamel(name))
-		} else {
-			cmd = addReactComponent(strcase.ToCamel(name), config.Style)
-		}
+		cmd := addReactComponent(strcase.ToCamel(name), config.Style)
 
 		err = cmd.Run()
 		if err != nil {
@@ -103,20 +89,6 @@ func addReactEmotion() core.Generator {
 		Bin:  "npm",
 		Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
 	})
-}
-
-func addReactHook(name string) core.Generator {
-	return util.NewTaskComposer("",
-		&core.FileDesc{
-			Path: fmt.Sprintf("%s.%s", name, "ts"),
-			Data: func() []byte {
-				var buf bytes.Buffer
-
-				templates.WriteReactHook(&buf, name)
-				return buf.Bytes()
-			},
-		},
-	)
 }
 
 func addReactComponent(name string, style bool) core.Generator {

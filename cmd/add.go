@@ -10,5 +10,7 @@ var addCmd = &cli.Command{
 		addTypescriptCmd,
 		addReactCmd,
 		addJestCmd,
+		addGoAirCmd,
+		addPriceUpdateConfigCmd,
 	},
 }

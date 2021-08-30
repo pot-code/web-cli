@@ -12,8 +12,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const cmdBackendName = "backend"
-
 type genBEConfig struct {
 	GenType     string `name:"type" validate:"required,oneof=go"`    // generation type
 	ProjectName string `arg:"0" name:"NAME" validate:"required,var"` // project name
@@ -22,7 +20,7 @@ type genBEConfig struct {
 }
 
 var generateBECmd = &cli.Command{
-	Name:      cmdBackendName,
+	Name:      "backend",
 	Aliases:   []string{"be"},
 	Usage:     "generate backends",
 	ArgsUsage: "NAME",
@@ -51,7 +49,7 @@ var generateBECmd = &cli.Command{
 		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, cmdBackendName)
+				cli.ShowCommandHelp(c, c.Command.Name)
 			}
 			return err
 		}

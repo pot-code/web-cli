@@ -9,14 +9,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const cmdTypescriptName = "typescript"
-
 type addTypescriptConfig struct {
 	Target string `name:"target" validate:"required,oneof=node react"`
 }
 
 var addTypescriptCmd = &cli.Command{
-	Name:    cmdTypescriptName,
+	Name:    "typescript",
 	Usage:   "add typescript support",
 	Aliases: []string{"ts"},
 	Flags: []cli.Flag{
@@ -32,7 +30,7 @@ var addTypescriptCmd = &cli.Command{
 		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, cmdTypescriptName)
+				cli.ShowCommandHelp(c, c.Command.Name)
 			}
 			return err
 		}
@@ -74,7 +72,7 @@ func addTypescriptToNode() core.Generator {
 		},
 	).AddCommand(&core.Command{
 		Bin: "npm",
-		Args: []string{"add", "-D",
+		Args: []string{"i", "-D",
 			"typescript",
 			"eslint",
 			"@typescript-eslint/eslint-plugin",
@@ -110,7 +108,7 @@ func addTypescriptToReact() core.Generator {
 		},
 	).AddCommand(&core.Command{
 		Bin: "npm",
-		Args: []string{"add", "-D",
+		Args: []string{"i", "-D",
 			"@types/react",
 			"@typescript-eslint/eslint-plugin",
 			"@typescript-eslint/parser",

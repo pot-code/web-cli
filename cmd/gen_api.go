@@ -14,8 +14,6 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const cmdApiName = "api"
-
 type genApiConfig struct {
 	GenType     string `name:"type" validate:"required,oneof=go"`    // generation type
 	ModuleName  string `arg:"0" name:"NAME" validate:"required,var"` // go pkg name
@@ -27,7 +25,7 @@ type genApiConfig struct {
 }
 
 var genAPICmd = &cli.Command{
-	Name:      cmdApiName,
+	Name:      "api",
 	Usage:     "generate an api module",
 	ArgsUsage: "MODULE_NAME",
 	Flags: []cli.Flag{
@@ -49,7 +47,7 @@ var genAPICmd = &cli.Command{
 		err := util.ParseConfig(c, config)
 		if err != nil {
 			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, cmdApiName)
+				cli.ShowCommandHelp(c, c.Command.Name)
 			}
 			return err
 		}
