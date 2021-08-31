@@ -18,6 +18,20 @@ export default function {%v name %}({}: {%v name %}Props) {
 .{%v name %}{}
 {% endfunc %}
 
+{% func ReactStory(name string) -%}
+import React from "react";
+import {%v name %} from "./{%v name %}";
+
+export default {
+  title: "component/{%v name %}",
+  component: {%v name %},
+};
+
+const Template = (args) => <{%v name %} {...args} />;
+
+export const Primary = Template.bind({});
+{% endfunc %}
+
 {% func ReactEmotion() -%}
 {
 	"presets": [

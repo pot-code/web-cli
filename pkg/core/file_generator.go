@@ -12,8 +12,9 @@ import (
 )
 
 type FileDesc struct {
-	Path string
-	Data DataProvider
+	Path      string
+	Data      DataProvider
+	overwrite bool
 }
 
 func (fd FileDesc) String() string {
@@ -23,30 +24,40 @@ func (fd FileDesc) String() string {
 type DataProvider = func() []byte
 
 type FileGenerator struct {
-	file    string // file path to be generated
-	data    DataProvider
-	cleaned bool
+	file      string // file path to be generated
+	data      DataProvider
+	cleaned   bool
+	overwrite bool
 }
 
 func NewFileGenerator(fd *FileDesc) Generator {
 	file := strings.TrimPrefix(fd.Path, "/")
 	log.Trace("registered file: ", file)
-	return &FileGenerator{file, fd.Data, false}
+	return &FileGenerator{file, fd.Data, false, fd.overwrite}
 }
 
 func (fg *FileGenerator) Run() error {
 	file := fg.file
 	provider := fg.data
+	overwrite := fg.overwrite
 
 	if file == "" {
-		log.Info("[skipped]no path specified")
+		log.Info("[skip]no path specified")
 		return nil
 	}
 
 	if provider == nil {
-		log.Infof("[skipped]no provider for '%s'", fg.file)
+		log.Infof("[skip]no provider for '%s'", fg.file)
 		return nil
 	}
+
+	if !overwrite {
+		if _, err := os.Stat(file); err == nil {
+			log.WithFields(log.Fields{"file": file, "overwrite": overwrite}).Info("[skip]no overwrite")
+			return nil
+		}
+	}
+
 	err := fg.write(file, provider())
 	if err == nil {
 		log.Infof("emit '%s'", fg.file)

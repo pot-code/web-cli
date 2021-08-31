@@ -15,7 +15,9 @@ import (
 
 type addReactConfig struct {
 	Hook  bool   `name:"hook"`
-	Style bool   `name:"style"`
+	Scss  bool   `name:"scss"`
+	Story bool   `name:"story"`
+	Dir   string `name:"dir"`
 	Name  string `arg:"0" name:"NAME" validate:"required,var"`
 }
 
@@ -26,10 +28,22 @@ var addReactCmd = &cli.Command{
 	ArgsUsage: "NAME",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
-			Name:    "style",
+			Name:    "scss",
 			Aliases: []string{"s"},
 			Usage:   "add scss module",
 			Value:   false,
+		},
+		&cli.BoolFlag{
+			Name:    "story",
+			Aliases: []string{"sb"},
+			Usage:   "add scss module",
+			Value:   false,
+		},
+		&cli.StringFlag{
+			Name:    "dir",
+			Aliases: []string{"d"},
+			Usage:   "output dir",
+			Value:   "",
 		},
 		&cli.BoolFlag{
 			Name:    "emotion",
@@ -61,7 +75,7 @@ var addReactCmd = &cli.Command{
 		name = strings.ReplaceAll(name, "-", "_")
 		log.Debug("preprocessed component name: ", name)
 
-		cmd := addReactComponent(strcase.ToCamel(name), config.Style)
+		cmd := addReactComponent(strcase.ToCamel(name), config.Dir, config.Scss, config.Story)
 
 		err = cmd.Run()
 		if err != nil {
@@ -91,11 +105,12 @@ func addReactEmotion() core.Generator {
 	})
 }
 
-func addReactComponent(name string, style bool) core.Generator {
+func addReactComponent(name, dir string, style, story bool) core.Generator {
 	var (
 		stylePath string
 		desc      []*core.FileDesc
 	)
+
 	if style {
 		styleName := strcase.ToKebab(name)
 		stylePath = fmt.Sprintf("%s.%s.%s", name, "module", "scss")
@@ -109,6 +124,19 @@ func addReactComponent(name string, style bool) core.Generator {
 			},
 		})
 	}
+
+	if story {
+		desc = append(desc, &core.FileDesc{
+			Path: fmt.Sprintf("%s.%s.%s", name, "story", "tsx"),
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactStory(&buf, name)
+				return buf.Bytes()
+			},
+		})
+	}
+
 	desc = append(desc,
 		&core.FileDesc{
 			Path: fmt.Sprintf("%s.%s", name, "tsx"),
@@ -119,5 +147,6 @@ func addReactComponent(name string, style bool) core.Generator {
 				return buf.Bytes()
 			},
 		})
-	return util.NewTaskComposer("", desc...)
+
+	return util.NewTaskComposer(dir, desc...)
 }
