@@ -41,7 +41,7 @@ var generateBECmd = &cli.Command{
 			Name:    "version",
 			Aliases: []string{"v"},
 			Usage:   "version number for go.mod generation",
-			Value:   "1.14",
+			Value:   "1.16",
 		},
 	},
 	Action: func(c *cli.Context) error {
@@ -75,20 +75,38 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 	return util.NewTaskComposer(
 		config.ProjectName,
 		&core.FileDesc{
-			Path: "cmd/http.go",
+			Path: "cmd/web.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendCmdHttp(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendCmdWeb(&buf, config.ProjectName, config.Author)
 				return buf.Bytes()
 			},
 		},
 		&core.FileDesc{
-			Path: "cmd/config.go",
+			Path: "bootstrap/config.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendConfig(&buf, config.ProjectName)
+				templates.WriteGoBackendBootstrapConfig(&buf, config.ProjectName)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "bootstrap/create.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendBootstrapCreate(&buf, config.ProjectName, config.Author)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "controller/routes.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendController(&buf)
 				return buf.Bytes()
 			},
 		},

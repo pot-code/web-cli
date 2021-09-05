@@ -14,7 +14,7 @@ import (
 type FileDesc struct {
 	Path      string
 	Data      DataProvider
-	overwrite bool
+	Overwrite bool
 }
 
 func (fd FileDesc) String() string {
@@ -33,7 +33,7 @@ type FileGenerator struct {
 func NewFileGenerator(fd *FileDesc) Generator {
 	file := strings.TrimPrefix(fd.Path, "/")
 	log.Trace("registered file: ", file)
-	return &FileGenerator{file, fd.Data, false, fd.overwrite}
+	return &FileGenerator{file, fd.Data, false, fd.Overwrite}
 }
 
 func (fg *FileGenerator) Run() error {

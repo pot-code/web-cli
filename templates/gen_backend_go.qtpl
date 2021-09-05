@@ -1,74 +1,64 @@
-{% func GoBackendCmdHttp(projectName string, author string) -%}
-package cmd
+{% func GoBackendBootstrapCreate(projectName string, author string) -%}
+package bootstrap
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	gobit "github.com/pot-code/gobit/pkg"
-	"github.com/pot-code/gobit/pkg/api"
 	"github.com/pot-code/gobit/pkg/db"
 	"github.com/pot-code/gobit/pkg/logging"
 	"github.com/pot-code/gobit/pkg/middleware"
 	"github.com/pot-code/gobit/pkg/util"
 	"go.uber.org/zap"
-	"golang.org/x/text/language"
+	"golang.org/x/text/language""
 )
 
-func Http(envPrefix string) {
-	option := new(AppConfig)
-	if err := util.LoadConfig(envPrefix, option); err != nil {
-		log.Fatal(err)
-	}
-
+func NewLogger(cfg *AppConfig, em *util.ExitManager) *zap.Logger {
 	logger, err := logging.NewLogger(&logging.LoggerConfig{
-		FilePath: option.Logging.FilePath,
-		Level:    option.Logging.Level,
+		FilePath: cfg.Logging.FilePath,
+		Level:    cfg.Logging.Level,
 	})
 	if err != nil {
-		log.Fatalf("failed to create logger: %s\n", err)
+		log.Fatalf("failed to create logger: %s", err)
 	}
-	defer logger.Sync()
 
-	dbConn, err := db.NewSqlxDB(&db.SqlDBConfig{
-		Dsn:     option.Database.Dsn,
-		MaxConn: option.Database.MaxConn,
-		Driver:  option.Database.Driver,
-		Debug:   strings.ToLower(option.Logging.Level) == "debug",
-	}, logger)
-	if err != nil {
-		log.Fatalf("failed to create DB connection: %s\n", err)
-	}
-	logger.Debug("create database instance", zap.String("db.driver", option.Database.Driver),
-		zap.String("db.dsn", option.Database.Dsn),
-	)
-
-	server := newHttpServer(option, dbConn, logger)
-
-	util.OnExit(10*time.Second, func(ctx context.Context) {
+	em.Register(func(ctx context.Context) {
 		logger.Sync()
-		dbConn.Close(ctx)
-		if err := server.Shutdown(ctx); err != nil {
-			log.Fatal(err)
-		}
 	})
+
+	return logger
 }
 
-// Http create http transport server
-func newHttpServer(
-	option *AppConfig,
-	conn *db.SqlxDB,
-	logger *zap.Logger,
-) *echo.Echo {
-	var app = echo.New()
+func NewDB(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *db.SqlxDB {
+	conn, err := db.NewSqlxDB(&db.SqlDBConfig{
+		Driver:  cfg.Database.Driver,
+		MaxConn: cfg.Database.MaxConn,
+		Dsn:     cfg.Database.Dsn,
+		Debug:   cfg.Env == gobit.EnvDevelop,
+	}, logger)
+	if err != nil {
+		log.Fatalf("failed to create DB connection: %s", err)
+	}
 
-	if option.Env == gobit.EnvDevelop {
-		api.RegisterProfileEndpoints(app)
+	em.Register(func(ctx context.Context) {
+		conn.Close(ctx)
+	})
+
+	logger.Debug("connect to database", zap.String("db.driver", cfg.Database.Driver),
+		zap.String("db.dsn", cfg.Database.Dsn),
+	)
+	return conn
+}
+
+// NewEchoServer create http server
+func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *echo.Echo {
+	app := echo.New()
+
+	if cfg.Env == gobit.EnvDevelop {
 		app.Use(middleware.Logging(logger, middleware.LoggingConfig{
 			Skipper: func(e echo.Context) bool {
 				return strings.HasPrefix(e.Request().RequestURI, "/healthz")
@@ -76,38 +66,27 @@ func newHttpServer(
 		}))
 	}
 
-	api.CreateEndpoint(app,
-		&api.Endpoint{
-			Prefix: "api",
-			Middlewares: []echo.MiddlewareFunc{
-				middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 3}),
-				echo_middleware.Secure(),
-				echo_middleware.RequestID(),
-				middleware.ParseAcceptLanguage([]language.Tag{
-					language.English,
-					language.Chinese,
-				}),
-			},
-			Groups: []*api.ApiGroup{
-				{
-					Prefix: "",
-					Routes: []*api.Route{},
-				},
-			},
-		})
+	app.Use(
+		middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 3}),
+		echo_middleware.Secure(),
+		echo_middleware.RequestID(),
+		middleware.ParseAcceptLanguage([]language.Tag{
+			language.English,
+			language.Chinese,
+		}),
+	)
 
-	api.PrintRoutes(app, logger)
-	go func() {
-		if err := app.Start(fmt.Sprintf("%s:%d", option.Host, option.Port)); err != nil {
-			log.Fatal(err)
-		}
-	}()
+	em.Register(func(ctx context.Context) {
+		app.Close()
+	})
+
 	return app
 }
 {% endfunc %}
 
-{% func GoBackendConfig(projectName string) -%}
-package cmd
+
+{% func GoBackendBootstrapConfig(projectName string) -%}
+package bootstrap
 
 import (
 	"runtime"
@@ -142,13 +121,50 @@ func init() {
 
 	// database
 	pflag.String("database.driver", "pgx", "database driver to use")
-	pflag.String("database.dsn", "postgres://postgres:test@127.0.0.1:5432/notification", "database host")
+	pflag.String("database.dsn", "", "database host")
 	pflag.Int32("database.maxconn", int32(runtime.NumCPU()), `max connection count, if you encounter a "too many connections" error, please consider
 	increasing the max_connection value of your db server, or lower this value`)
 
 	// logging
 	pflag.String("logging.level", "info", "logging level")
 	pflag.String("logging.file_path", "", "log to file")
+}
+{% endfunc %}
+
+{% func GoBackendCmdWeb(projectName string, author string) -%}
+package cmd
+
+import (
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/{%s author %}/{%s projectName %}/bootstrap"
+	"github.com/{%s author %}/{%s projectName %}/controller"
+	"github.com/pot-code/gobit/pkg/api"
+	"github.com/pot-code/gobit/pkg/util"
+)
+
+func Serve(ep string) {
+	cfg := new(bootstrap.AppConfig)
+	if err := util.LoadConfig(ep, cfg); err != nil {
+		log.Fatal(err)
+	}
+
+	em := util.NewExitManager()
+	logger := bootstrap.NewLogger(cfg, em)
+	server := bootstrap.NewEchoServer(cfg, logger, em)
+
+	controller.RegisterRoutes(server, cfg)
+	api.PrintRoutes(server, logger)
+
+	go func() {
+		if err := server.Start(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	em.Wait(30 * time.Second)
 }
 {% endfunc %}
 
@@ -161,7 +177,7 @@ import "github.com/{%s author %}/{%s projectName %}/cmd"
 var EnvPrefix string
 
 func main() {
-	cmd.Http(EnvPrefix)
+	cmd.Serve(EnvPrefix)
 }
 {% endfunc %}
 
@@ -172,4 +188,21 @@ go {%s version %}
 
 require (
 )
+{% endfunc %}
+
+{% func GoBackendController() -%}
+package controller
+
+import (
+	"github.com/labstack/echo/v4"
+	"github.com/pot-code/gobit/pkg/api"
+)
+
+func RegisterRoutes(app *echo.Echo) {
+	api.CreateEndpoint(app,
+		&api.Endpoint{
+			Prefix: "api",
+			Groups: []*api.ApiGroup{},
+		})
+}
 {% endfunc %}

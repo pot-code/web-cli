@@ -14,6 +14,7 @@ import (
 func main() {
 	log.SetFormatter(&log.TextFormatter{
 		DisableTimestamp: true,
+		QuoteEmptyFields: true,
 	})
 	if err := cmd.RootCmd.Run(os.Args); err != nil {
 		if ste, ok := err.(util.StackTracer); ok {

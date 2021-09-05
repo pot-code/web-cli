@@ -73,7 +73,9 @@ var addReactCmd = &cli.Command{
 
 		name := config.Name
 		name = strings.ReplaceAll(name, "-", "_")
-		log.Debug("preprocessed component name: ", name)
+		log.WithFields(log.Fields{
+			"cmd": "addReactCmd",
+		}).Debug("proceed component name: ", name)
 
 		cmd := addReactComponent(strcase.ToCamel(name), config.Dir, config.Scss, config.Story)
 
@@ -105,13 +107,20 @@ func addReactEmotion() core.Generator {
 	})
 }
 
-func addReactComponent(name, dir string, style, story bool) core.Generator {
+func addReactComponent(name, dir string, scss, story bool) core.Generator {
+	log.WithFields(log.Fields{
+		"caller": "addReactComponent",
+		"name":   name,
+		"dir":    dir,
+		"style":  scss,
+		"story":  story,
+	}).Debug("call function")
 	var (
 		stylePath string
 		desc      []*core.FileDesc
 	)
 
-	if style {
+	if scss {
 		styleName := strcase.ToKebab(name)
 		stylePath = fmt.Sprintf("%s.%s.%s", name, "module", "scss")
 		desc = append(desc, &core.FileDesc{
@@ -127,7 +136,7 @@ func addReactComponent(name, dir string, style, story bool) core.Generator {
 
 	if story {
 		desc = append(desc, &core.FileDesc{
-			Path: fmt.Sprintf("%s.%s.%s", name, "story", "tsx"),
+			Path: fmt.Sprintf("%s.%s.%s", name, "stories", "tsx"),
 			Data: func() []byte {
 				var buf bytes.Buffer
 

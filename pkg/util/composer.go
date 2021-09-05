@@ -26,12 +26,22 @@ func NewTaskComposer(root string, files ...*core.FileDesc) *TaskComposer {
 
 // AddFile add file task
 func (tc *TaskComposer) AddFile(fd *core.FileDesc) *TaskComposer {
+	log.WithFields(log.Fields{
+		"caller":    "AddFile",
+		"file":      fd.Path,
+		"overwrite": fd.Overwrite,
+	}).Debug("call function")
 	tc.files = append(tc.files, fd)
 	return tc
 }
 
 // AddCommand add command
 func (tc *TaskComposer) AddCommand(cmd *core.Command) *TaskComposer {
+	log.WithFields(log.Fields{
+		"caller": "AddCommand",
+		"bin":    cmd.Bin,
+		"cwd":    cmd.Dir,
+	}).Debug("call function")
 	tc.commands = append(tc.commands, cmd)
 	return tc
 }

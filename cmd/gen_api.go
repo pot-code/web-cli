@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -21,7 +20,6 @@ type genApiConfig struct {
 	ProjectName string
 	ModelName   string
 	Author      string
-	Root        string `name:"root" validate:"required"` // path root under which to generate api
 }
 
 var genAPICmd = &cli.Command{
@@ -34,12 +32,6 @@ var genAPICmd = &cli.Command{
 			Aliases: []string{"T"},
 			Usage:   "api type (go)",
 			Value:   "go",
-		},
-		&cli.StringFlag{
-			Name:    "root",
-			Aliases: []string{"r"},
-			Usage:   "root directory",
-			Value:   "api",
 		},
 	},
 	Action: func(c *cli.Context) error {
@@ -67,7 +59,7 @@ var genAPICmd = &cli.Command{
 			config.Author = meta.Author
 			config.ProjectName = meta.ProjectName
 
-			dir := path.Join(config.Root, config.PackagePath)
+			dir := config.PackagePath
 			log.Debug("output path: ", dir)
 			_, err = os.Stat(dir)
 			if err == nil {
@@ -75,7 +67,7 @@ var genAPICmd = &cli.Command{
 				return nil
 			}
 
-			gen := newGolangApiGenerator(config)
+			gen := generateGoApi(config)
 			if err := gen.Run(); err != nil {
 				gen.Cleanup()
 				return err
@@ -85,11 +77,11 @@ var genAPICmd = &cli.Command{
 	},
 }
 
-func newGolangApiGenerator(config *genApiConfig) core.Generator {
+func generateGoApi(config *genApiConfig) core.Generator {
 	return util.NewTaskComposer(
-		path.Join(config.Root, config.PackagePath),
+		config.PackagePath,
 		&core.FileDesc{
-			Path: "transport/http.go",
+			Path: "http.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
@@ -121,6 +113,15 @@ func newGolangApiGenerator(config *genApiConfig) core.Generator {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiService(&buf, config.PackagePath, config.ModelName)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "wire.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoApiWire(&buf, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},
