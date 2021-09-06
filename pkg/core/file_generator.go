@@ -30,7 +30,7 @@ type FileGenerator struct {
 	overwrite bool
 }
 
-func NewFileGenerator(fd *FileDesc) Generator {
+func NewFileGenerator(fd *FileDesc) Runner {
 	file := strings.TrimPrefix(fd.Path, "/")
 	log.Trace("registered file: ", file)
 	return &FileGenerator{file, fd.Data, false, fd.Overwrite}
@@ -63,23 +63,6 @@ func (fg *FileGenerator) Run() error {
 		log.Infof("emit '%s'", fg.file)
 	}
 	return errors.Wrapf(err, "failed to generate '%s'", file)
-}
-
-func (fg *FileGenerator) Cleanup() error {
-	if fg.cleaned {
-		return nil
-	}
-	fg.cleaned = true
-
-	log.Debugf("removing file '%s'", fg.file)
-	err := os.Remove(fg.file)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			log.WithFields(log.Fields{"error": err.Error(), "file": fg.file}).Debug("[cleanup]failed to cleanup")
-		}
-	}
-
-	return errors.WithStack(err)
 }
 
 func (fg *FileGenerator) write(file string, data []byte) error {

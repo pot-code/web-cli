@@ -5,26 +5,25 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
 type ParallelRunner struct {
-	commands []Executor
-	files    []Generator
+	commands []Runner
+	files    []Runner
 	cleaned  bool
 }
 
-var _ Generator = ParallelRunner{}
+var _ Runner = &ParallelRunner{}
 
-func NewParallelRunner(tasks ...Executor) *ParallelRunner {
+func NewParallelRunner(tasks ...Runner) *ParallelRunner {
 	var (
-		commands []Executor
-		files    []Generator
+		commands []Runner
+		files    []Runner
 	)
 
 	for _, t := range tasks {
-		if gen, ok := t.(Generator); ok {
+		if gen, ok := t.(*FileGenerator); ok {
 			files = append(files, gen)
 		} else {
 			commands = append(commands, t)
@@ -65,9 +64,9 @@ func (pr ParallelRunner) runGenerators() error {
 
 	for i := range files {
 		wg.Add(1)
-		go func(task Generator) {
+		go func(task Runner) {
 			if err := task.Run(); err != nil {
-				errChan <- task.Run()
+				errChan <- err
 			} else {
 				wg.Done()
 			}
@@ -86,21 +85,6 @@ func (pr ParallelRunner) runGenerators() error {
 	}
 }
 
-func (pr ParallelRunner) Cleanup() error {
-	if pr.cleaned {
-		return nil
-	}
-	pr.cleaned = true
-
-	for _, task := range pr.files {
-		if ce := task.Cleanup(); ce != nil {
-			return errors.WithStack(ce)
-		}
-	}
-
-	return nil
-}
-
 func (pr ParallelRunner) String() string {
-	return fmt.Sprintf("[ParallelRunner]tasks=%d", len(pr.commands))
+	return fmt.Sprintf("[ParallelRunner]: generator=%d, executor=%d", len(pr.files), len(pr.commands))
 }

@@ -70,7 +70,6 @@ var genAPICmd = &cli.Command{
 
 			gen := generateGoApi(config)
 			if err := gen.Run(); err != nil {
-				gen.Cleanup()
 				return err
 			}
 		}
@@ -78,7 +77,7 @@ var genAPICmd = &cli.Command{
 	},
 }
 
-func generateGoApi(config *genApiConfig) core.Generator {
+func generateGoApi(config *genApiConfig) core.Runner {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: fmt.Sprintf("%s/%s_handler.go", "server", config.PackagePath),

@@ -1,10 +1,5 @@
 package core
 
-type Generator interface {
-	Executor
-	Cleanup() error
-}
-
-type Executor interface {
+type Runner interface {
 	Run() error
 }

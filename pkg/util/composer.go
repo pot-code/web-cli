@@ -1,7 +1,6 @@
 package util
 
 import (
-	"os"
 	"path"
 	"strings"
 
@@ -14,11 +13,11 @@ type TaskComposer struct {
 	root     string // generation root
 	files    []*core.FileDesc
 	commands []*core.Command
-	runner   core.Generator
+	runner   core.Runner
 	cleaned  bool
 }
 
-var _ core.Generator = &TaskComposer{}
+var _ core.Runner = &TaskComposer{}
 
 func NewTaskComposer(root string, files ...*core.FileDesc) *TaskComposer {
 	return &TaskComposer{root: root, files: files, cleaned: false}
@@ -54,28 +53,9 @@ func (tc *TaskComposer) Run() error {
 	return runner.Run()
 }
 
-func (tc *TaskComposer) Cleanup() error {
-	if tc.cleaned {
-		return nil
-	}
-	if tc.runner == nil {
-		return nil
-	}
-	if tc.root != "" {
-		root := tc.root
-		log.Debugf("removing folder '%s'", root)
-		err := os.RemoveAll(root)
-		if err != nil {
-			log.WithFields(log.Fields{"error": err.Error(), "folder": root}).Debug("[cleanup]failed to cleanup")
-		}
-		return err
-	}
-	return tc.runner.Cleanup()
-}
-
 // MakeRunner make a task runner
-func (tc *TaskComposer) makeRunner() core.Generator {
-	var tasks []core.Executor
+func (tc *TaskComposer) makeRunner() core.Runner {
+	var tasks []core.Runner
 
 	for _, fd := range tc.files {
 		if tc.root != "" {

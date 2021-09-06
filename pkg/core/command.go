@@ -11,9 +11,10 @@ import (
 )
 
 type Command struct {
-	Bin  string
-	Dir  string
-	Args []string
+	Bin    string
+	Dir    string
+	Before bool // run before file generation
+	Args   []string
 }
 
 func (c Command) String() string {
@@ -27,7 +28,7 @@ type CmdExecutor struct {
 	cmd *Command
 }
 
-var _ Executor = CmdExecutor{}
+var _ Runner = CmdExecutor{}
 
 func NewCmdExecutor(cmd *Command) *CmdExecutor {
 	return &CmdExecutor{cmd}

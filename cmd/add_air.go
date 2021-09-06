@@ -14,15 +14,11 @@ var addGoAirCmd = &cli.Command{
 	Usage: "add air live reload support",
 	Action: func(c *cli.Context) error {
 		cmd := addGoAir()
-		err := cmd.Run()
-		if err != nil {
-			cmd.Cleanup()
-		}
-		return err
+		return cmd.Run()
 	},
 }
 
-func addGoAir() core.Generator {
+func addGoAir() core.Runner {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: "air.toml",

@@ -55,11 +55,7 @@ var addReactCmd = &cli.Command{
 	Action: func(c *cli.Context) error {
 		if c.Bool("emotion") {
 			cmd := addReactEmotion()
-			err := cmd.Run()
-			if err != nil {
-				cmd.Cleanup()
-			}
-			return err
+			return cmd.Run()
 		}
 
 		config := new(addReactConfig)
@@ -79,15 +75,11 @@ var addReactCmd = &cli.Command{
 
 		cmd := addReactComponent(strcase.ToCamel(name), config.Dir, config.Scss, config.Story)
 
-		err = cmd.Run()
-		if err != nil {
-			cmd.Cleanup()
-		}
-		return err
+		return cmd.Run()
 	},
 }
 
-func addReactEmotion() core.Generator {
+func addReactEmotion() core.Runner {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: ".babelrc",
@@ -107,7 +99,7 @@ func addReactEmotion() core.Generator {
 	})
 }
 
-func addReactComponent(name, dir string, scss, story bool) core.Generator {
+func addReactComponent(name, dir string, scss, story bool) core.Runner {
 	log.WithFields(log.Fields{
 		"caller": "addReactComponent",
 		"name":   name,

@@ -24,16 +24,14 @@ var addJestCmd = &cli.Command{
 	Action: func(c *cli.Context) error {
 		cmd := addJestToReact()
 		err := cmd.Run()
-		if err != nil {
-			cmd.Cleanup()
-		} else {
+		if err == nil {
 			log.Warnf("add to .eslintrc.js: %s", eslintPatch)
 		}
 		return err
 	},
 }
 
-func addJestToReact() core.Generator {
+func addJestToReact() core.Runner {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: ".babelrc",

@@ -37,7 +37,6 @@ var generateFECmd = &cli.Command{
 		if config.GenType == "react" {
 			gen := generateReact(config)
 			if err := gen.Run(); err != nil {
-				gen.Cleanup()
 				return err
 			}
 		}
@@ -45,7 +44,6 @@ var generateFECmd = &cli.Command{
 		if config.GenType == "next" {
 			gen := generateNext(config)
 			if err := gen.Run(); err != nil {
-				gen.Cleanup()
 				return err
 			}
 		}
@@ -53,14 +51,14 @@ var generateFECmd = &cli.Command{
 	},
 }
 
-func generateReact(config *genFEConfig) core.Generator {
+func generateReact(config *genFEConfig) core.Runner {
 	return util.NewTaskComposer("").AddCommand(&core.Command{
 		Bin:  "git",
 		Args: []string{"clone", "https://github.com/pot-code/react-boilerplate.git", config.ProjectName},
 	})
 }
 
-func generateNext(config *genFEConfig) core.Generator {
+func generateNext(config *genFEConfig) core.Runner {
 	return util.NewTaskComposer("").AddCommand(&core.Command{
 		Bin:  "yarn",
 		Args: []string{"create", "next-app", "--ts", config.ProjectName},

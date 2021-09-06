@@ -28,15 +28,11 @@ var addPriceUpdateConfigCmd = &cli.Command{
 		}
 
 		cmd := addPriceUpdateEntry(config.Name)
-		err = cmd.Run()
-		if err != nil {
-			cmd.Cleanup()
-		}
-		return err
+		return cmd.Run()
 	},
 }
 
-func addPriceUpdateEntry(name string) core.Generator {
+func addPriceUpdateEntry(name string) core.Runner {
 	return util.NewTaskComposer(name,
 		&core.FileDesc{
 			Path: "provider.yml",

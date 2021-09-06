@@ -63,7 +63,6 @@ var generateBECmd = &cli.Command{
 
 			gen := newGolangBackendGenerator(config)
 			if err := gen.Run(); err != nil {
-				gen.Cleanup()
 				return err
 			}
 		}
@@ -71,7 +70,7 @@ var generateBECmd = &cli.Command{
 	},
 }
 
-func newGolangBackendGenerator(config *genBEConfig) core.Generator {
+func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 	return util.NewTaskComposer(
 		config.ProjectName,
 		&core.FileDesc{

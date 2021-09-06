@@ -35,22 +35,18 @@ var addTypescriptCmd = &cli.Command{
 			return err
 		}
 
-		var cmd core.Generator
+		var cmd core.Runner
 		if config.Target == "node" {
 			cmd = addTypescriptToNode()
 		} else {
 			cmd = addTypescriptToReact()
 		}
 
-		err = cmd.Run()
-		if err != nil {
-			cmd.Cleanup()
-		}
-		return err
+		return cmd.Run()
 	},
 }
 
-func addTypescriptToNode() core.Generator {
+func addTypescriptToNode() core.Runner {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: ".eslintrc.js",
@@ -86,7 +82,7 @@ func addTypescriptToNode() core.Generator {
 	})
 }
 
-func addTypescriptToReact() core.Generator {
+func addTypescriptToReact() core.Runner {
 	return util.NewTaskComposer("",
 		&core.FileDesc{
 			Path: ".eslintrc.js",
