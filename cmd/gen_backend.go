@@ -102,11 +102,29 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 			},
 		},
 		&core.FileDesc{
-			Path: "controller/routes.go",
+			Path: "server/routes.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendController(&buf)
+				templates.WriteGoBackendServerRoutes(&buf, config.ProjectName, config.Author)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "server/server.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendServerServer(&buf)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "server/wire.go",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendServerWire(&buf, config.ProjectName, config.Author)
 				return buf.Bytes()
 			},
 		},
@@ -125,6 +143,15 @@ func newGolangBackendGenerator(config *genBEConfig) core.Generator {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendMod(&buf, config.ProjectName, config.Author, config.Version)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: ".vscode/settings.json",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendVscodeSettings(&buf)
 				return buf.Bytes()
 			},
 		},

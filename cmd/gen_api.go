@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 	"os"
 	"strings"
 
@@ -78,19 +79,18 @@ var genAPICmd = &cli.Command{
 }
 
 func generateGoApi(config *genApiConfig) core.Generator {
-	return util.NewTaskComposer(
-		config.PackagePath,
+	return util.NewTaskComposer("",
 		&core.FileDesc{
-			Path: "http.go",
+			Path: fmt.Sprintf("%s/%s_handler.go", "server", config.PackagePath),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHttp(&buf, config.ProjectName, config.Author, config.PackagePath, config.ModelName)
+				templates.WriteGoApiHandler(&buf, config.ProjectName, config.Author, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},
 		&core.FileDesc{
-			Path: "model.go",
+			Path: fmt.Sprintf("%s/model.go", config.PackagePath),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
@@ -99,7 +99,7 @@ func generateGoApi(config *genApiConfig) core.Generator {
 			},
 		},
 		&core.FileDesc{
-			Path: "repo.go",
+			Path: fmt.Sprintf("%s/repo.go", config.PackagePath),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
@@ -108,20 +108,11 @@ func generateGoApi(config *genApiConfig) core.Generator {
 			},
 		},
 		&core.FileDesc{
-			Path: "service.go",
+			Path: fmt.Sprintf("%s/service.go", config.PackagePath),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiService(&buf, config.PackagePath, config.ModelName)
-				return buf.Bytes()
-			},
-		},
-		&core.FileDesc{
-			Path: "wire.go",
-			Data: func() []byte {
-				var buf bytes.Buffer
-
-				templates.WriteGoApiWire(&buf, config.PackagePath, config.ModelName)
 				return buf.Bytes()
 			},
 		},

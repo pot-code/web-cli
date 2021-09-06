@@ -4,27 +4,52 @@ package bootstrap
 import (
 	"context"
 	"log"
+	"net/http"
+	"os"
 	"strings"
 
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	gobit "github.com/pot-code/gobit/pkg"
-	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/api"
 	"github.com/pot-code/gobit/pkg/logging"
 	"github.com/pot-code/gobit/pkg/middleware"
 	"github.com/pot-code/gobit/pkg/util"
 	"go.uber.org/zap"
-	"golang.org/x/text/language""
+	"go.uber.org/zap/zapcore"
 )
 
 func NewLogger(cfg *AppConfig, em *util.ExitManager) *zap.Logger {
-	logger, err := logging.NewLogger(&logging.LoggerConfig{
-		FilePath: cfg.Logging.FilePath,
-		Level:    cfg.Logging.Level,
-	})
+	ec := logging.NewEcsConfig()
+	enabler, err := logging.GetLevelEnabler(cfg.Logging.Level)
 	if err != nil {
 		log.Fatalf("failed to create logger: %s", err)
 	}
+
+	var (
+		out zapcore.WriteSyncer
+		zc  zapcore.Encoder
+	)
+	if cfg.Logging.Format == "json" {
+		zc = zapcore.NewJSONEncoder(ec)
+	} else {
+		zc = zapcore.NewConsoleEncoder(ec)
+	}
+
+	p := cfg.Logging.FilePath
+	if p == "" {
+		out = os.Stderr
+	} else {
+		out, err = logging.NewFileSyncer(p)
+		if err != nil {
+			log.Fatalf("failed to create logger: %s", err)
+		}
+	}
+
+	core := zapcore.NewCore(zc, out, enabler)
+	logger := zap.New(core)
 
 	em.Register(func(ctx context.Context) {
 		logger.Sync()
@@ -33,23 +58,22 @@ func NewLogger(cfg *AppConfig, em *util.ExitManager) *zap.Logger {
 	return logger
 }
 
-func NewDB(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *db.SqlxDB {
-	conn, err := db.NewSqlxDB(&db.SqlDBConfig{
-		Driver:  cfg.Database.Driver,
-		MaxConn: cfg.Database.MaxConn,
-		Dsn:     cfg.Database.Dsn,
-		Debug:   cfg.Env == gobit.EnvDevelop,
-	}, logger)
+func NewSqlxDB(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *sqlx.DB {
+	conn, err := sqlx.Connect(cfg.Database.Driver, cfg.Database.Dsn)
 	if err != nil {
 		log.Fatalf("failed to create DB connection: %s", err)
 	}
 
+	conn.DB.SetMaxOpenConns(int(cfg.Database.MaxConn))
+	conn.DB.SetMaxIdleConns(int(cfg.Database.MaxConn) >> 2)
 	em.Register(func(ctx context.Context) {
-		conn.Close(ctx)
+		conn.Close()
 	})
 
-	logger.Debug("connect to database", zap.String("db.driver", cfg.Database.Driver),
+	logger.Debug("connect to database",
+		zap.String("db.driver", cfg.Database.Driver),
 		zap.String("db.dsn", cfg.Database.Dsn),
+		zap.Int32("db.maxconn", cfg.Database.MaxConn),
 	)
 	return conn
 }
@@ -59,21 +83,40 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *ec
 	app := echo.New()
 
 	if cfg.Env == gobit.EnvDevelop {
-		app.Use(middleware.Logging(logger, middleware.LoggingConfig{
+		app.Use(middleware.Logging(middleware.LoggingConfig{
 			Skipper: func(e echo.Context) bool {
 				return strings.HasPrefix(e.Request().RequestURI, "/healthz")
+			},
+			LogFn: func(c echo.Context) {
+				code := c.Response().Status
+				rid := c.Response().Header().Get(echo.HeaderXRequestID)
+				logger.Debug(
+					http.StatusText(code),
+					zap.String("trace.id", rid),
+					zap.String("url.original", c.Path()),
+					zap.String("http.request.referrer", c.Request().Referer()),
+					zap.String("http.request.method", c.Request().Method),
+					zap.Strings("route.params.name", c.ParamNames()),
+					zap.Strings("route.params.value", c.ParamValues()),
+					zap.Int("http.request.status_code", code),
+				)
 			},
 		}))
 	}
 
 	app.Use(
-		middleware.ErrorHandling(logger, middleware.ErrorHandlingOption{StackDepth: 3}),
+		middleware.ErrorHandling(middleware.ErrorHandlingOption{Handler: func(c echo.Context, err error) {
+			traceID := c.Response().Header().Get(echo.HeaderXRequestID)
+			msg := api.ErrInternalError.Error()
+			logger.Error(err.Error(), zap.String("trace.id", traceID), zap.Object("detail", logging.NewZapErrorWrapper(err, 3)))
+
+			c.JSON(http.StatusInternalServerError,
+				api.NewRESTStandardError(msg).SetTraceID(traceID),
+			)
+		}}),
 		echo_middleware.Secure(),
 		echo_middleware.RequestID(),
-		middleware.ParseAcceptLanguage([]language.Tag{
-			language.English,
-			language.Chinese,
-		}),
+		middleware.ParseAcceptLanguage(middleware.ParseAcceptLanguageOption{}),
 	)
 
 	em.Register(func(ctx context.Context) {
@@ -95,11 +138,10 @@ import (
 	"github.com/spf13/pflag"
 )
 
-// AppConfig App option object
+// AppConfig App configuration
 type AppConfig struct {
 	AppID    string `mapstructure:"app_id" yaml:"app_id" validate:"required"`           // Application ID
-	Host     string `mapstructure:"host" yaml:"host"`                                   // bind host address
-	Port     int    `mapstructure:"port" yaml:"port"`                                   // bind listen port
+	Port     string `mapstructure:"port" yaml:"port"`                                   // bind listen port
 	Env      string `mapstructure:"env" yaml:"env" validate:"oneof=develop production"` // runtime environment
 	Database struct {
 		Driver  string `mapstructure:"driver" yaml:"driver" validate:"required"` // driver name
@@ -107,17 +149,17 @@ type AppConfig struct {
 		MaxConn int32  `mapstructure:"maxconn" yaml:"maxconn" validate:"min=1"`  // maximum opening connections number
 	} `mapstructure:"database" yaml:"database"`
 	Logging struct {
-		FilePath string `mapstructure:"file_path" yaml:"file_path"`                                // log file path
-		Level    string `mapstructure:"level" yaml:"level" validate:"oneof=debug info warn error"` // global logging level
+		FilePath string `mapstructure:"file_path" yaml:"file_path"` // log file path
+		Level    string `mapstructure:"level" yaml:"level"`         // global logging level
+		Format   string `mapstructure:"format" yaml:"format" validate:"oneof=json console"`
 	} `mapstructure:"logging" yaml:"logging"`
 }
 
 func init() {
 	// common
-	pflag.String("host", "", "binding address")
-	pflag.String("app_id", "{%s projectName %}", "application identifier (required)")
+	pflag.String("app_id", "{%v projectName %}", "application identifier (required)")
 	pflag.String("env", gobit.EnvDevelop, "runtime environment, can be 'develop' or 'production'")
-	pflag.Int("port", 8081, "listening port")
+	pflag.String("port", ":8081", "listening port")
 
 	// database
 	pflag.String("database.driver", "pgx", "database driver to use")
@@ -128,6 +170,7 @@ func init() {
 	// logging
 	pflag.String("logging.level", "info", "logging level")
 	pflag.String("logging.file_path", "", "log to file")
+	pflag.String("logging.format", "console", "log format, should be json or console")
 }
 {% endfunc %}
 
@@ -135,36 +178,45 @@ func init() {
 package cmd
 
 import (
-	"fmt"
+	"errors"
 	"log"
+	"net/http"
 	"time"
 
 	"github.com/{%s author %}/{%s projectName %}/bootstrap"
-	"github.com/{%s author %}/{%s projectName %}/controller"
+	"github.com/{%s author %}/{%s projectName %}/server"
 	"github.com/pot-code/gobit/pkg/api"
 	"github.com/pot-code/gobit/pkg/util"
+	"github.com/pot-code/gobit/pkg/validate"
 )
 
-func Serve(ep string) {
+func Serve() {
 	cfg := new(bootstrap.AppConfig)
-	if err := util.LoadConfig(ep, cfg); err != nil {
-		log.Fatal(err)
+	cm := util.NewConfigManager()
+	v := validate.NewValidator()
+
+	if err := cm.LoadConfig(cfg); err != nil {
+		log.Fatalf("failed to load config: %s", err)
+	}
+	if err := v.Struct(cfg, "en"); err != nil {
+		log.Fatalf("failed to validate config: \n%s", err)
 	}
 
 	em := util.NewExitManager()
-	logger := bootstrap.NewLogger(cfg, em)
-	server := bootstrap.NewEchoServer(cfg, logger, em)
+	defer em.WaitSignal(30 * time.Second)
 
-	controller.RegisterRoutes(server, cfg)
-	api.PrintRoutes(server, logger)
+	hs := server.InitializeServer(cfg, em)
+
+	server.RegisterRoutes(cfg, hs)
+	api.PrintRoutes(hs.Server, hs.Logger)
 
 	go func() {
-		if err := server.Start(fmt.Sprintf("%s:%d", cfg.Host, cfg.Port)); err != nil {
-			log.Fatal(err)
+		if err := hs.Server.Start(cfg.Port); err != nil {
+			if !errors.Is(err, http.ErrServerClosed) {
+				log.Fatal(err)
+			}
 		}
 	}()
-
-	em.Wait(30 * time.Second)
 }
 {% endfunc %}
 
@@ -173,11 +225,8 @@ package main
 
 import "github.com/{%s author %}/{%s projectName %}/cmd"
 
-// EnvPrefix env prefix for viper, injected by build flags
-var EnvPrefix string
-
 func main() {
-	cmd.Serve(EnvPrefix)
+	cmd.Serve()
 }
 {% endfunc %}
 
@@ -190,19 +239,76 @@ require (
 )
 {% endfunc %}
 
-{% func GoBackendController() -%}
-package controller
+{% func GoBackendServerRoutes(projectName string, author string) -%}
+package server
 
 import (
-	"github.com/labstack/echo/v4"
+	"github.com/{%s author %}/{%s projectName %}/bootstrap"
 	"github.com/pot-code/gobit/pkg/api"
 )
 
-func RegisterRoutes(app *echo.Echo) {
-	api.CreateEndpoint(app,
+func RegisterRoutes(cfg *bootstrap.AppConfig, hs *HttpServer) {
+	api.CreateEndpoint(hs.Server,
 		&api.Endpoint{
 			Prefix: "api",
 			Groups: []*api.ApiGroup{},
 		})
+}
+{% endfunc %}
+
+{% func GoBackendServerServer() -%}
+package server
+
+import (
+	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
+)
+
+type Handler struct {
+}
+
+func NewHandler() *Handler {
+	return &Handler{}
+}
+
+type HttpServer struct {
+	Logger    *zap.Logger
+	Server    *echo.Echo
+	Handlers  *Handler
+}
+
+func NewHttpServer(logger *zap.Logger, server *echo.Echo, handler *Handler) *HttpServer {
+	return &HttpServer{Logger: logger, Server: server, Handlers: handler}
+}
+{% endfunc %}
+
+{% func GoBackendServerWire(projectName string, author string) -%}
+//+build wireinject
+
+package server
+
+import (
+	"github.com/google/wire"
+	"github.com/{%s author %}/{%s projectName %}/bootstrap"
+	"github.com/pot-code/gobit/pkg/util"
+)
+
+func InitializeServer(cfg *bootstrap.AppConfig, em *util.ExitManager) *HttpServer {
+	wire.Build(
+		NewHttpServer, NewHandler,
+		bootstrap.NewEchoServer, bootstrap.NewLogger,
+	)
+	return &HttpServer{}
+}
+{% endfunc %}
+
+{% func GoBackendVscodeSettings() -%}
+{
+	"go.inferGopath": false,
+	"gopls": {
+		"build.buildFlags": [
+			"-tags=wireinject"
+		]
+	},
 }
 {% endfunc %}
