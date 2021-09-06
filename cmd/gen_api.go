@@ -97,15 +97,15 @@ func generateGoApi(config *genApiConfig) core.Runner {
 				return buf.Bytes()
 			},
 		},
-		&core.FileDesc{
-			Path: fmt.Sprintf("%s/repo.go", config.PackagePath),
-			Data: func() []byte {
-				var buf bytes.Buffer
+		// &core.FileDesc{
+		// 	Path: fmt.Sprintf("%s/repo.go", config.PackagePath),
+		// 	Data: func() []byte {
+		// 		var buf bytes.Buffer
 
-				templates.WriteGoApiRepo(&buf, config.PackagePath, config.ModelName)
-				return buf.Bytes()
-			},
-		},
+		// 		templates.WriteGoApiRepo(&buf, config.PackagePath, config.ModelName)
+		// 		return buf.Bytes()
+		// 	},
+		// },
 		&core.FileDesc{
 			Path: fmt.Sprintf("%s/service.go", config.PackagePath),
 			Data: func() []byte {
@@ -115,5 +115,9 @@ func generateGoApi(config *genApiConfig) core.Runner {
 				return buf.Bytes()
 			},
 		},
-	)
+	).AddCommand(&core.Command{
+		Bin:    "ent",
+		Args:   []string{"init", config.ModelName},
+		Before: true,
+	})
 }

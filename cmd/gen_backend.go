@@ -158,5 +158,9 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 		Bin:  "go",
 		Args: []string{"mod", "tidy"},
 		Dir:  path.Join("./" + config.ProjectName),
+	}).AddCommand(&core.Command{
+		Bin:  "wire",
+		Args: []string{"./server"},
+		Dir:  path.Join("./" + config.ProjectName),
 	})
 }

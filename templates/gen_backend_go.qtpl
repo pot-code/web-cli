@@ -225,6 +225,8 @@ package main
 
 import "github.com/{%s author %}/{%s projectName %}/cmd"
 
+//go:generate wire ./server
+//go:generate go generate ./ent
 func main() {
 	cmd.Serve()
 }

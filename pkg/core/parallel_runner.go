@@ -9,31 +9,44 @@ import (
 )
 
 type ParallelRunner struct {
-	commands []Runner
-	files    []Runner
-	cleaned  bool
+	beforeCommands []Runner
+	commands       []Runner
+	files          []Runner
+	cleaned        bool
 }
 
 var _ Runner = &ParallelRunner{}
 
 func NewParallelRunner(tasks ...Runner) *ParallelRunner {
 	var (
-		commands []Runner
-		files    []Runner
+		commands       []Runner
+		beforeCommands []Runner
+		files          []Runner
 	)
 
 	for _, t := range tasks {
-		if gen, ok := t.(*FileGenerator); ok {
-			files = append(files, gen)
-		} else {
-			commands = append(commands, t)
+		switch v := t.(type) {
+		case *FileGenerator:
+			files = append(files, v)
+		case *CmdExecutor:
+			if v.cmd.Before {
+				beforeCommands = append(beforeCommands, v)
+			} else {
+				commands = append(commands, v)
+			}
+		default:
+			log.Fatalf("unknown task types")
 		}
 	}
-	return &ParallelRunner{commands, files, false}
+	return &ParallelRunner{beforeCommands, commands, files, false}
 }
 
 func (pr ParallelRunner) Run() error {
 	start := time.Now()
+
+	if err := pr.runBeforeCommands(); err != nil {
+		return err
+	}
 
 	if err := pr.runGenerators(); err != nil {
 		return err
@@ -49,6 +62,15 @@ func (pr ParallelRunner) Run() error {
 
 func (pr ParallelRunner) runCommands() error {
 	for _, cmd := range pr.commands {
+		if err := cmd.Run(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (pr ParallelRunner) runBeforeCommands() error {
+	for _, cmd := range pr.beforeCommands {
 		if err := cmd.Run(); err != nil {
 			return err
 		}
