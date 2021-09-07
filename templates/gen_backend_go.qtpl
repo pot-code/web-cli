@@ -104,6 +104,10 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *ec
 		}))
 	}
 
+	if cfg.Env == gobit.EnvProduction {
+		app.HideBanner = true
+	}
+
 	app.Use(
 		middleware.ErrorHandling(middleware.ErrorHandlingOption{Handler: func(c echo.Context, err error) {
 			traceID := c.Response().Header().Get(echo.HeaderXRequestID)
@@ -120,6 +124,7 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *ec
 	)
 
 	em.Register(func(ctx context.Context) {
+		log.Println("shutdown echo server")
 		app.Close()
 	})
 
@@ -130,13 +135,6 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *ec
 
 {% func GoBackendBootstrapConfig(projectName string) -%}
 package bootstrap
-
-import (
-	"runtime"
-
-	gobit "github.com/pot-code/gobit/pkg"
-	"github.com/spf13/pflag"
-)
 
 // AppConfig App configuration
 type AppConfig struct {
@@ -153,24 +151,6 @@ type AppConfig struct {
 		Level    string `mapstructure:"level" yaml:"level"`         // global logging level
 		Format   string `mapstructure:"format" yaml:"format" validate:"oneof=json console"`
 	} `mapstructure:"logging" yaml:"logging"`
-}
-
-func init() {
-	// common
-	pflag.String("app_id", "{%v projectName %}", "application identifier (required)")
-	pflag.String("env", gobit.EnvDevelop, "runtime environment, can be 'develop' or 'production'")
-	pflag.String("port", ":8081", "listening port")
-
-	// database
-	pflag.String("database.driver", "pgx", "database driver to use")
-	pflag.String("database.dsn", "", "database host")
-	pflag.Int32("database.maxconn", int32(runtime.NumCPU()), `max connection count, if you encounter a "too many connections" error, please consider
-	increasing the max_connection value of your db server, or lower this value`)
-
-	// logging
-	pflag.String("logging.level", "info", "logging level")
-	pflag.String("logging.file_path", "", "log to file")
-	pflag.String("logging.format", "console", "log format, should be json or console")
 }
 {% endfunc %}
 
@@ -313,4 +293,38 @@ func InitializeServer(cfg *bootstrap.AppConfig, em *util.ExitManager) *HttpServe
 		]
 	},
 }
+{% endfunc %}
+
+{% func GoBackendDockerfile() -%}
+FROM golang:1.16 as builder
+
+WORKDIR /go/src
+
+COPY go.mod .
+COPY go.sum .
+
+RUN go mod download
+# build delve
+RUN go get github.com/go-delve/delve/cmd/dlv
+
+COPY . .
+# build prod app
+RUN GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o app ./cmd
+# build debug app
+RUN GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -gcflags "all=-N -l" -o debug ./cmd
+
+FROM alpine:3.8
+
+RUN apk add --no-cache libc6-compat
+
+WORKDIR /usr/bin/go
+
+COPY --from=builder ["/go/src/app", "/go/src/debug", "/go/bin/dlv", "./"]
+
+RUN chmod 0755 app
+RUN chmod 0755 debug
+
+EXPOSE 8081 2345
+
+CMD [ "./app" ]
 {% endfunc %}
