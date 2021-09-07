@@ -9,7 +9,6 @@ var addCmd = &cli.Command{
 	Subcommands: []*cli.Command{
 		addTypescriptCmd,
 		addReactCmd,
-		addJestCmd,
 		addGoAirCmd,
 		addPriceUpdateConfigCmd,
 	},
