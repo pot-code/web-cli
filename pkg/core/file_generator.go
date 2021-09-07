@@ -60,7 +60,9 @@ func (fg *FileGenerator) Run() error {
 
 	err := fg.write(file, provider())
 	if err == nil {
-		log.Infof("emit '%s'", fg.file)
+		log.WithFields(log.Fields{
+			"overwrite": overwrite,
+		}).Infof("emit '%s'", fg.file)
 	}
 	return errors.Wrapf(err, "failed to generate '%s'", file)
 }

@@ -18,7 +18,7 @@ var RootCmd = &cli.App{
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:        "debug",
-			Aliases:     []string{"d"},
+			Aliases:     []string{"D"},
 			Usage:       "enable debug",
 			Value:       false,
 			DefaultText: "false",

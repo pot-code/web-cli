@@ -10,5 +10,6 @@ var generateCmd = &cli.Command{
 		generateBECmd,
 		genAPICmd,
 		generateFECmd,
+		genFlagsCmd,
 	},
 }
