@@ -11,5 +11,6 @@ var addCmd = &cli.Command{
 		addReactCmd,
 		addGoAirCmd,
 		addPriceUpdateConfigCmd,
+		addViperTagCmd,
 	},
 }

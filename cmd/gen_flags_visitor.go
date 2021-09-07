@@ -13,7 +13,7 @@ var (
 	ErrUnhandledEt             = errors.New("no handler for array element type")
 	ErrUnhandledField          = errors.New("no handler for field type")
 	ErrUnhandledSelectorPrefix = errors.New("no handler for selector prefix")
-	ErrUnhandledPflagMapping   = errors.New("no handler for pflag mapping")
+	ErrPflagMappingNotFound    = errors.New("no pflag mapping found")
 )
 
 type pflagType struct {
@@ -52,7 +52,7 @@ func newConfigStructVisitor(fset *token.FileSet, pkg string) *configStructVisito
 
 func (cv *configStructVisitor) visitField(node ast.Node, prefix []string) {
 	n := node.(*ast.Field)
-	comment := n.Comment.Text()
+	comment := strings.TrimSpace(n.Comment.Text())
 	fieldName := n.Names[0].String()
 
 	tag := n.Tag.Value
@@ -64,8 +64,6 @@ func (cv *configStructVisitor) visitField(node ast.Node, prefix []string) {
 		}).Error(err)
 		panic(err)
 	}
-
-	comment = strings.TrimSpace(comment)
 
 	log.WithFields(log.Fields{
 		"tag_raw":              tag,
@@ -115,8 +113,8 @@ func (cv *configStructVisitor) visitIdent(node ast.Node, prefix []string, ft, co
 		log.WithFields(log.Fields{
 			"go_type":  ft,
 			"position": cv.fset.Position(n.Pos()),
-		}).Error(ErrUnhandledPflagMapping)
-		panic(ErrUnhandledPflagMapping)
+		}).Error(ErrPflagMappingNotFound)
+		panic(ErrPflagMappingNotFound)
 	}
 }
 
