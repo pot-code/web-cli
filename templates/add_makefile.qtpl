@@ -1,0 +1,17 @@
+{% func GoMakefile() -%}
+GO:=go
+GO_WIN:=GOOS=windows GOARCH=amd64 go
+LDFLAGS:=-s -w
+BIN_NAME:=app
+BIN_NAME_WIN:=app.exe
+OUT_PATH:=./.out
+
+build: generate
+	$(GO) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(BIN_NAME) .
+
+build-win64: generate
+	$(GO_WIN) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(BIN_NAME_WIN) .
+
+generate:
+	$(GO) generate
+{% endfunc -%}

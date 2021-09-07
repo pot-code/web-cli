@@ -10,6 +10,7 @@ var addCmd = &cli.Command{
 		addTypescriptCmd,
 		addReactCmd,
 		addGoAirCmd,
+		addGoMakefileCmd,
 		addPriceUpdateConfigCmd,
 		addViperTagCmd,
 	},
