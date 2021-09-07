@@ -153,11 +153,29 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 				return buf.Bytes()
 			},
 		},
+		&core.FileDesc{
+			Path: "Dockerfile",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendDockerfile(&buf)
+				return buf.Bytes()
+			},
+		},
+		&core.FileDesc{
+			Path: "Makefile",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoMakefile(&buf)
+				return buf.Bytes()
+			},
+		},
 	).AddCommand(&core.Command{
 		Bin:  "go",
 		Args: []string{"mod", "tidy"},
 		Dir:  path.Join("./" + config.ProjectName),
-	}).AddCommand(&core.Command{
+	}, &core.Command{
 		Bin:  "wire",
 		Args: []string{"./server"},
 		Dir:  path.Join("./" + config.ProjectName),

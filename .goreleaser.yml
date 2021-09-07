@@ -6,3 +6,5 @@ changelog:
     exclude:
       - '^docs:'
       - '^test:'
+builds:
+  - skip: true
