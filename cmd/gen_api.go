@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -78,9 +79,11 @@ var genAPICmd = &cli.Command{
 }
 
 func generateGoApi(config *genApiConfig) core.Runner {
+	handlerName := fmt.Sprintf("%s_handler.go", config.PackagePath)
+
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
-			Path: fmt.Sprintf("%s/%s_handler.go", "server", config.PackagePath),
+			Path: path.Join("server", handlerName),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
@@ -89,7 +92,7 @@ func generateGoApi(config *genApiConfig) core.Runner {
 			},
 		},
 		&core.FileDesc{
-			Path: fmt.Sprintf("%s/model.go", config.PackagePath),
+			Path: path.Join(config.PackagePath, "model.go"),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
@@ -107,7 +110,7 @@ func generateGoApi(config *genApiConfig) core.Runner {
 		// 	},
 		// },
 		&core.FileDesc{
-			Path: fmt.Sprintf("%s/service.go", config.PackagePath),
+			Path: path.Join(config.PackagePath, "service.go"),
 			Data: func() []byte {
 				var buf bytes.Buffer
 
