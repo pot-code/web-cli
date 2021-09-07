@@ -78,7 +78,7 @@ var genAPICmd = &cli.Command{
 }
 
 func generateGoApi(config *genApiConfig) core.Runner {
-	return util.NewTaskComposer("",
+	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: fmt.Sprintf("%s/%s_handler.go", "server", config.PackagePath),
 			Data: func() []byte {

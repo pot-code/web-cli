@@ -47,13 +47,14 @@ var addViperTagCmd = &cli.Command{
 func addViperFlag(config *addViperTagConfig) (core.Runner, error) {
 	var outData bytes.Buffer
 
-	return util.NewTaskComposer("", &core.FileDesc{
-		Path:      config.ConfigPath,
-		Overwrite: true,
-		Data: func() []byte {
-			return outData.Bytes()
-		},
-	}).AddCommand(&core.Command{
+	return util.NewTaskComposer("").AddFile(
+		&core.FileDesc{
+			Path:      config.ConfigPath,
+			Overwrite: true,
+			Data: func() []byte {
+				return outData.Bytes()
+			},
+		}).AddCommand(&core.Command{
 		Bin:    "gomodifytags",
 		Before: true,
 		Args: []string{

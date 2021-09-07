@@ -13,33 +13,29 @@ type TaskComposer struct {
 	root     string // generation root
 	files    []*core.FileDesc
 	commands []*core.Command
-	runner   core.Runner
-	cleaned  bool
 }
 
 var _ core.Runner = &TaskComposer{}
 
-func NewTaskComposer(root string, files ...*core.FileDesc) *TaskComposer {
-	return &TaskComposer{root: root, files: files, cleaned: false}
+func NewTaskComposer(root string) *TaskComposer {
+	return &TaskComposer{root: root}
 }
 
 // AddFile add file task
-func (tc *TaskComposer) AddFile(fd *core.FileDesc) *TaskComposer {
-	tc.files = append(tc.files, fd)
+func (tc *TaskComposer) AddFile(fds ...*core.FileDesc) *TaskComposer {
+	tc.files = append(tc.files, fds...)
 	return tc
 }
 
 // AddCommand add command
-func (tc *TaskComposer) AddCommand(cmd *core.Command) *TaskComposer {
-	tc.commands = append(tc.commands, cmd)
+func (tc *TaskComposer) AddCommand(cmds ...*core.Command) *TaskComposer {
+	tc.commands = append(tc.commands, cmds...)
 	return tc
 }
 
 func (tc *TaskComposer) Run() error {
 	log.Debugf("generation tree:\n%s", tc.getGenerationTree())
 	runner := tc.makeRunner()
-	tc.runner = runner
-
 	return runner.Run()
 }
 

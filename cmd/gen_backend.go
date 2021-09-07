@@ -71,8 +71,7 @@ var generateBECmd = &cli.Command{
 }
 
 func newGolangBackendGenerator(config *genBEConfig) core.Runner {
-	return util.NewTaskComposer(
-		config.ProjectName,
+	return util.NewTaskComposer(config.ProjectName).AddFile(
 		&core.FileDesc{
 			Path: "cmd/web.go",
 			Data: func() []byte {

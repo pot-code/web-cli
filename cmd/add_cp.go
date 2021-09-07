@@ -33,7 +33,7 @@ var addPriceUpdateConfigCmd = &cli.Command{
 }
 
 func addPriceUpdateEntry(name string) core.Runner {
-	return util.NewTaskComposer(name,
+	return util.NewTaskComposer(name).AddFile(
 		&core.FileDesc{
 			Path: "provider.yml",
 			Data: func() []byte {

@@ -19,7 +19,7 @@ var addGoAirCmd = &cli.Command{
 }
 
 func addGoAir() core.Runner {
-	return util.NewTaskComposer("",
+	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "air.toml",
 			Data: func() []byte {

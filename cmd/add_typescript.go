@@ -47,7 +47,7 @@ var addTypescriptCmd = &cli.Command{
 }
 
 func addTypescriptToNode() core.Runner {
-	return util.NewTaskComposer("",
+	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
 			Data: func() []byte {
@@ -83,7 +83,7 @@ func addTypescriptToNode() core.Runner {
 }
 
 func addTypescriptToReact() core.Runner {
-	return util.NewTaskComposer("",
+	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
 			Data: func() []byte {

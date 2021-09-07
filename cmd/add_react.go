@@ -80,7 +80,7 @@ var addReactCmd = &cli.Command{
 }
 
 func addReactEmotion() core.Runner {
-	return util.NewTaskComposer("",
+	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".babelrc",
 			Data: func() []byte {
@@ -149,5 +149,5 @@ func addReactComponent(name, dir string, scss, story bool) core.Runner {
 			},
 		})
 
-	return util.NewTaskComposer(dir, desc...)
+	return util.NewTaskComposer(dir).AddFile(desc...)
 }

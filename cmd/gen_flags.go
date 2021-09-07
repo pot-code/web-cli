@@ -69,21 +69,22 @@ func generateFlagsFile(config *genFlagsConfig) (core.Runner, error) {
 
 	pkg := visitor.pkg
 	fileName := config.FileName + constants.GoSuffix
-	return util.NewTaskComposer(pkg, &core.FileDesc{
-		Path:      fileName,
-		Overwrite: true,
-		Data: func() []byte {
-			var buf bytes.Buffer
+	return util.NewTaskComposer(pkg).AddFile(
+		&core.FileDesc{
+			Path:      fileName,
+			Overwrite: true,
+			Data: func() []byte {
+				var buf bytes.Buffer
 
-			templates.WriteGoGenPflags(&buf, pkg, fm)
-			data, err := format.Source(buf.Bytes())
-			if err != nil {
-				log.WithField("err", err).Error("failed to format code")
-				return buf.Bytes()
-			}
-			return data
-		},
-	}).AddCommand(&core.Command{
+				templates.WriteGoGenPflags(&buf, pkg, fm)
+				data, err := format.Source(buf.Bytes())
+				if err != nil {
+					log.WithField("err", err).Error("failed to format code")
+					return buf.Bytes()
+				}
+				return data
+			},
+		}).AddCommand(&core.Command{
 		Bin:  "goimports",
 		Args: []string{"-w", path.Join(pkg, fileName)},
 	}).AddCommand(&core.Command{
