@@ -171,6 +171,15 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 				return buf.Bytes()
 			},
 		},
+		&core.FileDesc{
+			Path: "air.toml",
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteGoAirConfig(&buf)
+				return buf.Bytes()
+			},
+		},
 	).AddCommand(&core.Command{
 		Bin:  "go",
 		Args: []string{"mod", "tidy"},

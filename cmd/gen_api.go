@@ -150,6 +150,10 @@ func generateGoApiFiles(config *genApiConfig) core.Runner {
 			Bin:  "wire",
 			Args: []string{"./server"},
 		},
+		&core.Command{
+			Bin:  "go",
+			Args: []string{"mod", "tidy"},
+		},
 	)
 }
 
