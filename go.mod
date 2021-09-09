@@ -4,7 +4,7 @@ go 1.14
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.1 // indirect
-	github.com/fatih/structtag v1.2.0 // indirect
+	github.com/fatih/structtag v1.2.0
 	github.com/go-playground/locales v0.14.0
 	github.com/go-playground/universal-translator v0.18.0
 	github.com/go-playground/validator/v10 v10.9.0
@@ -16,4 +16,5 @@ require (
 	github.com/valyala/quicktemplate v1.6.3
 	github.com/xlab/treeprint v1.1.0
 	golang.org/x/text v0.3.7
+	golang.org/x/tools v0.1.5
 )

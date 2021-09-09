@@ -185,7 +185,7 @@ func Serve() {
 	lm := util.LifecycleManager()
 	defer lm.WaitExitSignal(30 * time.Second)
 
-	hs := server.InitializeServer(cfg, lm)
+	hs := server.InitHttpServer(cfg, lm)
 
 	server.OnExitRoutes(cfg, hs)
 	api.PrintRoutes(hs.Server, hs.Logger)
@@ -246,22 +246,25 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
-}
-
-func NewHandler() *Handler {
-	return &Handler{}
+type HandlerCollection struct {
 }
 
 type HttpServer struct {
 	Logger    *zap.Logger
 	Server    *echo.Echo
-	Handlers  *Handler
+	Handlers  *HandlerCollection
 }
 
-func NewHttpServer(logger *zap.Logger, server *echo.Echo, handler *Handler) *HttpServer {
-	return &HttpServer{Logger: logger, Server: server, Handlers: handler}
+func NewHttpServer(logger *zap.Logger, server *echo.Echo, handlers *HandlerCollection) *HttpServer {
+	return &HttpServer{Logger: logger, Server: server, Handlers: handlers}
 }
+
+var WireHandlerCollection = wire.Struct(
+	new(HandlerCollection), "*",
+)
+var HttpSet = wire.NewSet(
+	WireHandlerCollection,
+)
 {% endfunc %}
 
 {% func GoBackendServerWire(projectName string, author string) -%}
@@ -275,9 +278,9 @@ import (
 	"github.com/pot-code/gobit/pkg/util"
 )
 
-func InitializeServer(cfg *bootstrap.AppConfig, lm *util.LifecycleManager) *HttpServer {
+func InitHttpServer(cfg *bootstrap.AppConfig, lm *util.LifecycleManager) *HttpServer {
 	wire.Build(
-		NewHttpServer, NewHandler,
+		NewHttpServer, HttpSet,
 		bootstrap.NewEchoServer, bootstrap.NewLogger,
 	)
 	return &HttpServer{}

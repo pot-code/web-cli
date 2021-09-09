@@ -157,8 +157,8 @@ func (cv *configStructVisitor) visitStruct(node ast.Node, prefix []string) {
 	}
 }
 
-func (cv *configStructVisitor) visit(node ast.Node) {
-	n := node.(*ast.StructType)
+func (cv *configStructVisitor) visit(root ast.Node) {
+	n := root.(*ast.StructType)
 
 	for _, f := range n.Fields.List {
 		cv.visitField(f, []string{})
