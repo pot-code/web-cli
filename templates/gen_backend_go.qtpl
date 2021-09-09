@@ -182,7 +182,7 @@ func Serve() {
 		log.Fatalf("failed to validate config: \n%s", err)
 	}
 
-	lm := util.LifecycleManager()
+	lm := util.NewLifecycleManager()
 	defer lm.WaitExitSignal(30 * time.Second)
 
 	hs := server.InitHttpServer(cfg, lm)
@@ -242,6 +242,7 @@ func OnExitRoutes(cfg *bootstrap.AppConfig, hs *HttpServer) {
 package server
 
 import (
+	"github.com/google/wire"
 	"github.com/labstack/echo/v4"
 	"go.uber.org/zap"
 )
