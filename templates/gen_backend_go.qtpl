@@ -21,23 +21,19 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func NewLogger(cfg *AppConfig, em *util.ExitManager) *zap.Logger {
+func NewLogger(cfg *AppConfig, lm *util.LifecycleManager) *zap.Logger {
 	ec := logging.NewEcsConfig()
 	enabler, err := logging.GetLevelEnabler(cfg.Logging.Level)
-	if err != nil {
-		log.Fatalf("failed to create logger: %s", err)
-	}
+	util.HandleFatalError("failed to create logger", err)
 
-	var (
-		out zapcore.WriteSyncer
-		zc  zapcore.Encoder
-	)
+	var zc zapcore.Encoder
 	if cfg.Logging.Format == "json" {
 		zc = zapcore.NewJSONEncoder(ec)
 	} else {
 		zc = zapcore.NewConsoleEncoder(ec)
 	}
 
+	var out zapcore.WriteSyncer
 	p := cfg.Logging.FilePath
 	if p == "" {
 		out = os.Stderr
@@ -51,22 +47,26 @@ func NewLogger(cfg *AppConfig, em *util.ExitManager) *zap.Logger {
 	core := zapcore.NewCore(zc, out, enabler)
 	logger := zap.New(core)
 
-	em.Register(func(ctx context.Context) {
+	lm.OnExit(func(ctx context.Context) {
+		log.Println("sync zap logger")
 		logger.Sync()
 	})
 
 	return logger
 }
 
-func NewSqlxDB(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *sqlx.DB {
+func NewSqlxDB(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager) *sqlx.DB {
 	conn, err := sqlx.Connect(cfg.Database.Driver, cfg.Database.Dsn)
-	if err != nil {
-		log.Fatalf("failed to create DB connection: %s", err)
-	}
+	util.HandleFatalError("failed to create DB connection", err)
 
 	conn.DB.SetMaxOpenConns(int(cfg.Database.MaxConn))
 	conn.DB.SetMaxIdleConns(int(cfg.Database.MaxConn) >> 2)
-	em.Register(func(ctx context.Context) {
+
+	lm.AddLivenessProbe(func(ctx context.Context) error {
+		return conn.PingContext(ctx)
+	})
+	lm.OnExit(func(ctx context.Context) {
+		log.Println("close sqlx DB connection")
 		conn.Close()
 	})
 
@@ -79,7 +79,7 @@ func NewSqlxDB(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *sqlx.D
 }
 
 // NewEchoServer create http server
-func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *echo.Echo {
+func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager) *echo.Echo {
 	app := echo.New()
 
 	if cfg.Env == gobit.EnvDevelop {
@@ -112,7 +112,7 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *ec
 		middleware.ErrorHandling(middleware.ErrorHandlingOption{Handler: func(c echo.Context, err error) {
 			traceID := c.Response().Header().Get(echo.HeaderXRequestID)
 			msg := api.ErrInternalError.Error()
-			logger.Error(err.Error(), zap.String("trace.id", traceID), zap.Object("detail", logging.NewZapErrorWrapper(err, 3)))
+			logger.Error(err.Error(), zap.String("trace.id", traceID), zap.Object("detail", logging.NewZapStacktraceError(err, 3)))
 
 			c.JSON(http.StatusInternalServerError,
 				api.NewRESTStandardError(msg).SetTraceID(traceID),
@@ -123,7 +123,7 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, em *util.ExitManager) *ec
 		middleware.ParseAcceptLanguage(middleware.ParseAcceptLanguageOption{}),
 	)
 
-	em.Register(func(ctx context.Context) {
+	lm.OnExit(func(ctx context.Context) {
 		log.Println("shutdown echo server")
 		app.Close()
 	})
@@ -138,19 +138,19 @@ package bootstrap
 
 // AppConfig App configuration
 type AppConfig struct {
-	AppID    string `mapstructure:"app_id" yaml:"app_id" validate:"required"`           // Application ID
-	Port     string `mapstructure:"port" yaml:"port"`                                   // bind listen port
-	Env      string `mapstructure:"env" yaml:"env" validate:"oneof=develop production"` // runtime environment
+	AppID    string `validate:"required"` // application ID
+	Port     string // bind listen port
+	Env      string `validate:"oneof=develop production"` // runtime environment
 	Database struct {
-		Driver  string `mapstructure:"driver" yaml:"driver" validate:"required"` // driver name
-		Dsn     string `mapstructure:"dsn" yaml:"dsn" validate:"required"`       // dsn string
-		MaxConn int32  `mapstructure:"maxconn" yaml:"maxconn" validate:"min=1"`  // maximum opening connections number
-	} `mapstructure:"database" yaml:"database"`
+		Driver  string `validate:"required"` // driver name
+		Dsn     string `validate:"required"` // dsn string
+		MaxConn int32  `validate:"min=1"`    // maximum opening connections number
+	}
 	Logging struct {
-		FilePath string `mapstructure:"file_path" yaml:"file_path"` // log file path
-		Level    string `mapstructure:"level" yaml:"level"`         // global logging level
-		Format   string `mapstructure:"format" yaml:"format" validate:"oneof=json console"`
-	} `mapstructure:"logging" yaml:"logging"`
+		FilePath string // log file path
+		Level    string // global logging level
+		Format   string `validate:"oneof=json console"`
+	}
 }
 {% endfunc %}
 
@@ -182,12 +182,12 @@ func Serve() {
 		log.Fatalf("failed to validate config: \n%s", err)
 	}
 
-	em := util.NewExitManager()
-	defer em.WaitSignal(30 * time.Second)
+	lm := util.LifecycleManager()
+	defer lm.WaitExitSignal(30 * time.Second)
 
-	hs := server.InitializeServer(cfg, em)
+	hs := server.InitializeServer(cfg, lm)
 
-	server.RegisterRoutes(cfg, hs)
+	server.OnExitRoutes(cfg, hs)
 	api.PrintRoutes(hs.Server, hs.Logger)
 
 	go func() {
@@ -229,7 +229,7 @@ import (
 	"github.com/pot-code/gobit/pkg/api"
 )
 
-func RegisterRoutes(cfg *bootstrap.AppConfig, hs *HttpServer) {
+func OnExitRoutes(cfg *bootstrap.AppConfig, hs *HttpServer) {
 	api.CreateEndpoint(hs.Server,
 		&api.Endpoint{
 			Prefix: "api",
@@ -275,7 +275,7 @@ import (
 	"github.com/pot-code/gobit/pkg/util"
 )
 
-func InitializeServer(cfg *bootstrap.AppConfig, em *util.ExitManager) *HttpServer {
+func InitializeServer(cfg *bootstrap.AppConfig, lm *util.LifecycleManager) *HttpServer {
 	wire.Build(
 		NewHttpServer, NewHandler,
 		bootstrap.NewEchoServer, bootstrap.NewLogger,
@@ -304,27 +304,20 @@ COPY go.mod .
 COPY go.sum .
 
 RUN go mod download
-# build delve
-RUN go get github.com/go-delve/delve/cmd/dlv
 
 COPY . .
 # build prod app
 RUN GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -ldflags="-s -w" -o app ./cmd
-# build debug app
-RUN GOARCH=amd64 GOOS=linux CGO_ENABLED=0 go build -gcflags "all=-N -l" -o debug ./cmd
 
 FROM alpine:3.8
 
-RUN apk add --no-cache libc6-compat
-
 WORKDIR /usr/bin/go
 
-COPY --from=builder ["/go/src/app", "/go/src/debug", "/go/bin/dlv", "./"]
+COPY --from=builder ["/go/src/app", "./"]
 
 RUN chmod 0755 app
-RUN chmod 0755 debug
 
-EXPOSE 8081 2345
+EXPOSE 8081 
 
 CMD [ "./app" ]
 {% endfunc %}
