@@ -158,7 +158,7 @@ func (gga *GenerateGoApiService) updateServerRegistry(visitor serverRegistryVisi
 	}
 
 	visitor.visitRoot(f, fset)
-	modifedAst := astutil.Apply(f, func(c *astutil.Cursor) bool {
+	modifiedAst := astutil.Apply(f, func(c *astutil.Cursor) bool {
 		n := c.Node()
 
 		if _, ok := n.(*ast.File); ok {
@@ -191,5 +191,5 @@ func (gga *GenerateGoApiService) updateServerRegistry(visitor serverRegistryVisi
 	if err != nil {
 		return fmt.Errorf("failed to update '%s': %w", registryFile, err)
 	}
-	return format.Node(out, fset, modifedAst)
+	return format.Node(out, fset, modifiedAst)
 }
