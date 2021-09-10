@@ -21,14 +21,20 @@ func NewTaskComposer(root string) *TaskComposer {
 	return &TaskComposer{root: root}
 }
 
-// AddFile add file task
 func (tc *TaskComposer) AddFile(fds ...*core.FileDesc) *TaskComposer {
 	tc.files = append(tc.files, fds...)
 	return tc
 }
 
-// AddCommand add command
 func (tc *TaskComposer) AddCommand(cmds ...*core.ShellCommand) *TaskComposer {
+	tc.commands = append(tc.commands, cmds...)
+	return tc
+}
+
+func (tc *TaskComposer) AddBeforeCommand(cmds ...*core.ShellCommand) *TaskComposer {
+	for _, cmd := range cmds {
+		cmd.Before = true
+	}
 	tc.commands = append(tc.commands, cmds...)
 	return tc
 }

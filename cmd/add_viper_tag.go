@@ -17,7 +17,7 @@ var AddViperTagCmd = core.NewCliLeafCommand("viper", "transform config struct to
 	&AddViperTagConfig{
 		StructName: "AppConfig",
 	},
-	core.WithAlias([]string{"V"}),
+	core.WithAlias([]string{"v"}),
 	core.WithArgUsage("config_path"),
 ).AddService(AddViperTagService).ExportCommand()
 
@@ -33,10 +33,9 @@ var AddViperTagService = util.NoCondFunctionService(func(c *cli.Context, cfg int
 				return outData.Bytes(), nil
 			},
 		},
-	).AddCommand(
+	).AddBeforeCommand(
 		&core.ShellCommand{
-			Bin:    "gomodifytags",
-			Before: true,
+			Bin: "gomodifytags",
 			Args: []string{
 				"-file",
 				config.ConfigPath,

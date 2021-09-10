@@ -20,7 +20,7 @@ type ShellCommand struct {
 }
 
 func (c *ShellCommand) String() string {
-	return fmt.Sprintf("cwd=%s bin=%s args=%s", c.Cwd, c.Bin, strings.Join(c.Args, ","))
+	return fmt.Sprintf("cwd=%s bin=%s args=%s", c.Cwd, c.Bin, strings.Join(c.Args, " "))
 }
 
 type ShellCmdExecutor struct {

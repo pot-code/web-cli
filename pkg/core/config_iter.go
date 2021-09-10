@@ -37,7 +37,7 @@ func IterateCliConfig(config interface{}, visitor ConfigStructVisitor, runtime *
 		case reflect.Bool:
 			visitor.VisitBooleanType(tf, vf, runtime)
 		case reflect.Int:
-			visitor.VisitBooleanType(tf, vf, runtime)
+			visitor.VisitIntType(tf, vf, runtime)
 		default:
 			panic("not implemented")
 		}

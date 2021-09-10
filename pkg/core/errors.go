@@ -1,11 +1,5 @@
 package core
 
-import (
-	"fmt"
-
-	"github.com/pkg/errors"
-)
-
 // CommandError command misuse error
 type CommandError struct {
 	cmd string
@@ -28,16 +22,4 @@ func (ce CommandError) Command() string {
 
 func (ce CommandError) Unwrap() error {
 	return ce.err
-}
-
-type StackTracer interface {
-	StackTrace() errors.StackTrace
-}
-
-func GetVerboseStackTrace(depth int, st StackTracer) string {
-	frames := st.StackTrace()
-	if depth > 0 {
-		frames = frames[:depth]
-	}
-	return fmt.Sprintf("%+v", frames)
 }

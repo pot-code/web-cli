@@ -260,11 +260,8 @@ func NewHttpServer(logger *zap.Logger, server *echo.Echo, handlers *HandlerColle
 	return &HttpServer{Logger: logger, Server: server, Handlers: handlers}
 }
 
-var WireHandlerCollection = wire.Struct(
-	new(HandlerCollection), "*",
-)
 var HttpSet = wire.NewSet(
-	WireHandlerCollection,
+	wire.Struct(new(HandlerCollection), "*"),
 )
 {% endfunc %}
 
