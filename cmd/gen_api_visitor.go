@@ -16,20 +16,21 @@ type serverRegistryVisitor interface {
 }
 
 type addHandlerVisitor struct {
-	cfg         *GenerateGoApiService
-	handlerName string
+	cfg                    *GenerateGoApiService
+	handlerName            string
+	handlerConstructorName string
 }
 
 var _ serverRegistryVisitor = &addHandlerVisitor{}
 
 func newAddHandlerVisitor(cfg *GenerateGoApiService) *addHandlerVisitor {
 	handlerName := fmt.Sprintf(constants.GoApiHandlerPattern, cfg.CamelModuleName)
-	return &addHandlerVisitor{cfg, handlerName}
+	handlerConstructorName := constants.GoConstructorPrefix + handlerName
+	return &addHandlerVisitor{cfg, handlerName, handlerConstructorName}
 }
 
 func (srv *addHandlerVisitor) visitHttpSet(node *ast.ValueSpec) error {
-	handlerName := srv.handlerName
-	handlerConstructorName := constants.GoConstructorPrefix + handlerName
+	handlerConstructorName := srv.handlerConstructorName
 	pkgName := srv.cfg.PackageName
 	ce := node.Values[0].(*ast.CallExpr)
 

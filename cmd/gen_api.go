@@ -74,15 +74,13 @@ func (gga *GenerateGoApiService) Handle(c *cli.Context, cfg interface{}) error {
 	}
 
 	gga.CamelModuleName = strcase.ToCamel(pkgName)
-	log.Debug("generated module name: ", gga.CamelModuleName)
 	gga.AuthorName = meta.Author
 	gga.ProjectName = meta.ProjectName
 
 	dir := gga.PackageName
-	log.Debug("output path: ", dir)
 	_, err = os.Stat(dir)
 	if err == nil {
-		log.Infof("[skipped]'%s' already exists", dir)
+		log.WithField("module", dir).Infof("module already exists")
 		return nil
 	}
 
