@@ -17,7 +17,10 @@ var GenerateFECmd = core.NewCliLeafCommand("frontend", "generate frontends",
 	},
 	core.WithArgUsage("project_name"),
 	core.WithAlias([]string{"fe"}),
-).AddService(new(GenerateReactFeService)).AddService(new(GenerateNextJsFeService)).ExportCommand()
+).AddService(
+	new(GenerateReactFeService),
+	new(GenerateNextJsFeService),
+).ExportCommand()
 
 type GenerateReactFeService struct{}
 

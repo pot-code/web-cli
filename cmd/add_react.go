@@ -25,7 +25,10 @@ var AddReactCmd = core.NewCliLeafCommand("react", "add React components",
 	new(AddReactConfig),
 	core.WithArgUsage("component_name"),
 	core.WithAlias([]string{"r"}),
-).AddService(new(AddReactComponentService)).AddService(new(AddReactEmotionService)).ExportCommand()
+).AddService(
+	new(AddReactComponentService),
+	new(AddReactEmotionService),
+).ExportCommand()
 
 type AddReactComponentService struct {
 	ComponentName string

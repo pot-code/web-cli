@@ -39,9 +39,11 @@ var GenAPICmd = core.NewCliLeafCommand("api", "generate an api module",
 		GenType: "go",
 	},
 	core.WithArgUsage("module_name"),
-).AddService(&GenerateGoApiService{
-	RegistryFile: path.Join("server", "server.go"),
-}).ExportCommand()
+).AddService(
+	&GenerateGoApiService{
+		RegistryFile: path.Join("server", "server.go"),
+	},
+).ExportCommand()
 
 type GenerateGoApiService struct {
 	RegistryFile    string

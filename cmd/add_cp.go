@@ -13,7 +13,8 @@ type AddPriceUpdateConfig struct {
 	Name string `arg:"0" alias:"config_name" validate:"required"`
 }
 
-var AddPriceUpdateConfigCmd = core.NewCliLeafCommand("cp", "add a price update config folder", new(AddPriceUpdateConfig),
+var AddPriceUpdateConfigCmd = core.NewCliLeafCommand("cp", "add a price update config folder",
+	new(AddPriceUpdateConfig),
 	core.WithArgUsage("config_name"),
 ).AddService(new(AddPriceUpdateConfigService)).ExportCommand()
 

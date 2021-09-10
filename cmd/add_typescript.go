@@ -16,7 +16,10 @@ type AddTypescriptConfig struct {
 var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript support",
 	new(AddTypescriptConfig),
 	core.WithAlias([]string{"ts"}),
-).AddService(new(AddTypescriptToNodeService)).AddService(new(AddTypescriptToReactService)).ExportCommand()
+).AddService(
+	new(AddTypescriptToNodeService),
+	new(AddTypescriptToReactService),
+).ExportCommand()
 
 type AddTypescriptToNodeService struct{}
 

@@ -9,8 +9,9 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var AddGoMakefileCmd = core.NewCliLeafCommand("makefile", "add Makefile", nil).
-	AddService().ExportCommand()
+var AddGoMakefileCmd = core.NewCliLeafCommand("makefile", "add Makefile", nil,
+	core.WithAlias([]string{"m"}),
+).AddService(new(AddGoMakefileService)).ExportCommand()
 
 type AddGoMakefileService struct{}
 
