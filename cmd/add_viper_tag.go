@@ -34,7 +34,7 @@ var AddViperTagService = util.NoCondFunctionService(func(c *cli.Context, cfg int
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin:    "gomodifytags",
 			Before: true,
 			Args: []string{

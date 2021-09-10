@@ -139,15 +139,15 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "ent",
 			Args: []string{"init", modelName},
 		},
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "wire",
 			Args: []string{"./server"},
 		},
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
 		},

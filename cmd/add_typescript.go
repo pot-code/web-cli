@@ -50,7 +50,7 @@ func (arc *AddTypescriptToNodeService) Handle(c *cli.Context, cfg interface{}) e
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin: "npm",
 			Args: []string{"i", "-D",
 				"typescript",
@@ -96,7 +96,7 @@ func (arc *AddTypescriptToReactService) Handle(c *cli.Context, cfg interface{}) 
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin: "npm",
 			Args: []string{"i", "-D",
 				"@types/react",

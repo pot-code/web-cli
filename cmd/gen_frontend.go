@@ -33,10 +33,12 @@ func (grf *GenerateReactFeService) Cond(c *cli.Context) bool {
 func (grf *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GenFEConfig)
 
-	return util.NewTaskComposer("").AddCommand(&core.Command{
-		Bin:  "git",
-		Args: []string{"clone", "https://github.com/pot-code/react-boilerplate.git", config.ProjectName},
-	}).Run()
+	return util.NewTaskComposer("").AddCommand(
+		&core.ShellCommand{
+			Bin:  "git",
+			Args: []string{"clone", "https://github.com/pot-code/react-boilerplate.git", config.ProjectName},
+		},
+	).Run()
 }
 
 type GenerateNextJsFeService struct{}
@@ -50,8 +52,10 @@ func (gnf *GenerateNextJsFeService) Cond(c *cli.Context) bool {
 func (gnf *GenerateNextJsFeService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GenFEConfig)
 
-	return util.NewTaskComposer("").AddCommand(&core.Command{
-		Bin:  "yarn",
-		Args: []string{"create", "next-app", "--ts", config.ProjectName},
-	}).Run()
+	return util.NewTaskComposer("").AddCommand(
+		&core.ShellCommand{
+			Bin:  "yarn",
+			Args: []string{"create", "next-app", "--ts", config.ProjectName},
+		},
+	).Run()
 }

@@ -65,11 +65,11 @@ var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "goimports",
 			Args: []string{"-w", path.Join(pkg, fileName)},
 		},
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
 		},

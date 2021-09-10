@@ -12,7 +12,7 @@ import (
 type TaskComposer struct {
 	root     string // generation root
 	files    []*core.FileDesc
-	commands []*core.Command
+	commands []*core.ShellCommand
 }
 
 var _ core.Runner = &TaskComposer{}
@@ -28,7 +28,7 @@ func (tc *TaskComposer) AddFile(fds ...*core.FileDesc) *TaskComposer {
 }
 
 // AddCommand add command
-func (tc *TaskComposer) AddCommand(cmds ...*core.Command) *TaskComposer {
+func (tc *TaskComposer) AddCommand(cmds ...*core.ShellCommand) *TaskComposer {
 	tc.commands = append(tc.commands, cmds...)
 	return tc
 }
@@ -50,7 +50,7 @@ func (tc *TaskComposer) makeRunner() core.Runner {
 		tasks = append(tasks, core.NewFileGenerator(fd))
 	}
 	for _, cmd := range tc.commands {
-		tasks = append(tasks, core.NewCmdExecutor(cmd))
+		tasks = append(tasks, core.NewShellCmdExecutor(cmd))
 	}
 	return core.NewParallelRunner(tasks...)
 }

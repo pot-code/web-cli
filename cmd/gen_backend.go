@@ -157,12 +157,12 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
 			Dir:  path.Join("./" + projectName),
 		},
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "wire",
 			Args: []string{"./server"},
 			Dir:  path.Join("./" + projectName),

@@ -11,7 +11,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type Command struct {
+type ShellCommand struct {
 	Bin    string
 	Dir    string
 	Before bool // run before file generation
@@ -19,24 +19,24 @@ type Command struct {
 	Out    io.Writer
 }
 
-func (c Command) String() string {
+func (c ShellCommand) String() string {
 	if len(c.Args) > 0 {
 		return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
 	}
 	return c.Bin
 }
 
-type CmdExecutor struct {
-	cmd *Command
+type ShellCmdExecutor struct {
+	cmd *ShellCommand
 }
 
-var _ Runner = CmdExecutor{}
+var _ Runner = ShellCmdExecutor{}
 
-func NewCmdExecutor(cmd *Command) *CmdExecutor {
-	return &CmdExecutor{cmd}
+func NewShellCmdExecutor(cmd *ShellCommand) *ShellCmdExecutor {
+	return &ShellCmdExecutor{cmd}
 }
 
-func (ce CmdExecutor) Run() error {
+func (ce ShellCmdExecutor) Run() error {
 	cmd := ce.cmd
 	log.WithFields(log.Fields{"cmd": cmd, "context": "CmdExecutor.Run"}).Info("execute command")
 	proc := exec.Command(cmd.Bin, cmd.Args...)

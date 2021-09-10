@@ -28,7 +28,7 @@ func NewParallelRunner(tasks ...Runner) *ParallelRunner {
 		switch v := t.(type) {
 		case *FileGenerator:
 			files = append(files, v)
-		case *CmdExecutor:
+		case *ShellCmdExecutor:
 			if v.cmd.Before {
 				beforeCommands = append(beforeCommands, v)
 			} else {

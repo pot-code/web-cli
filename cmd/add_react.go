@@ -45,8 +45,7 @@ func (arc *AddReactComponentService) Handle(c *cli.Context, cfg interface{}) err
 	name := config.Name
 
 	arc.ComponentName = strings.ReplaceAll(name, "-", "_")
-	cmd := arc.addReactComponent(config)
-	return cmd.Run()
+	return arc.addReactComponent(config).Run()
 }
 
 func (arc *AddReactComponentService) addScss(cfg *AddReactConfig) *core.FileDesc {
@@ -138,11 +137,11 @@ func (arc *AddReactEmotionService) Handle(c *cli.Context, cfg interface{}) error
 			},
 		},
 	).AddCommand(
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "npm",
 			Args: []string{"i", "@emotion/react"},
 		},
-		&core.Command{
+		&core.ShellCommand{
 			Bin:  "npm",
 			Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
 		},
