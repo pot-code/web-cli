@@ -21,11 +21,11 @@ type AddPriceUpdateConfigService struct{}
 
 var _ core.CommandService = &AddPriceUpdateConfigService{}
 
-func (ggb *AddPriceUpdateConfigService) Cond(c *cli.Context) bool {
-	return c.String("type") == "go"
+func (apu *AddPriceUpdateConfigService) Cond(c *cli.Context) bool {
+	return true
 }
 
-func (ggb *AddPriceUpdateConfigService) Handle(c *cli.Context, cfg interface{}) error {
+func (apu *AddPriceUpdateConfigService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*AddPriceUpdateConfig)
 
 	return util.NewTaskComposer(config.Name).AddFile(

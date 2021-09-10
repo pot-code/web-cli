@@ -13,7 +13,8 @@ type AddTypescriptConfig struct {
 	Target string `flag:"target" alias:"t" usage:"project target" validate:"required,oneof=node react"`
 }
 
-var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript support", new(AddTypescriptConfig),
+var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript support",
+	new(AddTypescriptConfig),
 	core.WithAlias([]string{"ts"}),
 ).AddService(new(AddTypescriptToNodeService)).AddService(new(AddTypescriptToReactService)).ExportCommand()
 

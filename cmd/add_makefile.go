@@ -16,11 +16,11 @@ type AddGoMakefileService struct{}
 
 var _ core.CommandService = &AddGoMakefileService{}
 
-func (ggb *AddGoMakefileService) Cond(c *cli.Context) bool {
+func (agm *AddGoMakefileService) Cond(c *cli.Context) bool {
 	return true
 }
 
-func (ggb *AddGoMakefileService) Handle(c *cli.Context, cfg interface{}) error {
+func (agm *AddGoMakefileService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "Makefile",

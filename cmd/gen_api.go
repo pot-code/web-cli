@@ -34,7 +34,10 @@ type GenApiConfig struct {
 	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
 }
 
-var GenAPICmd = core.NewCliLeafCommand("api", "generate an api module", new(GenApiConfig),
+var GenAPICmd = core.NewCliLeafCommand("api", "generate an api module",
+	&GenApiConfig{
+		GenType: "go",
+	},
 	core.WithArgUsage("module_name"),
 ).AddService(&GenerateGoApiService{
 	RegistryFile: path.Join("server", "server.go"),
