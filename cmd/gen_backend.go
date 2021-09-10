@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/transform"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
@@ -56,6 +57,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				templates.WriteGoBackendCmdWeb(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: "bootstrap/config.go",
@@ -65,6 +67,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				templates.WriteGoBackendBootstrapConfig(&buf, projectName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: "bootstrap/create.go",
@@ -83,6 +86,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				templates.WriteGoBackendServerRoutes(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: "server/server.go",
@@ -92,6 +96,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				templates.WriteGoBackendServerServer(&buf)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: "server/wire.go",
@@ -101,6 +106,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				templates.WriteGoBackendServerWire(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: "main.go",
@@ -110,6 +116,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				templates.WriteGoBackendMain(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: "go.mod",
@@ -160,12 +167,12 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 		&core.ShellCommand{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
-			Dir:  path.Join("./" + projectName),
+			Cwd:  path.Join("./" + projectName),
 		},
 		&core.ShellCommand{
 			Bin:  "wire",
 			Args: []string{"./server"},
-			Dir:  path.Join("./" + projectName),
+			Cwd:  path.Join("./" + projectName),
 		},
 	).Run()
 }

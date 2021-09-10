@@ -23,7 +23,7 @@ type FileDesc struct {
 }
 
 func (fd *FileDesc) String() string {
-	return fmt.Sprintf("[FileDesc] path=%s overwrite=%v transforms=%d", fd.Path, fd.Overwrite, len(fd.Transforms))
+	return fmt.Sprintf("path=%s overwrite=%v transforms=%d", fd.Path, fd.Overwrite, len(fd.Transforms))
 }
 
 type FileGenerator struct {

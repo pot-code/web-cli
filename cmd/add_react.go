@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
+	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
@@ -137,13 +138,7 @@ func (arc *AddReactEmotionService) Handle(c *cli.Context, cfg interface{}) error
 			},
 		},
 	).AddCommand(
-		&core.ShellCommand{
-			Bin:  "npm",
-			Args: []string{"i", "@emotion/react"},
-		},
-		&core.ShellCommand{
-			Bin:  "npm",
-			Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
-		},
+		commands.YarnAdd("@emotion/react"),
+		commands.YarnAddDev("@emotion/babel-preset-css-prop"),
 	).Run()
 }

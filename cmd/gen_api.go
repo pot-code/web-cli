@@ -13,8 +13,10 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
+	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/constants"
 	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/transform"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
@@ -110,6 +112,7 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 				templates.WriteGoApiHandler(&buf, projectName, authorName, pkgName, svcName, handlerName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: path.Join(pkgName, "model.go"),
@@ -119,6 +122,7 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 				templates.WriteGoApiModel(&buf, pkgName, svcName, repoName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: path.Join(pkgName, "repo.go"),
@@ -128,6 +132,7 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 				templates.WriteGoApiRepo(&buf, pkgName, repoName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
 			Path: path.Join(pkgName, "service.go"),
@@ -137,20 +142,12 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 				templates.WriteGoApiService(&buf, pkgName, svcName, repoName)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 	).AddCommand(
-		&core.ShellCommand{
-			Bin:  "ent",
-			Args: []string{"init", modelName},
-		},
-		&core.ShellCommand{
-			Bin:  "wire",
-			Args: []string{"./server"},
-		},
-		&core.ShellCommand{
-			Bin:  "go",
-			Args: []string{"mod", "tidy"},
-		},
+		commands.GoEntInit(modelName),
+		commands.GoWire("./server"),
+		commands.GoModTidy(),
 	)
 }
 

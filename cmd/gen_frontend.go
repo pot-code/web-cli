@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/urfave/cli/v2"
@@ -34,10 +35,7 @@ func (grf *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error
 	config := cfg.(*GenFEConfig)
 
 	return util.NewTaskComposer("").AddCommand(
-		&core.ShellCommand{
-			Bin:  "git",
-			Args: []string{"clone", "https://github.com/pot-code/react-boilerplate.git", config.ProjectName},
-		},
+		commands.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
 	).Run()
 }
 
@@ -53,9 +51,6 @@ func (gnf *GenerateNextJsFeService) Handle(c *cli.Context, cfg interface{}) erro
 	config := cfg.(*GenFEConfig)
 
 	return util.NewTaskComposer("").AddCommand(
-		&core.ShellCommand{
-			Bin:  "yarn",
-			Args: []string{"create", "next-app", "--ts", config.ProjectName},
-		},
+		commands.YarnCreate("next-app", "--ts", config.ProjectName),
 	).Run()
 }

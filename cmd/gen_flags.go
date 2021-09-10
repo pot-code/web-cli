@@ -6,8 +6,10 @@ import (
 	"path"
 
 	"github.com/pkg/errors"
+	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/constants"
 	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/transform"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
@@ -54,18 +56,12 @@ var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 				var buf bytes.Buffer
 
 				templates.WriteGoGenPflags(&buf, pkg, fm)
-				// TODO: format output
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 	).AddCommand(
-		&core.ShellCommand{
-			Bin:  "goimports",
-			Args: []string{"-w", path.Join(pkg, fileName)},
-		},
-		&core.ShellCommand{
-			Bin:  "go",
-			Args: []string{"mod", "tidy"},
-		},
+		commands.GoImports(path.Join(pkg, fileName)),
+		commands.GoModTidy(),
 	).Run()
 })

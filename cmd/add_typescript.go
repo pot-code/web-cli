@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 
+	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
@@ -50,20 +51,17 @@ func (arc *AddTypescriptToNodeService) Handle(c *cli.Context, cfg interface{}) e
 			},
 		},
 	).AddCommand(
-		&core.ShellCommand{
-			Bin: "npm",
-			Args: []string{"i", "-D",
-				"typescript",
-				"eslint",
-				"@typescript-eslint/eslint-plugin",
-				"eslint-plugin-prettier",
-				"@typescript-eslint/parser",
-				"eslint-config-prettier",
-				"eslint-plugin-import",
-				"prettier",
-				"prettier-eslint",
-			},
-		},
+		commands.YarnAddDev(
+			"typescript",
+			"eslint",
+			"@typescript-eslint/eslint-plugin",
+			"eslint-plugin-prettier",
+			"@typescript-eslint/parser",
+			"eslint-config-prettier",
+			"eslint-plugin-import",
+			"prettier",
+			"prettier-eslint",
+		),
 	).Run()
 }
 
@@ -96,25 +94,22 @@ func (arc *AddTypescriptToReactService) Handle(c *cli.Context, cfg interface{}) 
 			},
 		},
 	).AddCommand(
-		&core.ShellCommand{
-			Bin: "npm",
-			Args: []string{"i", "-D",
-				"@types/react",
-				"@typescript-eslint/eslint-plugin",
-				"@typescript-eslint/parser",
-				"eslint",
-				"eslint-config-airbnb",
-				"eslint-config-prettier",
-				"eslint-import-resolver-typescript",
-				"eslint-plugin-import",
-				"eslint-plugin-jsx-a11y",
-				"eslint-plugin-prettier",
-				"eslint-plugin-react",
-				"eslint-plugin-react-hooks",
-				"prettier",
-				"prettier-eslint",
-				"typescript",
-			},
-		},
+		commands.YarnAddDev(
+			"@types/react",
+			"@typescript-eslint/eslint-plugin",
+			"@typescript-eslint/parser",
+			"eslint",
+			"eslint-config-airbnb",
+			"eslint-config-prettier",
+			"eslint-import-resolver-typescript",
+			"eslint-plugin-import",
+			"eslint-plugin-jsx-a11y",
+			"eslint-plugin-prettier",
+			"eslint-plugin-react",
+			"eslint-plugin-react-hooks",
+			"prettier",
+			"prettier-eslint",
+			"typescript",
+		),
 	).Run()
 }
