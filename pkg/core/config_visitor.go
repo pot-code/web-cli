@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/pot-code/web-cli/pkg/validate"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -23,7 +24,7 @@ var _ ConfigStructVisitor = &ExtractFlagsVisitor{}
 func (efv *ExtractFlagsVisitor) VisitStringType(tf reflect.StructField, vf reflect.Value, c *cli.Context) error {
 	tag := tf.Tag
 
-	if flagTag := tag.Get("flag"); flagTag != "" {
+	if flagName := tag.Get("flag"); flagName != "" {
 		alias := tag.Get("alias")
 		usage := tag.Get("usage")
 
@@ -33,7 +34,7 @@ func (efv *ExtractFlagsVisitor) VisitStringType(tf reflect.StructField, vf refle
 		}
 
 		flag := &cli.StringFlag{
-			Name:     flagTag,
+			Name:     flagName,
 			Required: required,
 		}
 
@@ -51,18 +52,26 @@ func (efv *ExtractFlagsVisitor) VisitStringType(tf reflect.StructField, vf refle
 		}
 		flag.Usage = usage
 
+		log.WithFields(log.Fields{
+			"name":     flagName,
+			"type":     tf.Type.String(),
+			"required": required,
+			"alias":    alias,
+			"usage":    usage,
+		}).Debug("register flag")
+
 		efv.Flags = append(efv.Flags, flag)
 	}
 	return nil
 }
 
 func (efv *ExtractFlagsVisitor) VisitBooleanType(tf reflect.StructField, vf reflect.Value, c *cli.Context) error {
-	if flagTag := tf.Tag.Get("flag"); flagTag != "" {
+	if flagName := tf.Tag.Get("flag"); flagName != "" {
 		usage := tf.Tag.Get("usage")
 		alias := tf.Tag.Get("alias")
 
 		flag := &cli.BoolFlag{
-			Name:  flagTag,
+			Name:  flagName,
 			Usage: usage,
 		}
 		if alias != "" {
@@ -71,6 +80,13 @@ func (efv *ExtractFlagsVisitor) VisitBooleanType(tf reflect.StructField, vf refl
 		if !vf.IsZero() {
 			flag.Value = vf.Bool()
 		}
+
+		log.WithFields(log.Fields{
+			"name":  flagName,
+			"type":  tf.Type.String(),
+			"alias": alias,
+			"usage": usage,
+		}).Debug("register flag")
 		efv.Flags = append(efv.Flags, flag)
 	}
 	return nil
@@ -81,17 +97,24 @@ func (efv *ExtractFlagsVisitor) VisitIntType(tf reflect.StructField, vf reflect.
 		usage := tf.Tag.Get("usage")
 		alias := tf.Tag.Get("alias")
 
-		flag := &cli.IntFlag{
+		flagName := &cli.IntFlag{
 			Name:  flagTag,
 			Usage: usage,
 		}
 		if alias != "" {
-			flag.Aliases = strings.Split(alias, ",")
+			flagName.Aliases = strings.Split(alias, ",")
 		}
 		if !vf.IsZero() {
-			flag.Value = int(vf.Int())
+			flagName.Value = int(vf.Int())
 		}
-		efv.Flags = append(efv.Flags, flag)
+
+		log.WithFields(log.Fields{
+			"name":  flagName,
+			"type":  tf.Type.String(),
+			"alias": alias,
+			"usage": usage,
+		}).Debug("register flag")
+		efv.Flags = append(efv.Flags, flagName)
 	}
 	return nil
 }

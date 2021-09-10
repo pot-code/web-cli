@@ -23,11 +23,11 @@ type GenerateReactFeService struct{}
 
 var _ core.CommandService = &GenerateReactFeService{}
 
-func (ggb *GenerateReactFeService) Cond(c *cli.Context) bool {
+func (grf *GenerateReactFeService) Cond(c *cli.Context) bool {
 	return c.String("type") == "react"
 }
 
-func (ggb *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error {
+func (grf *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GenFEConfig)
 
 	return util.NewTaskComposer("").AddCommand(&core.Command{
@@ -40,11 +40,11 @@ type GenerateNextJsFeService struct{}
 
 var _ core.CommandService = &GenerateNextJsFeService{}
 
-func (ggb *GenerateNextJsFeService) Cond(c *cli.Context) bool {
+func (gnf *GenerateNextJsFeService) Cond(c *cli.Context) bool {
 	return c.String("type") == "next"
 }
 
-func (ggb *GenerateNextJsFeService) Handle(c *cli.Context, cfg interface{}) error {
+func (gnf *GenerateNextJsFeService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GenFEConfig)
 
 	return util.NewTaskComposer("").AddCommand(&core.Command{

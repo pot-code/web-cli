@@ -31,12 +31,6 @@ func IterateCliConfig(config interface{}, visitor ConfigStructVisitor, runtime *
 			continue
 		}
 
-		log.WithFields(log.Fields{
-			"tag":   tf.Tag,
-			"field": tf.Name,
-			"type":  tf.Type.String(),
-		}).Debug("field description")
-
 		switch tf.Type.Kind() {
 		case reflect.String:
 			visitor.VisitStringType(tf, vf, runtime)

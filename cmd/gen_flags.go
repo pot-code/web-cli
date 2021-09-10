@@ -32,11 +32,11 @@ type GenViperFlagsService struct{}
 
 var _ core.CommandService = &GenGolangBeService{}
 
-func (ggb *GenViperFlagsService) Cond(c *cli.Context) bool {
+func (gvf *GenViperFlagsService) Cond(c *cli.Context) bool {
 	return true
 }
 
-func (ggb *GenViperFlagsService) Handle(c *cli.Context, cfg interface{}) error {
+func (gvf *GenViperFlagsService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GenFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {

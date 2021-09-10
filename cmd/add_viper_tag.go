@@ -25,11 +25,11 @@ type AddViperTagService struct{}
 
 var _ core.CommandService = &AddViperTagService{}
 
-func (arc *AddViperTagService) Cond(c *cli.Context) bool {
+func (avt *AddViperTagService) Cond(c *cli.Context) bool {
 	return true
 }
 
-func (arc *AddViperTagService) Handle(c *cli.Context, cfg interface{}) error {
+func (avt *AddViperTagService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*AddViperTagConfig)
 
 	var outData bytes.Buffer
