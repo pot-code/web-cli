@@ -1,7 +1,6 @@
 package core
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
@@ -105,8 +104,4 @@ func (pr ParallelRunner) runGenerators() error {
 	case <-doneChan:
 		return nil
 	}
-}
-
-func (pr ParallelRunner) String() string {
-	return fmt.Sprintf("[ParallelRunner]: generator=%d, executor=%d", len(pr.files), len(pr.commands))
 }

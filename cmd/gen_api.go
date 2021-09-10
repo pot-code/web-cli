@@ -25,10 +25,9 @@ import (
 )
 
 const (
-	structHandlerCollection  = "HandlerCollection"
-	varWireHandlerCollection = "WireHandlerCollection"
-	varHttpSet               = "HttpSet"
-	varWireSet               = "WireSet"
+	structHandlerCollection = "HandlerCollection"
+	varHttpSet              = "HttpSet"
+	varWireSet              = "WireSet"
 )
 
 type GenApiConfig struct {
