@@ -16,13 +16,13 @@ type serverRegistryVisitor interface {
 }
 
 type addHandlerVisitor struct {
-	cfg         *genApiConfig
+	cfg         *GenerateGoApiService
 	handlerName string
 }
 
 var _ serverRegistryVisitor = &addHandlerVisitor{}
 
-func newAddHandlerVisitor(cfg *genApiConfig) *addHandlerVisitor {
+func newAddHandlerVisitor(cfg *GenerateGoApiService) *addHandlerVisitor {
 	handlerName := fmt.Sprintf(constants.GoApiHandlerPattern, cfg.CamelModuleName)
 	return &addHandlerVisitor{cfg, handlerName}
 }

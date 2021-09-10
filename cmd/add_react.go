@@ -9,77 +9,120 @@ import (
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
-type addReactConfig struct {
-	Hook  bool   `flag:"hook"`
-	Scss  bool   `flag:"scss"`
-	Story bool   `flag:"story"`
-	Dir   string `flag:"dir"`
-	Name  string `arg:"0" alias:"component_name" validate:"required,var"`
+type AddReactConfig struct {
+	Hook    bool   `flag:"hook" usage:"add react hook"`
+	Scss    bool   `flag:"scss" alias:"S" usage:"add scss module"`
+	Story   bool   `flag:"story" alias:"sb" usage:"add storybook"`
+	Emotion bool   `flag:"emotion" alias:"e" usage:"add @emotion/react"`
+	Dir     string `flag:"dir" alias:"d" usage:"output dir"`
+	Name    string `arg:"0" alias:"component_name" validate:"required,var"`
 }
 
-var addReactCmd = &cli.Command{
-	Name:      "react",
-	Usage:     "add React components",
-	Aliases:   []string{"r"},
-	ArgsUsage: "component_name",
-	Flags: []cli.Flag{
-		&cli.BoolFlag{
-			Name:    "scss",
-			Aliases: []string{"s"},
-			Usage:   "add scss module",
-			Value:   false,
-		},
-		&cli.BoolFlag{
-			Name:    "story",
-			Aliases: []string{"sb"},
-			Usage:   "add scss module",
-			Value:   false,
-		},
-		&cli.StringFlag{
-			Name:    "dir",
-			Aliases: []string{"d"},
-			Usage:   "output dir",
-			Value:   "",
-		},
-		&cli.BoolFlag{
-			Name:    "emotion",
-			Aliases: []string{"e"},
-			Usage:   "add @emotion/react",
-			Value:   false,
-		},
-	},
-	Action: func(c *cli.Context) error {
-		if c.Bool("emotion") {
-			cmd := addReactEmotion()
-			return cmd.Run()
-		}
+var AddReactCmd = core.NewCliLeafCommand("react", "add React components", new(AddReactConfig),
+	core.WithArgUsage("component_name"),
+	core.WithAlias([]string{"r"}),
+).AddService(new(AddReactComponentService)).AddService(new(AddReactEmotionService)).ExportCommand()
 
-		config := new(addReactConfig)
-		err := util.ParseConfig(c, config)
-		if err != nil {
-			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, c.Command.Name)
-			}
-			return err
-		}
-
-		name := config.Name
-		name = strings.ReplaceAll(name, "-", "_")
-		log.WithFields(log.Fields{
-			"cmd": "addReactCmd",
-		}).Debug("proceed component name: ", name)
-
-		cmd := addReactComponent(strcase.ToCamel(name), config.Dir, config.Scss, config.Story)
-
-		return cmd.Run()
-	},
+type AddReactComponentService struct {
+	ComponentName string
 }
 
-func addReactEmotion() core.Runner {
+var _ core.CommandService = &AddReactComponentService{}
+
+func (arc *AddReactComponentService) Cond(c *cli.Context) bool {
+	return true
+}
+
+func (arc *AddReactComponentService) Handle(c *cli.Context, cfg interface{}) error {
+	config := cfg.(*AddReactConfig)
+	name := config.Name
+
+	arc.ComponentName = strings.ReplaceAll(name, "-", "_")
+	cmd := arc.addReactComponent(config)
+	return cmd.Run()
+}
+
+func (arc *AddReactComponentService) addScss(cfg *AddReactConfig) *core.FileDesc {
+	rootClass := strcase.ToKebab(arc.ComponentName)
+
+	return &core.FileDesc{
+		Path: arc.getScssFileName(),
+		Data: func() []byte {
+			var buf bytes.Buffer
+
+			templates.WriteReactSCSS(&buf, rootClass)
+			return buf.Bytes()
+		},
+	}
+}
+
+func (arc *AddReactComponentService) addStoryBook(cfg *AddReactConfig) *core.FileDesc {
+	name := arc.ComponentName
+
+	return &core.FileDesc{
+		Path: arc.getStoryFileName(),
+		Data: func() []byte {
+			var buf bytes.Buffer
+
+			templates.WriteReactStory(&buf, name)
+			return buf.Bytes()
+		},
+	}
+}
+
+func (arc *AddReactComponentService) addReactComponent(cfg *AddReactConfig) core.Runner {
+	dir := cfg.Dir
+	name := arc.ComponentName
+
+	var styleFile string
+	var files = []*core.FileDesc{
+		{
+			Path: arc.getComponentFileName(),
+			Data: func() []byte {
+				var buf bytes.Buffer
+
+				templates.WriteReactComponent(&buf, name, styleFile)
+				return buf.Bytes()
+			},
+		},
+	}
+
+	if cfg.Scss {
+		styleFile = arc.getScssFileName()
+		files = append(files, arc.addScss(cfg))
+	}
+
+	if cfg.Story {
+		files = append(files, arc.addStoryBook(cfg))
+	}
+
+	return util.NewTaskComposer(dir).AddFile(files...)
+}
+
+func (arc *AddReactComponentService) getScssFileName() string {
+	return fmt.Sprintf("%s.%s.%s", arc.ComponentName, "module", "scss")
+}
+
+func (arc *AddReactComponentService) getStoryFileName() string {
+	return fmt.Sprintf("%s.%s.%s", arc.ComponentName, "stories", "tsx")
+}
+
+func (arc *AddReactComponentService) getComponentFileName() string {
+	return fmt.Sprintf("%s.%s", arc.ComponentName, "tsx")
+}
+
+type AddReactEmotionService struct{}
+
+var _ core.CommandService = &AddReactEmotionService{}
+
+func (arc *AddReactEmotionService) Cond(c *cli.Context) bool {
+	return c.Bool("emotion")
+}
+
+func (arc *AddReactEmotionService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".babelrc",
@@ -99,51 +142,5 @@ func addReactEmotion() core.Runner {
 			Bin:  "npm",
 			Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
 		},
-	)
-}
-
-func addReactComponent(name, dir string, scss, story bool) core.Runner {
-	var (
-		stylePath string
-		desc      []*core.FileDesc
-	)
-
-	if scss {
-		styleName := strcase.ToKebab(name)
-		stylePath = fmt.Sprintf("%s.%s.%s", name, "module", "scss")
-		desc = append(desc, &core.FileDesc{
-			Path: stylePath,
-			Data: func() []byte {
-				var buf bytes.Buffer
-
-				templates.WriteReactSCSS(&buf, styleName)
-				return buf.Bytes()
-			},
-		})
-	}
-
-	if story {
-		desc = append(desc, &core.FileDesc{
-			Path: fmt.Sprintf("%s.%s.%s", name, "stories", "tsx"),
-			Data: func() []byte {
-				var buf bytes.Buffer
-
-				templates.WriteReactStory(&buf, name)
-				return buf.Bytes()
-			},
-		})
-	}
-
-	desc = append(desc,
-		&core.FileDesc{
-			Path: fmt.Sprintf("%s.%s", name, "tsx"),
-			Data: func() []byte {
-				var buf bytes.Buffer
-
-				templates.WriteReactComponent(&buf, name, stylePath)
-				return buf.Bytes()
-			},
-		})
-
-	return util.NewTaskComposer(dir).AddFile(desc...)
+	).Run()
 }

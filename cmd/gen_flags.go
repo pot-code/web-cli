@@ -6,6 +6,7 @@ import (
 	"go/format"
 	"path"
 
+	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/pkg/constants"
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
@@ -14,46 +15,32 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type genFlagsConfig struct {
+type GenFlagsConfig struct {
 	ConfigPath string `arg:"0" alias:"CONFIG_PATH" validate:"required"`
-	FileName   string `flag:"name" validate:"var"`
+	FileName   string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
 }
 
-var genFlagsCmd = &cli.Command{
-	Name:      "flags",
-	Aliases:   []string{"f"},
-	Usage:     "generate flags registration go file",
-	ArgsUsage: "CONFIG_PATH",
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "name",
-			Usage:   "generated file name",
-			Aliases: []string{"n"},
-			Value:   "flags_gen",
-		},
+var GenFlagsCmd = core.NewCliLeafCommand("flags", "generate flags registration go file",
+	&GenFlagsConfig{
+		FileName: "config_gen",
 	},
-	Action: func(c *cli.Context) error {
-		config := new(genFlagsConfig)
-		err := util.ParseConfig(c, config)
-		if err != nil {
-			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, c.Command.Name)
-			}
-			return err
-		}
+	core.WithAlias([]string{"f"}),
+	core.WithArgUsage("CONFIG_PATH"),
+).AddService(new(GenViperFlagsService)).ExportCommand()
 
-		cmd, err := generateFlagsFile(config)
-		if err != nil {
-			return err
-		}
-		return cmd.Run()
-	},
+type GenViperFlagsService struct{}
+
+var _ core.CommandService = &GenGolangBeService{}
+
+func (ggb *GenViperFlagsService) Cond(c *cli.Context) bool {
+	return true
 }
 
-func generateFlagsFile(config *genFlagsConfig) (core.Runner, error) {
+func (ggb *GenViperFlagsService) Handle(c *cli.Context, cfg interface{}) error {
+	config := cfg.(*GenFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to parse pflags: %w", err)
+		return errors.WithStack(fmt.Errorf("failed to parse pflags: %w", err))
 	}
 
 	fm := []map[string]interface{}{}
@@ -94,5 +81,5 @@ func generateFlagsFile(config *genFlagsConfig) (core.Runner, error) {
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
 		},
-	), nil
+	).Run()
 }

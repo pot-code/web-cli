@@ -12,72 +12,48 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type genBEConfig struct {
-	GenType     string `flag:"type" validate:"required,oneof=go"`             // generation type
-	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"` // project name
-	Author      string `flag:"author" validate:"required,var"`                // project author name
-	Version     string `flag:"version" validate:"required,version"`           // version number
+type GenBeConfig struct {
+	GenType     string `flag:"type" alias:"t" usage:"backend type" validate:"required,oneof=go"`
+	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
+	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,var"`
+	GoVersion   string `flag:"version" alias:"v" usage:"specify go version" validate:"required,version"`
 }
 
-var generateBECmd = &cli.Command{
-	Name:      "backend",
-	Aliases:   []string{"be"},
-	Usage:     "generate backends",
-	ArgsUsage: "project_name",
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "type",
-			Aliases: []string{"t"},
-			Usage:   "backend type (go)",
-			Value:   "go",
-		},
-		&cli.StringFlag{
-			Name:     "author",
-			Aliases:  []string{"a"},
-			Usage:    "author name for the app (required)",
-			Required: true,
-		},
-		&cli.StringFlag{
-			Name:    "version",
-			Aliases: []string{"v"},
-			Usage:   "version number for go.mod generation",
-			Value:   "1.16",
-		},
+var GenBeCmd = core.NewCliLeafCommand("backend", "generate backends",
+	&GenBeConfig{
+		GenType:   "go",
+		GoVersion: "1.16",
 	},
-	Action: func(c *cli.Context) error {
-		config := new(genBEConfig)
-		err := util.ParseConfig(c, config)
-		if err != nil {
-			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, c.Command.Name)
-			}
-			return err
-		}
+	core.WithArgUsage("project_name"),
+	core.WithAlias([]string{"be"}),
+).AddService(new(GenGolangBeService)).ExportCommand()
 
-		if config.GenType == "go" {
-			_, err := os.Stat(config.ProjectName)
-			if err == nil {
-				log.Infof("[skipped]'%s' already exists", config.ProjectName)
-				return nil
-			}
+type GenGolangBeService struct{}
 
-			gen := newGolangBackendGenerator(config)
-			if err := gen.Run(); err != nil {
-				return err
-			}
-		}
+var _ core.CommandService = &GenGolangBeService{}
+
+func (ggb *GenGolangBeService) Cond(c *cli.Context) bool {
+	return c.String("type") == "go"
+}
+
+func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
+	config := cfg.(*GenBeConfig)
+	projectName := config.ProjectName
+	authorName := config.AuthorName
+
+	_, err := os.Stat(projectName)
+	if err == nil {
+		log.Infof("[skipped]'%s' already exists", projectName)
 		return nil
-	},
-}
+	}
 
-func newGolangBackendGenerator(config *genBEConfig) core.Runner {
-	return util.NewTaskComposer(config.ProjectName).AddFile(
+	return util.NewTaskComposer(projectName).AddFile(
 		&core.FileDesc{
 			Path: "cmd/web.go",
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendCmdWeb(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendCmdWeb(&buf, projectName, authorName)
 				return buf.Bytes()
 			},
 		},
@@ -86,7 +62,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendBootstrapConfig(&buf, config.ProjectName)
+				templates.WriteGoBackendBootstrapConfig(&buf, projectName)
 				return buf.Bytes()
 			},
 		},
@@ -95,7 +71,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendBootstrapCreate(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendBootstrapCreate(&buf, projectName, authorName)
 				return buf.Bytes()
 			},
 		},
@@ -104,7 +80,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendServerRoutes(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendServerRoutes(&buf, projectName, authorName)
 				return buf.Bytes()
 			},
 		},
@@ -122,7 +98,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendServerWire(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendServerWire(&buf, projectName, authorName)
 				return buf.Bytes()
 			},
 		},
@@ -131,7 +107,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendMain(&buf, config.ProjectName, config.Author)
+				templates.WriteGoBackendMain(&buf, projectName, authorName)
 				return buf.Bytes()
 			},
 		},
@@ -140,7 +116,7 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendMod(&buf, config.ProjectName, config.Author, config.Version)
+				templates.WriteGoBackendMod(&buf, projectName, authorName, config.GoVersion)
 				return buf.Bytes()
 			},
 		},
@@ -184,12 +160,12 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 		&core.Command{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
-			Dir:  path.Join("./" + config.ProjectName),
+			Dir:  path.Join("./" + projectName),
 		},
 		&core.Command{
 			Bin:  "wire",
 			Args: []string{"./server"},
-			Dir:  path.Join("./" + config.ProjectName),
+			Dir:  path.Join("./" + projectName),
 		},
-	)
+	).Run()
 }

@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
+	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/pkg/constants"
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
@@ -28,77 +29,68 @@ const (
 	varWireSet               = "WireSet"
 )
 
-type genApiConfig struct {
-	GenType         string `flag:"type" validate:"required,oneof=go"`            // generation type
-	ArgName         string `arg:"0" alias:"module_name" validate:"required,var"` // go pkg name
+type GenApiConfig struct {
+	GenType string `flag:"type" alias:"t" usage:"api type" validate:"required,oneof=go"` // generation type
+	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
+}
+
+var GenAPICmd = core.NewCliLeafCommand("api", "generate an api module", new(GenApiConfig),
+	core.WithArgUsage("module_name"),
+).AddService(&GenerateGoApiService{
+	RegistryFile: path.Join("server", "server.go"),
+}).ExportCommand()
+
+type GenerateGoApiService struct {
+	RegistryFile    string
 	PackageName     string
 	ProjectName     string
 	CamelModuleName string
 	AuthorName      string
+	Config          *GenApiConfig
 }
 
-var genAPICmd = &cli.Command{
-	Name:      "api",
-	Usage:     "generate an api module",
-	ArgsUsage: "module_name",
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "type",
-			Aliases: []string{"T"},
-			Usage:   "api type (go)",
-			Value:   "go",
-		},
-	},
-	Action: func(c *cli.Context) error {
-		cfg := new(genApiConfig)
-		err := util.ParseConfig(c, cfg)
-		if err != nil {
-			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, c.Command.Name)
-			}
-			return err
-		}
+var _ core.CommandService = &GenerateGoApiService{}
 
-		pkgName := strings.ReplaceAll(cfg.ArgName, "-", "_")
-		pkgName = strcase.ToSnake(pkgName)
-		cfg.PackageName = pkgName
+func (gga *GenerateGoApiService) Cond(c *cli.Context) bool {
+	return c.String("type") == "go"
+}
 
-		if cfg.GenType == "go" {
-			meta, err := util.ParseGoMod(constants.GoModFile)
-			if err != nil {
-				return err
-			}
+func (gga *GenerateGoApiService) Handle(c *cli.Context, cfg interface{}) error {
+	config := cfg.(*GenApiConfig)
+	pkgName := strings.ReplaceAll(config.ArgName, "-", "_")
+	pkgName = strcase.ToSnake(pkgName)
+	gga.PackageName = pkgName
 
-			cfg.CamelModuleName = strcase.ToCamel(pkgName)
-			log.Debug("generated module name: ", cfg.CamelModuleName)
-			cfg.AuthorName = meta.Author
-			cfg.ProjectName = meta.ProjectName
+	meta, err := util.ParseGoMod(constants.GoModFile)
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
-			dir := cfg.PackageName
-			log.Debug("output path: ", dir)
-			_, err = os.Stat(dir)
-			if err == nil {
-				log.Infof("[skipped]'%s' already exists", dir)
-				return nil
-			}
+	gga.CamelModuleName = strcase.ToCamel(pkgName)
+	log.Debug("generated module name: ", gga.CamelModuleName)
+	gga.AuthorName = meta.Author
+	gga.ProjectName = meta.ProjectName
 
-			registryFile := path.Join("server", "server.go")
-			if err := updateServerRegistry(cfg, registryFile, newAddHandlerVisitor(cfg)); err != nil {
-				return fmt.Errorf("failed to update registry: %w", err)
-			}
-
-			gen := generateGoApiFiles(cfg)
-			if err := gen.Run(); err != nil {
-				return err
-			}
-		}
+	dir := gga.PackageName
+	log.Debug("output path: ", dir)
+	_, err = os.Stat(dir)
+	if err == nil {
+		log.Infof("[skipped]'%s' already exists", dir)
 		return nil
-	},
+	}
+
+	if err := gga.updateServerRegistry(newAddHandlerVisitor(gga)); err != nil {
+		return errors.Wrap(err, "failed to update registry")
+	}
+
+	return gga.generateFiles().Run()
 }
 
-func generateGoApiFiles(config *genApiConfig) core.Runner {
-	modelName := config.CamelModuleName
-	pkgName := config.PackageName
+func (gga *GenerateGoApiService) generateFiles() core.Runner {
+	projectName := gga.ProjectName
+	authorName := gga.AuthorName
+	modelName := gga.CamelModuleName
+	pkgName := gga.PackageName
 	handlerFile := fmt.Sprintf("%s_handler.go", pkgName)
 	handlerName := fmt.Sprintf(constants.GoApiHandlerPattern, modelName)
 	svcName := fmt.Sprintf(constants.GoApiServicePattern, modelName)
@@ -110,7 +102,7 @@ func generateGoApiFiles(config *genApiConfig) core.Runner {
 			Data: func() []byte {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHandler(&buf, config.ProjectName, config.AuthorName, pkgName, svcName, handlerName)
+				templates.WriteGoApiHandler(&buf, projectName, authorName, pkgName, svcName, handlerName)
 				return buf.Bytes()
 			},
 		},
@@ -144,7 +136,7 @@ func generateGoApiFiles(config *genApiConfig) core.Runner {
 	).AddCommand(
 		&core.Command{
 			Bin:  "ent",
-			Args: []string{"init", config.CamelModuleName},
+			Args: []string{"init", modelName},
 		},
 		&core.Command{
 			Bin:  "wire",
@@ -157,7 +149,8 @@ func generateGoApiFiles(config *genApiConfig) core.Runner {
 	)
 }
 
-func updateServerRegistry(cfg *genApiConfig, registryFile string, visitor serverRegistryVisitor) error {
+func (gga *GenerateGoApiService) updateServerRegistry(visitor serverRegistryVisitor) error {
+	registryFile := gga.RegistryFile
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, registryFile, nil, parser.ParseComments)
 	if err != nil {

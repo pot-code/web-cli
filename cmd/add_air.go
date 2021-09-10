@@ -9,16 +9,18 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var addGoAirCmd = &cli.Command{
-	Name:  "air",
-	Usage: "add air live reload support",
-	Action: func(c *cli.Context) error {
-		cmd := addGoAir()
-		return cmd.Run()
-	},
+var AddGoAirCmd = core.NewCliLeafCommand("air", "add air live reload support", nil).
+	AddService(new(AddGoAirService)).ExportCommand()
+
+type AddGoAirService struct{}
+
+var _ core.CommandService = &AddGoAirService{}
+
+func (aga *AddGoAirService) Cond(c *cli.Context) bool {
+	return true
 }
 
-func addGoAir() core.Runner {
+func (aga *AddGoAirService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "air.toml",
@@ -29,5 +31,5 @@ func addGoAir() core.Runner {
 				return buf.Bytes()
 			},
 		},
-	)
+	).Run()
 }

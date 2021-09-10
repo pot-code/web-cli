@@ -50,7 +50,7 @@ func parseTag(tag string) (*tagMeta, error) {
 	return tg, nil
 }
 
-func parseConfigFile(config *genFlagsConfig) (*configStructVisitor, error) {
+func parseConfigFile(config *GenFlagsConfig) (*configStructVisitor, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, config.ConfigPath, nil, parser.ParseComments)
 	if err != nil {

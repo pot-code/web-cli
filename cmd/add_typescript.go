@@ -9,44 +9,23 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type addTypescriptConfig struct {
-	Target string `flag:"target" validate:"required,oneof=node react"`
+type AddTypescriptConfig struct {
+	Target string `flag:"target" alias:"t" usage:"project target" validate:"required,oneof=node react"`
 }
 
-var addTypescriptCmd = &cli.Command{
-	Name:    "typescript",
-	Usage:   "add typescript support",
-	Aliases: []string{"ts"},
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:    "target",
-			Aliases: []string{"t"},
-			Usage:   "project target (node/react)",
-			Value:   "react",
-		},
-	},
-	Action: func(c *cli.Context) error {
-		config := new(addTypescriptConfig)
-		err := util.ParseConfig(c, config)
-		if err != nil {
-			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, c.Command.Name)
-			}
-			return err
-		}
+var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript support", new(AddTypescriptConfig),
+	core.WithAlias([]string{"ts"}),
+).AddService(new(AddTypescriptToNodeService)).AddService(new(AddTypescriptToReactService)).ExportCommand()
 
-		var cmd core.Runner
-		if config.Target == "node" {
-			cmd = addTypescriptToNode()
-		} else {
-			cmd = addTypescriptToReact()
-		}
+type AddTypescriptToNodeService struct{}
 
-		return cmd.Run()
-	},
+var _ core.CommandService = &AddTypescriptToNodeService{}
+
+func (arc *AddTypescriptToNodeService) Cond(c *cli.Context) bool {
+	return c.String("target") == "node"
 }
 
-func addTypescriptToNode() core.Runner {
+func (arc *AddTypescriptToNodeService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
@@ -81,10 +60,18 @@ func addTypescriptToNode() core.Runner {
 				"prettier-eslint",
 			},
 		},
-	)
+	).Run()
 }
 
-func addTypescriptToReact() core.Runner {
+type AddTypescriptToReactService struct{}
+
+var _ core.CommandService = &AddTypescriptToReactService{}
+
+func (arc *AddTypescriptToReactService) Cond(c *cli.Context) bool {
+	return c.String("target") == "react"
+}
+
+func (arc *AddTypescriptToReactService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
@@ -125,5 +112,5 @@ func addTypescriptToReact() core.Runner {
 				"typescript",
 			},
 		},
-	)
+	).Run()
 }

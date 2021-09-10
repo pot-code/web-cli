@@ -1,4 +1,4 @@
-package util
+package validate
 
 import (
 	"fmt"
@@ -17,13 +17,13 @@ import (
 	"golang.org/x/text/language"
 )
 
-var NameExp = `^[_\w][-_\w]*$`
+var nameExp = `^[_\w][-_\w]*$`
 
-var NameReg = regexp.MustCompile(NameExp)
+var nameReg = regexp.MustCompile(nameExp)
 
 func ValidateVarName(name string) error {
-	if !NameReg.MatchString(name) {
-		return fmt.Errorf("input must be adhere to %s", NameExp)
+	if !nameReg.MatchString(name) {
+		return fmt.Errorf("input must be adhere to %s", nameExp)
 	}
 	return nil
 }
@@ -36,8 +36,8 @@ func ValidateVersion(v string) error {
 }
 
 var (
-	validate = validator.New()
-	trans    ut.Translator
+	V = validator.New()
+	T ut.Translator
 )
 
 var matcher = language.NewMatcher([]language.Tag{
@@ -53,31 +53,31 @@ func getLang() string {
 }
 
 func registerZhTrans(trans ut.Translator) {
-	validate.RegisterTranslation("version", trans, func(ut ut.Translator) error {
+	V.RegisterTranslation("version", trans, func(ut ut.Translator) error {
 		return ut.Add("version", "{0}必须符合版本号格式", false)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("version", fe.Field())
 		return t
 	})
-	validate.RegisterTranslation("var", trans, func(ut ut.Translator) error {
+	V.RegisterTranslation("var", trans, func(ut ut.Translator) error {
 		return ut.Add("var", "{0}必须符合格式'{1}'", false)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("var", fe.Field(), NameExp)
+		t, _ := ut.T("var", fe.Field(), nameExp)
 		return t
 	})
 }
 
 func registerEnTrans(trans ut.Translator) {
-	validate.RegisterTranslation("version", trans, func(ut ut.Translator) error {
+	V.RegisterTranslation("version", trans, func(ut ut.Translator) error {
 		return ut.Add("version", "{0} should be in version form", false)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
 		t, _ := ut.T("version", fe.Field())
 		return t
 	})
-	validate.RegisterTranslation("var", trans, func(ut ut.Translator) error {
+	V.RegisterTranslation("var", trans, func(ut ut.Translator) error {
 		return ut.Add("var", "{0} should be in form '{1}'", false)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("var", fe.Field(), NameExp)
+		t, _ := ut.T("var", fe.Field(), nameExp)
 		return t
 	})
 }
@@ -89,22 +89,22 @@ func init() {
 
 	ent, _ := uni.GetTranslator("en")
 	zht, _ := uni.GetTranslator("zh")
-	en_translations.RegisterDefaultTranslations(validate, ent)
-	zh_translations.RegisterDefaultTranslations(validate, zht)
+	en_translations.RegisterDefaultTranslations(V, ent)
+	zh_translations.RegisterDefaultTranslations(V, zht)
 
 	registerEnTrans(ent)
 	registerZhTrans(zht)
 
-	trans, _ = uni.GetTranslator(getLang())
+	T, _ = uni.GetTranslator(getLang())
 
-	validate.RegisterValidation("version", func(fl validator.FieldLevel) bool {
+	V.RegisterValidation("version", func(fl validator.FieldLevel) bool {
 		return ValidateVersion(fl.Field().String()) == nil
 	})
-	validate.RegisterValidation("var", func(fl validator.FieldLevel) bool {
+	V.RegisterValidation("var", func(fl validator.FieldLevel) bool {
 		return ValidateVarName(fl.Field().String()) == nil
 	})
 
-	validate.RegisterTagNameFunc(func(field reflect.StructField) string {
+	V.RegisterTagNameFunc(func(field reflect.StructField) string {
 		if name := field.Tag.Get("flag"); name != "" {
 			return name
 		}

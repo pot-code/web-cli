@@ -9,31 +9,26 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type addPriceUpdateConfig struct {
+type AddPriceUpdateConfig struct {
 	Name string `arg:"0" alias:"config_name" validate:"required"`
 }
 
-var addPriceUpdateConfigCmd = &cli.Command{
-	Name:      "cp",
-	Usage:     "add a price update config folder",
-	ArgsUsage: "config_name",
-	Action: func(c *cli.Context) error {
-		config := new(addPriceUpdateConfig)
-		err := util.ParseConfig(c, config)
-		if err != nil {
-			if _, ok := err.(*util.CommandError); ok {
-				cli.ShowCommandHelp(c, c.Command.Name)
-			}
-			return err
-		}
+var AddPriceUpdateConfigCmd = core.NewCliLeafCommand("cp", "add a price update config folder", new(AddPriceUpdateConfig),
+	core.WithArgUsage("config_name"),
+).AddService(new(AddPriceUpdateConfigService)).ExportCommand()
 
-		cmd := addPriceUpdateEntry(config.Name)
-		return cmd.Run()
-	},
+type AddPriceUpdateConfigService struct{}
+
+var _ core.CommandService = &AddPriceUpdateConfigService{}
+
+func (ggb *AddPriceUpdateConfigService) Cond(c *cli.Context) bool {
+	return c.String("type") == "go"
 }
 
-func addPriceUpdateEntry(name string) core.Runner {
-	return util.NewTaskComposer(name).AddFile(
+func (ggb *AddPriceUpdateConfigService) Handle(c *cli.Context, cfg interface{}) error {
+	config := cfg.(*AddPriceUpdateConfig)
+
+	return util.NewTaskComposer(config.Name).AddFile(
 		&core.FileDesc{
 			Path: "provider.yml",
 			Data: func() []byte {
@@ -52,5 +47,5 @@ func addPriceUpdateEntry(name string) core.Runner {
 				return buf.Bytes()
 			},
 		},
-	)
+	).Run()
 }

@@ -9,17 +9,18 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var addGoMakefileCmd = &cli.Command{
-	Name:    "makefile",
-	Aliases: []string{"m"},
-	Usage:   "add Makefile",
-	Action: func(c *cli.Context) error {
-		cmd := addGoMakefile()
-		return cmd.Run()
-	},
+var AddGoMakefileCmd = core.NewCliLeafCommand("makefile", "add Makefile", nil).
+	AddService().ExportCommand()
+
+type AddGoMakefileService struct{}
+
+var _ core.CommandService = &AddGoMakefileService{}
+
+func (ggb *AddGoMakefileService) Cond(c *cli.Context) bool {
+	return true
 }
 
-func addGoMakefile() core.Runner {
+func (ggb *AddGoMakefileService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "Makefile",
@@ -30,5 +31,5 @@ func addGoMakefile() core.Runner {
 				return buf.Bytes()
 			},
 		},
-	)
+	).Run()
 }
