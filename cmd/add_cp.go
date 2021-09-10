@@ -16,17 +16,9 @@ type AddPriceUpdateConfig struct {
 var AddPriceUpdateConfigCmd = core.NewCliLeafCommand("cp", "add a price update config folder",
 	new(AddPriceUpdateConfig),
 	core.WithArgUsage("config_name"),
-).AddService(new(AddPriceUpdateConfigService)).ExportCommand()
+).AddService(AddPriceUpdateConfigService).ExportCommand()
 
-type AddPriceUpdateConfigService struct{}
-
-var _ core.CommandService = &AddPriceUpdateConfigService{}
-
-func (apu *AddPriceUpdateConfigService) Cond(c *cli.Context) bool {
-	return true
-}
-
-func (apu *AddPriceUpdateConfigService) Handle(c *cli.Context, cfg interface{}) error {
+var AddPriceUpdateConfigService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*AddPriceUpdateConfig)
 
 	return util.NewTaskComposer(config.Name).AddFile(
@@ -49,4 +41,4 @@ func (apu *AddPriceUpdateConfigService) Handle(c *cli.Context, cfg interface{}) 
 			},
 		},
 	).Run()
-}
+})

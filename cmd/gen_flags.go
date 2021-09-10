@@ -26,17 +26,9 @@ var GenFlagsCmd = core.NewCliLeafCommand("flags", "generate flags registration g
 	},
 	core.WithAlias([]string{"f"}),
 	core.WithArgUsage("CONFIG_PATH"),
-).AddService(new(GenViperFlagsService)).ExportCommand()
+).AddService(GenViperFlagsService).ExportCommand()
 
-type GenViperFlagsService struct{}
-
-var _ core.CommandService = &GenGolangBeService{}
-
-func (gvf *GenViperFlagsService) Cond(c *cli.Context) bool {
-	return true
-}
-
-func (gvf *GenViperFlagsService) Handle(c *cli.Context, cfg interface{}) error {
+var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GenFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {
@@ -82,4 +74,4 @@ func (gvf *GenViperFlagsService) Handle(c *cli.Context, cfg interface{}) error {
 			Args: []string{"mod", "tidy"},
 		},
 	).Run()
-}
+})

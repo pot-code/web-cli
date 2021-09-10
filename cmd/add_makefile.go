@@ -11,17 +11,9 @@ import (
 
 var AddGoMakefileCmd = core.NewCliLeafCommand("makefile", "add Makefile", nil,
 	core.WithAlias([]string{"m"}),
-).AddService(new(AddGoMakefileService)).ExportCommand()
+).AddService(AddGoMakefileService).ExportCommand()
 
-type AddGoMakefileService struct{}
-
-var _ core.CommandService = &AddGoMakefileService{}
-
-func (agm *AddGoMakefileService) Cond(c *cli.Context) bool {
-	return true
-}
-
-func (agm *AddGoMakefileService) Handle(c *cli.Context, cfg interface{}) error {
+var AddGoMakefileService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "Makefile",
@@ -33,4 +25,4 @@ func (agm *AddGoMakefileService) Handle(c *cli.Context, cfg interface{}) error {
 			},
 		},
 	).Run()
-}
+})

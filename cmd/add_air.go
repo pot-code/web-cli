@@ -10,17 +10,9 @@ import (
 )
 
 var AddGoAirCmd = core.NewCliLeafCommand("air", "add air live reload support", nil).
-	AddService(new(AddGoAirService)).ExportCommand()
+	AddService(AddGoAirService).ExportCommand()
 
-type AddGoAirService struct{}
-
-var _ core.CommandService = &AddGoAirService{}
-
-func (aga *AddGoAirService) Cond(c *cli.Context) bool {
-	return true
-}
-
-func (aga *AddGoAirService) Handle(c *cli.Context, cfg interface{}) error {
+var AddGoAirService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "air.toml",
@@ -32,4 +24,4 @@ func (aga *AddGoAirService) Handle(c *cli.Context, cfg interface{}) error {
 			},
 		},
 	).Run()
-}
+})

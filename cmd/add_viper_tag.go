@@ -19,17 +19,9 @@ var AddViperTagCmd = core.NewCliLeafCommand("viper", "transform config struct to
 	},
 	core.WithAlias([]string{"V"}),
 	core.WithArgUsage("config_path"),
-).AddService(new(AddViperTagService)).ExportCommand()
+).AddService(AddViperTagService).ExportCommand()
 
-type AddViperTagService struct{}
-
-var _ core.CommandService = &AddViperTagService{}
-
-func (avt *AddViperTagService) Cond(c *cli.Context) bool {
-	return true
-}
-
-func (avt *AddViperTagService) Handle(c *cli.Context, cfg interface{}) error {
+var AddViperTagService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*AddViperTagConfig)
 
 	var outData bytes.Buffer
@@ -56,4 +48,4 @@ func (avt *AddViperTagService) Handle(c *cli.Context, cfg interface{}) error {
 			Out: &outData,
 		},
 	).Run()
-}
+})
