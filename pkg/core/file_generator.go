@@ -11,60 +11,74 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+type DataProvider = func() ([]byte, error)
+
+type Transform = func([]byte) ([]byte, error)
+
 type FileDesc struct {
-	Path      string
-	Data      DataProvider
-	Overwrite bool
+	Path       string
+	Data       DataProvider
+	Overwrite  bool
+	Transforms []Transform
 }
 
-func (fd FileDesc) String() string {
-	return fd.Path
+func (fd *FileDesc) String() string {
+	return fmt.Sprintf("[FileDesc] path=%s overwrite=%v transforms=%d", fd.Path, fd.Overwrite, len(fd.Transforms))
 }
-
-type DataProvider = func() []byte
 
 type FileGenerator struct {
-	file      string // file path to be generated
-	data      DataProvider
-	cleaned   bool
-	overwrite bool
+	file       string // file path to be generated
+	data       DataProvider
+	overwrite  bool
+	transforms []Transform
 }
 
 func NewFileGenerator(fd *FileDesc) Runner {
 	file := strings.TrimPrefix(fd.Path, "/")
-	log.Trace("registered file: ", file)
-	return &FileGenerator{file, fd.Data, false, fd.Overwrite}
+	return &FileGenerator{file, fd.Data, fd.Overwrite, fd.Transforms}
 }
 
 func (fg *FileGenerator) Run() error {
 	file := fg.file
-	provider := fg.data
-	overwrite := fg.overwrite
-
 	if file == "" {
-		log.Info("[skip]no path specified")
+		log.Warn("no path specified [skipped]")
 		return nil
 	}
 
+	provider := fg.data
 	if provider == nil {
-		log.Infof("[skip]no provider for '%s'", fg.file)
+		log.WithField("file", file).Warnf("no provider found [skipped]")
 		return nil
 	}
 
+	overwrite := fg.overwrite
 	if !overwrite {
 		if _, err := os.Stat(file); err == nil {
-			log.WithFields(log.Fields{"file": file, "overwrite": overwrite}).Info("[skip]no overwrite")
+			log.WithFields(log.Fields{"file": file, "overwrite": overwrite}).Info("emit file [skipped]")
 			return nil
 		}
 	}
 
-	err := fg.write(file, provider())
+	data, err := provider()
+	if err != nil {
+		return errors.Wrapf(err, "failed to get from provider [ %s ]", file)
+	}
+
+	for _, t := range fg.transforms {
+		data, err = t(data)
+		if err != nil {
+			return errors.Wrapf(err, "failed to apply transformation to [ %s ]", file)
+		}
+	}
+
+	err = fg.write(file, data)
 	if err == nil {
 		log.WithFields(log.Fields{
 			"overwrite": overwrite,
-		}).Infof("emit '%s'", fg.file)
+			"file":      fg.file,
+		}).Infof("emit file")
 	}
-	return errors.Wrapf(err, "failed to generate '%s'", file)
+	return errors.Wrapf(err, "failed to generate [ %s ]", file)
 }
 
 func (fg *FileGenerator) write(file string, data []byte) error {
@@ -74,8 +88,4 @@ func (fg *FileGenerator) write(file string, data []byte) error {
 		}
 	}
 	return errors.Wrapf(os.WriteFile(file, data, fs.ModePerm), "failed to write file '%s'", file)
-}
-
-func (fg *FileGenerator) String() string {
-	return fmt.Sprintf("[FileGenerator]path=%s", fg.file)
 }

@@ -19,11 +19,11 @@ type ShellCommand struct {
 	Out    io.Writer
 }
 
-func (c ShellCommand) String() string {
+func (c *ShellCommand) String() string {
 	if len(c.Args) > 0 {
 		return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
 	}
-	return c.Bin
+	return fmt.Sprintf("[ShellCommand] cwd=%s bin=%s args=%s", c.Dir, c.Bin, strings.Join(c.Args, ","))
 }
 
 type ShellCmdExecutor struct {
@@ -38,7 +38,7 @@ func NewShellCmdExecutor(cmd *ShellCommand) *ShellCmdExecutor {
 
 func (ce ShellCmdExecutor) Run() error {
 	cmd := ce.cmd
-	log.WithFields(log.Fields{"cmd": cmd, "context": "CmdExecutor.Run"}).Info("execute command")
+	log.WithFields(log.Fields{"cmd": cmd, "context": "ShellCmdExecutor.Run"}).Info("execute command")
 	proc := exec.Command(cmd.Bin, cmd.Args...)
 
 	if cmd.Dir != "" {

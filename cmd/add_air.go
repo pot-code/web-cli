@@ -16,11 +16,11 @@ var AddGoAirService = util.NoCondFunctionService(func(c *cli.Context, cfg interf
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "air.toml",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoAirConfig(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 	).Run()

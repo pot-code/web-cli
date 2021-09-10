@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"go/format"
 	"path"
 
 	"github.com/pkg/errors"
@@ -11,7 +10,6 @@ import (
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -52,16 +50,12 @@ var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 		&core.FileDesc{
 			Path:      fileName,
 			Overwrite: true,
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoGenPflags(&buf, pkg, fm)
-				data, err := format.Source(buf.Bytes())
-				if err != nil {
-					log.WithField("err", err).Error("failed to format code")
-					return buf.Bytes()
-				}
-				return data
+				// TODO: format output
+				return buf.Bytes(), nil
 			},
 		},
 	).AddCommand(

@@ -17,11 +17,11 @@ var AddGoMakefileService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "Makefile",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoMakefile(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 	).Run()

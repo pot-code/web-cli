@@ -104,38 +104,38 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: path.Join("server", handlerFile),
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiHandler(&buf, projectName, authorName, pkgName, svcName, handlerName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: path.Join(pkgName, "model.go"),
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiModel(&buf, pkgName, svcName, repoName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: path.Join(pkgName, "repo.go"),
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiRepo(&buf, pkgName, repoName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: path.Join(pkgName, "service.go"),
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoApiService(&buf, pkgName, svcName, repoName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 	).AddCommand(

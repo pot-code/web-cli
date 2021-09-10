@@ -50,110 +50,110 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer(projectName).AddFile(
 		&core.FileDesc{
 			Path: "cmd/web.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendCmdWeb(&buf, projectName, authorName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "bootstrap/config.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendBootstrapConfig(&buf, projectName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "bootstrap/create.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendBootstrapCreate(&buf, projectName, authorName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "server/routes.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendServerRoutes(&buf, projectName, authorName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "server/server.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendServerServer(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "server/wire.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendServerWire(&buf, projectName, authorName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "main.go",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendMain(&buf, projectName, authorName)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "go.mod",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendMod(&buf, projectName, authorName, config.GoVersion)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: ".vscode/settings.json",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendVscodeSettings(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "Dockerfile",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoBackendDockerfile(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "Makefile",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoMakefile(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 		&core.FileDesc{
 			Path: "air.toml",
-			Data: func() []byte {
+			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
 				templates.WriteGoAirConfig(&buf)
-				return buf.Bytes()
+				return buf.Bytes(), nil
 			},
 		},
 	).AddCommand(
