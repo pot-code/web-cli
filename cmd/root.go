@@ -9,7 +9,7 @@ var AppVersion string
 
 var RootCmd = &cli.App{
 	Name:  "web-cli",
-	Usage: "web utils",
+	Usage: "A toolkit to ease your development experience",
 	Commands: []*cli.Command{
 		generateCmd,
 		addCmd,

@@ -103,13 +103,6 @@ func addReactEmotion() core.Runner {
 }
 
 func addReactComponent(name, dir string, scss, story bool) core.Runner {
-	log.WithFields(log.Fields{
-		"caller": "addReactComponent",
-		"name":   name,
-		"dir":    dir,
-		"style":  scss,
-		"story":  story,
-	}).Debug("call function")
 	var (
 		stylePath string
 		desc      []*core.FileDesc

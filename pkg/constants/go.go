@@ -1,7 +1,8 @@
 package constants
 
 const (
-	GoSuffix = ".go"
+	GoSuffix  = ".go"
+	GoModFile = "go.mod"
 
 	GoGithubPrefix         = "github.com"
 	GoApiServicePattern    = "%sUseCase"

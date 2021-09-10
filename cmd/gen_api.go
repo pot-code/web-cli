@@ -64,7 +64,7 @@ var genAPICmd = &cli.Command{
 		cfg.PackageName = pkgName
 
 		if cfg.GenType == "go" {
-			meta, err := util.ParseGoMod("go.mod")
+			meta, err := util.ParseGoMod(constants.GoModFile)
 			if err != nil {
 				return err
 			}
