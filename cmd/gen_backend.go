@@ -13,17 +13,17 @@ import (
 )
 
 type genBEConfig struct {
-	GenType     string `name:"type" validate:"required,oneof=go"`    // generation type
-	ProjectName string `arg:"0" name:"NAME" validate:"required,var"` // project name
-	Author      string `name:"author" validate:"required,var"`       // project author name
-	Version     string `name:"version" validate:"required,version"`  // version number
+	GenType     string `flag:"type" validate:"required,oneof=go"`             // generation type
+	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"` // project name
+	Author      string `flag:"author" validate:"required,var"`                // project author name
+	Version     string `flag:"version" validate:"required,version"`           // version number
 }
 
 var generateBECmd = &cli.Command{
 	Name:      "backend",
 	Aliases:   []string{"be"},
 	Usage:     "generate backends",
-	ArgsUsage: "NAME",
+	ArgsUsage: "project_name",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "type",
@@ -180,13 +180,16 @@ func newGolangBackendGenerator(config *genBEConfig) core.Runner {
 				return buf.Bytes()
 			},
 		},
-	).AddCommand(&core.Command{
-		Bin:  "go",
-		Args: []string{"mod", "tidy"},
-		Dir:  path.Join("./" + config.ProjectName),
-	}, &core.Command{
-		Bin:  "wire",
-		Args: []string{"./server"},
-		Dir:  path.Join("./" + config.ProjectName),
-	})
+	).AddCommand(
+		&core.Command{
+			Bin:  "go",
+			Args: []string{"mod", "tidy"},
+			Dir:  path.Join("./" + config.ProjectName),
+		},
+		&core.Command{
+			Bin:  "wire",
+			Args: []string{"./server"},
+			Dir:  path.Join("./" + config.ProjectName),
+		},
+	)
 }

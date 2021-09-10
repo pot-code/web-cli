@@ -14,18 +14,18 @@ import (
 )
 
 type addReactConfig struct {
-	Hook  bool   `name:"hook"`
-	Scss  bool   `name:"scss"`
-	Story bool   `name:"story"`
-	Dir   string `name:"dir"`
-	Name  string `arg:"0" name:"NAME" validate:"required,var"`
+	Hook  bool   `flag:"hook"`
+	Scss  bool   `flag:"scss"`
+	Story bool   `flag:"story"`
+	Dir   string `flag:"dir"`
+	Name  string `arg:"0" alias:"component_name" validate:"required,var"`
 }
 
 var addReactCmd = &cli.Command{
 	Name:      "react",
 	Usage:     "add React components",
 	Aliases:   []string{"r"},
-	ArgsUsage: "NAME",
+	ArgsUsage: "component_name",
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
 			Name:    "scss",
@@ -90,13 +90,16 @@ func addReactEmotion() core.Runner {
 				return buf.Bytes()
 			},
 		},
-	).AddCommand(&core.Command{
-		Bin:  "npm",
-		Args: []string{"i", "@emotion/react"},
-	}).AddCommand(&core.Command{
-		Bin:  "npm",
-		Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
-	})
+	).AddCommand(
+		&core.Command{
+			Bin:  "npm",
+			Args: []string{"i", "@emotion/react"},
+		},
+		&core.Command{
+			Bin:  "npm",
+			Args: []string{"i", "-D", "@emotion/babel-preset-css-prop"},
+		},
+	)
 }
 
 func addReactComponent(name, dir string, scss, story bool) core.Runner {

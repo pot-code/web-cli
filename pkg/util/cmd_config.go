@@ -44,7 +44,7 @@ func ParseConfig(c *cli.Context, config interface{}) error {
 			} else {
 				panic("not implemented")
 			}
-		} else if name := tf.Tag.Get("name"); name != "" {
+		} else if name := tf.Tag.Get("flag"); name != "" {
 			if tf.Type.Kind() == reflect.String {
 				vf.SetString(c.String(name))
 			} else if tf.Type.Kind() == reflect.Bool {

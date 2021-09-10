@@ -10,13 +10,13 @@ import (
 )
 
 type addPriceUpdateConfig struct {
-	Name string `arg:"0" name:"NAME" validate:"required"`
+	Name string `arg:"0" alias:"config_name" validate:"required"`
 }
 
 var addPriceUpdateConfigCmd = &cli.Command{
 	Name:      "cp",
 	Usage:     "add a price update config folder",
-	ArgsUsage: "NAME",
+	ArgsUsage: "config_name",
 	Action: func(c *cli.Context) error {
 		config := new(addPriceUpdateConfig)
 		err := util.ParseConfig(c, config)

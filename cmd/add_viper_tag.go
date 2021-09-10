@@ -9,15 +9,15 @@ import (
 )
 
 type addViperTagConfig struct {
-	ConfigPath string `arg:"0" name:"CONFIG_PATH" validate:"required"`
-	StructName string `name:"struct" validate:"required"`
+	ConfigPath string `arg:"0" alias:"config_path" validate:"required"`
+	StructName string `flag:"struct" validate:"required"`
 }
 
 var addViperTagCmd = &cli.Command{
 	Name:      "viper",
 	Aliases:   []string{"v"},
-	Usage:     "generate flags registration go file",
-	ArgsUsage: "CONFIG_PATH",
+	Usage:     "transform config struct to pflags",
+	ArgsUsage: "config_path",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "struct",
@@ -54,17 +54,20 @@ func addViperFlag(config *addViperTagConfig) (core.Runner, error) {
 			Data: func() []byte {
 				return outData.Bytes()
 			},
-		}).AddCommand(&core.Command{
-		Bin:    "gomodifytags",
-		Before: true,
-		Args: []string{
-			"-file",
-			config.ConfigPath,
-			"-struct",
-			config.StructName,
-			"-add-tags",
-			"mapstructure,yaml",
 		},
-		Out: &outData,
-	}), nil
+	).AddCommand(
+		&core.Command{
+			Bin:    "gomodifytags",
+			Before: true,
+			Args: []string{
+				"-file",
+				config.ConfigPath,
+				"-struct",
+				config.StructName,
+				"-add-tags",
+				"mapstructure,yaml",
+			},
+			Out: &outData,
+		},
+	), nil
 }

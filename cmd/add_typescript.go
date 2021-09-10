@@ -10,7 +10,7 @@ import (
 )
 
 type addTypescriptConfig struct {
-	Target string `name:"target" validate:"required,oneof=node react"`
+	Target string `flag:"target" validate:"required,oneof=node react"`
 }
 
 var addTypescriptCmd = &cli.Command{
@@ -66,20 +66,22 @@ func addTypescriptToNode() core.Runner {
 				return buf.Bytes()
 			},
 		},
-	).AddCommand(&core.Command{
-		Bin: "npm",
-		Args: []string{"i", "-D",
-			"typescript",
-			"eslint",
-			"@typescript-eslint/eslint-plugin",
-			"eslint-plugin-prettier",
-			"@typescript-eslint/parser",
-			"eslint-config-prettier",
-			"eslint-plugin-import",
-			"prettier",
-			"prettier-eslint",
+	).AddCommand(
+		&core.Command{
+			Bin: "npm",
+			Args: []string{"i", "-D",
+				"typescript",
+				"eslint",
+				"@typescript-eslint/eslint-plugin",
+				"eslint-plugin-prettier",
+				"@typescript-eslint/parser",
+				"eslint-config-prettier",
+				"eslint-plugin-import",
+				"prettier",
+				"prettier-eslint",
+			},
 		},
-	})
+	)
 }
 
 func addTypescriptToReact() core.Runner {
@@ -102,24 +104,26 @@ func addTypescriptToReact() core.Runner {
 				return buf.Bytes()
 			},
 		},
-	).AddCommand(&core.Command{
-		Bin: "npm",
-		Args: []string{"i", "-D",
-			"@types/react",
-			"@typescript-eslint/eslint-plugin",
-			"@typescript-eslint/parser",
-			"eslint",
-			"eslint-config-airbnb",
-			"eslint-config-prettier",
-			"eslint-import-resolver-typescript",
-			"eslint-plugin-import",
-			"eslint-plugin-jsx-a11y",
-			"eslint-plugin-prettier",
-			"eslint-plugin-react",
-			"eslint-plugin-react-hooks",
-			"prettier",
-			"prettier-eslint",
-			"typescript",
+	).AddCommand(
+		&core.Command{
+			Bin: "npm",
+			Args: []string{"i", "-D",
+				"@types/react",
+				"@typescript-eslint/eslint-plugin",
+				"@typescript-eslint/parser",
+				"eslint",
+				"eslint-config-airbnb",
+				"eslint-config-prettier",
+				"eslint-import-resolver-typescript",
+				"eslint-plugin-import",
+				"eslint-plugin-jsx-a11y",
+				"eslint-plugin-prettier",
+				"eslint-plugin-react",
+				"eslint-plugin-react-hooks",
+				"prettier",
+				"prettier-eslint",
+				"typescript",
+			},
 		},
-	})
+	)
 }

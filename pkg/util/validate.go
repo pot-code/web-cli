@@ -105,7 +105,10 @@ func init() {
 	})
 
 	validate.RegisterTagNameFunc(func(field reflect.StructField) string {
-		if name := field.Tag.Get("name"); name != "" {
+		if name := field.Tag.Get("flag"); name != "" {
+			return name
+		}
+		if name := field.Tag.Get("alias"); name != "" {
 			return name
 		}
 		return field.Name

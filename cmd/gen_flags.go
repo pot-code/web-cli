@@ -15,8 +15,8 @@ import (
 )
 
 type genFlagsConfig struct {
-	ConfigPath string `arg:"0" name:"CONFIG_PATH" validate:"required"`
-	FileName   string `name:"name" validate:"var"`
+	ConfigPath string `arg:"0" alias:"CONFIG_PATH" validate:"required"`
+	FileName   string `flag:"name" validate:"var"`
 }
 
 var genFlagsCmd = &cli.Command{
@@ -84,11 +84,15 @@ func generateFlagsFile(config *genFlagsConfig) (core.Runner, error) {
 				}
 				return data
 			},
-		}).AddCommand(&core.Command{
-		Bin:  "goimports",
-		Args: []string{"-w", path.Join(pkg, fileName)},
-	}).AddCommand(&core.Command{
-		Bin:  "go",
-		Args: []string{"mod", "tidy"},
-	}), nil
+		},
+	).AddCommand(
+		&core.Command{
+			Bin:  "goimports",
+			Args: []string{"-w", path.Join(pkg, fileName)},
+		},
+		&core.Command{
+			Bin:  "go",
+			Args: []string{"mod", "tidy"},
+		},
+	), nil
 }

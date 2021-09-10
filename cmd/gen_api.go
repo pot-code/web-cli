@@ -29,8 +29,8 @@ const (
 )
 
 type genApiConfig struct {
-	GenType         string `name:"type" validate:"required,oneof=go"`    // generation type
-	ArgName         string `arg:"0" name:"NAME" validate:"required,var"` // go pkg name
+	GenType         string `flag:"type" validate:"required,oneof=go"`            // generation type
+	ArgName         string `arg:"0" alias:"module_name" validate:"required,var"` // go pkg name
 	PackageName     string
 	ProjectName     string
 	CamelModuleName string
@@ -40,7 +40,7 @@ type genApiConfig struct {
 var genAPICmd = &cli.Command{
 	Name:      "api",
 	Usage:     "generate an api module",
-	ArgsUsage: "MODULE_NAME",
+	ArgsUsage: "module_name",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "type",

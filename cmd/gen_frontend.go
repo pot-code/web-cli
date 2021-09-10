@@ -7,15 +7,15 @@ import (
 )
 
 type genFEConfig struct {
-	GenType     string `name:"type" validate:"required,oneof=react next"` // generation type
-	ProjectName string `arg:"0" name:"NAME" validate:"required,var"`      // project name
+	GenType     string `flag:"type" validate:"required,oneof=react next"`     // generation type
+	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"` // project name
 }
 
 var generateFECmd = &cli.Command{
 	Name:      "frontend",
 	Aliases:   []string{"fe"},
 	Usage:     "generate frontends",
-	ArgsUsage: "NAME",
+	ArgsUsage: "project_name",
 	Flags: []cli.Flag{
 		&cli.StringFlag{
 			Name:    "type",
