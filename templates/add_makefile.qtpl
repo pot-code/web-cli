@@ -18,6 +18,6 @@ clean:
 test:
 	@$(GO) test -v ./
 
-dev: generate
+dev:
 	@air -c air.toml
 {% endfunc -%}

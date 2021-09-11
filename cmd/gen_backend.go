@@ -163,6 +163,15 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				return buf.Bytes(), nil
 			},
 		},
+		&core.FileDesc{
+			Path: "config.yml",
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendConfigYml(&buf, projectName)
+				return buf.Bytes(), nil
+			},
+		},
 	).AddCommand(
 		&core.ShellCommand{
 			Bin:  "go",

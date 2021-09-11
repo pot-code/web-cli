@@ -5,12 +5,10 @@ import (
 	"context"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
-	"github.com/jmoiron/sqlx"
 	"github.com/labstack/echo/v4"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	gobit "github.com/pot-code/gobit/pkg"
@@ -19,71 +17,13 @@ import (
 	"github.com/pot-code/gobit/pkg/middleware"
 	"github.com/pot-code/gobit/pkg/util"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 )
-
-func NewLogger(cfg *AppConfig, lm *util.LifecycleManager) *zap.Logger {
-	ec := logging.NewEcsConfig()
-	enabler, err := logging.GetLevelEnabler(cfg.Logging.Level)
-	util.HandleFatalError("failed to create logger", err)
-
-	var zc zapcore.Encoder
-	if cfg.Logging.Format == "json" {
-		zc = zapcore.NewJSONEncoder(ec)
-	} else {
-		zc = zapcore.NewConsoleEncoder(ec)
-	}
-
-	var out zapcore.WriteSyncer
-	p := cfg.Logging.FilePath
-	if p == "" {
-		out = os.Stderr
-	} else {
-		out, err = logging.NewFileSyncer(p)
-		if err != nil {
-			log.Fatalf("failed to create logger: %s", err)
-		}
-	}
-
-	core := zapcore.NewCore(zc, out, enabler)
-	logger := zap.New(core)
-
-	lm.OnExit(func(ctx context.Context) {
-		log.Println("sync zap logger")
-		logger.Sync()
-	})
-
-	return logger
-}
-
-func NewSqlxDB(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager) *sqlx.DB {
-	conn, err := sqlx.Connect(cfg.Database.Driver, cfg.Database.Dsn)
-	util.HandleFatalError("failed to create DB connection", err)
-
-	conn.DB.SetMaxOpenConns(int(cfg.Database.MaxConn))
-	conn.DB.SetMaxIdleConns(int(cfg.Database.MaxConn) >> 2)
-
-	lm.AddLivenessProbe(func(ctx context.Context) error {
-		return conn.PingContext(ctx)
-	})
-	lm.OnExit(func(ctx context.Context) {
-		log.Println("close sqlx DB connection")
-		conn.Close()
-	})
-
-	logger.Debug("connect to database",
-		zap.String("db.driver", cfg.Database.Driver),
-		zap.String("db.dsn", cfg.Database.Dsn),
-		zap.Int32("db.maxconn", cfg.Database.MaxConn),
-	)
-	return conn
-}
 
 // NewEchoServer create http server
 func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager) *echo.Echo {
 	app := echo.New()
 
-	if cfg.Env == gobit.EnvDevelop {
+	if cfg.Base.Env == gobit.EnvDevelop {
 		app.Use(middleware.Logging(middleware.LoggingConfig{
 			Skipper: func(e echo.Context) bool {
 				return strings.HasPrefix(e.Request().RequestURI, "/healthz")
@@ -105,7 +45,7 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager
 		}))
 	}
 
-	if cfg.Env == gobit.EnvProduction {
+	if cfg.Base.Env == gobit.EnvProduction {
 		app.HideBanner = true
 	}
 
@@ -136,26 +76,36 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager
 }
 {% endfunc %}
 
-
 {% func GoBackendBootstrapConfig(projectName string) -%}
 package bootstrap
 
-// AppConfig App configuration
+import (
+	"github.com/google/wire"
+	"github.com/pot-code/gobit/pkg/config"
+	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/logging"
+)
+
 type AppConfig struct {
-	AppID    string `validate:"required"` // application ID
-	Port     string // bind listen port
-	Env      string `validate:"oneof=develop production"` // runtime environment
-	Database struct {
-		Driver  string `validate:"required"` // driver name
-		Dsn     string `validate:"required"` // dsn string
-		MaxConn int32  `validate:"min=1"`    // maximum opening connections number
-	}
-	Logging struct {
-		FilePath string // log file path
-		Level    string // global logging level
-		Format   string `validate:"oneof=json console"`
-	}
+	Base     *config.BaseConfig     `mapstructure:"base" yaml:"base"`
+	Database *db.DatabaseConfig     `mapstructure:"database" yaml:"database"`
+	Logging  *logging.LoggingConfig `mapstructure:"logging" yaml:"logging"`
 }
+
+var ConfigSet = wire.FieldsOf(
+	new(*AppConfig),
+	"Base",
+	"Database",
+	"Logging",
+)
+
+var InfraSet = wire.NewSet(
+	ConfigSet,
+	NewEchoServer,
+	logging.NewZapLoggerProvider,
+	db.NewSqlxProvider,
+)
+
 {% endfunc %}
 
 {% func GoBackendCmdWeb(projectName string, author string) -%}
@@ -170,13 +120,14 @@ import (
 	"github.com/{%s author %}/{%s projectName %}/bootstrap"
 	"github.com/{%s author %}/{%s projectName %}/server"
 	"github.com/pot-code/gobit/pkg/api"
+	"github.com/pot-code/gobit/pkg/config"
 	"github.com/pot-code/gobit/pkg/util"
 	"github.com/pot-code/gobit/pkg/validate"
 )
 
 func Serve() {
 	cfg := new(bootstrap.AppConfig)
-	cm := util.NewConfigManager()
+	cm := config.NewConfigManager()
 	v := validate.NewValidator()
 
 	if err := cm.LoadConfig(cfg); err != nil {
@@ -195,7 +146,7 @@ func Serve() {
 	api.PrintRoutes(hs.Server, hs.Logger)
 
 	go func() {
-		if err := hs.Server.Start(cfg.Port); err != nil {
+		if err := hs.Server.Start(cfg.Base.Port); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				log.Fatal(err)
 			}
@@ -260,7 +211,11 @@ type HttpServer struct {
 	Handlers  *HandlerCollection
 }
 
-func NewHttpServer(logger *zap.Logger, server *echo.Echo, handlers *HandlerCollection) *HttpServer {
+func NewHttpServer(
+	logger *zap.Logger,
+	server *echo.Echo,
+	handlers *HandlerCollection,
+) *HttpServer {
 	return &HttpServer{Logger: logger, Server: server, Handlers: handlers}
 }
 
@@ -282,8 +237,7 @@ import (
 
 func InitHttpServer(cfg *bootstrap.AppConfig, lm *util.LifecycleManager) *HttpServer {
 	wire.Build(
-		NewHttpServer, HttpSet,
-		bootstrap.NewEchoServer, bootstrap.NewLogger,
+		NewHttpServer, HttpSet, bootstrap.InfraSet,
 	)
 	return &HttpServer{}
 }
@@ -298,6 +252,20 @@ func InitHttpServer(cfg *bootstrap.AppConfig, lm *util.LifecycleManager) *HttpSe
 		]
 	},
 }
+{% endfunc %}
+
+{% func GoBackendConfigYml(projectName string) -%}
+base:
+  app_id: {%s projectName %}
+  env: development
+  port: ':8080'
+database:
+  driver: pgx
+  dsn: postgres://postgres:test@localhost:5432/?application_name={%s projectName %}
+  max_conn: 8
+logging:
+  level: debug
+  format: console
 {% endfunc %}
 
 {% func GoBackendDockerfile() -%}
