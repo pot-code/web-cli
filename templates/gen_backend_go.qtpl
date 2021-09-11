@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/jmoiron/sqlx"
@@ -108,6 +109,9 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager
 		app.HideBanner = true
 	}
 
+	app.GET("/healthz", func(c echo.Context) error {
+		return lm.Probe(5 * time.Second)
+	})
 	app.Use(
 		middleware.ErrorHandling(middleware.ErrorHandlingOption{Handler: func(c echo.Context, err error) {
 			traceID := c.Response().Header().Get(echo.HeaderXRequestID)

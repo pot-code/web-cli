@@ -1,10 +1,11 @@
 package core
 
 import (
-	"sync"
 	"time"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 )
 
 type ParallelRunner struct {
@@ -79,29 +80,13 @@ func (pr ParallelRunner) runBeforeCommands() error {
 
 func (pr ParallelRunner) runGenerators() error {
 	files := pr.files
-	errChan := make(chan error)
-	doneChan := make(chan struct{})
-	wg := sync.WaitGroup{}
+	eg := new(errgroup.Group)
 
-	for i := range files {
-		wg.Add(1)
-		go func(task Runner) {
-			if err := task.Run(); err != nil {
-				errChan <- err
-			} else {
-				wg.Done()
-			}
-		}(files[i])
+	for _, t := range files {
+		task := t // fix loopclosure
+		eg.Go(func() error {
+			return task.Run()
+		})
 	}
-	go func() {
-		wg.Wait()
-		doneChan <- struct{}{}
-	}()
-
-	select {
-	case err := <-errChan:
-		return err
-	case <-doneChan:
-		return nil
-	}
+	return errors.Wrap(eg.Wait(), "failed to run generators")
 }
