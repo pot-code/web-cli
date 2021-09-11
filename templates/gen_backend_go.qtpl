@@ -62,6 +62,7 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager
 				api.NewRESTStandardError(msg).SetTraceID(traceID),
 			)
 		}}),
+		echo_middleware.Gzip(),
 		echo_middleware.Secure(),
 		echo_middleware.RequestID(),
 		middleware.ParseAcceptLanguage(middleware.ParseAcceptLanguageOption{}),
