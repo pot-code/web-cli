@@ -6,23 +6,17 @@ BIN_NAME:=app
 BIN_NAME_WIN:=app.exe
 OUT_PATH:=./.out
 
-build: test generate
+build: test
 	@$(GO) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(BIN_NAME) .
 
-build-win64: test generate
+build-win64: test
 	@$(GO_WIN) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(BIN_NAME_WIN) .
-
-generate: ./bootstrap/*.go 
-	@$(GO) generate
 
 clean: 
 	@rm -rf .out
 
 test:
 	@$(GO) test -v ./
-
-migrate:
-	@$(GO) run ./ migrate
 
 dev: generate
 	@air -c air.toml
