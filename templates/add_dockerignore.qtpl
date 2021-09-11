@@ -1,0 +1,20 @@
+{% func GoDockerignore() -%}
+**/.classpath
+**/.dockerignore
+**/.env
+**/.git
+**/.gitignore
+**/.project
+**/.settings
+**/.toolstarget
+**/.vs
+**/.vscode
+**/Dockerfile*
+*.toml
+*.js
+
+.vscode
+.out
+.editorconfig
+tmp
+{% endfunc %}

@@ -172,6 +172,15 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 				return buf.Bytes(), nil
 			},
 		},
+		&core.FileDesc{
+			Path: ".dockerignore",
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoDockerignore(&buf)
+				return buf.Bytes(), nil
+			},
+		},
 	).AddCommand(
 		&core.ShellCommand{
 			Bin:  "go",
