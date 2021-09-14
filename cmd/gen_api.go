@@ -112,7 +112,7 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: path.Join(pkgName, "model.go"),
+			Path: path.Join(pkgName, "def.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 

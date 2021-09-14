@@ -5,9 +5,11 @@ import (
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"reflect"
 	"strings"
 
 	"github.com/fatih/structtag"
+	"github.com/pot-code/web-cli/pkg/validate"
 )
 
 type tagMeta struct {
@@ -16,8 +18,8 @@ type tagMeta struct {
 	MarshalName string
 }
 
-func parseTag(tag string) (*tagMeta, error) {
-	tt := strings.Trim(tag, "`")
+func parseTag(tag reflect.StructTag) (*tagMeta, error) {
+	tt := strings.Trim(string(tag), "`")
 
 	tags, err := structtag.Parse(tt)
 	if err != nil {
@@ -36,17 +38,7 @@ func parseTag(tag string) (*tagMeta, error) {
 		tg.Default = d.Value()
 	}
 
-	r, err := tags.Get("validate")
-	if err == nil {
-		options := strings.Split(r.Value(), ",")
-		for _, o := range options {
-			if o == "required" {
-				tg.Required = true
-				break
-			}
-		}
-	}
-
+	tg.Required = validate.IsRequired(tag)
 	return tg, nil
 }
 

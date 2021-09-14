@@ -4,6 +4,7 @@ import (
 	"errors"
 	"go/ast"
 	"go/token"
+	"reflect"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -56,7 +57,7 @@ func (cv *configStructVisitor) visitField(node ast.Node, prefix []string) {
 	fieldName := n.Names[0].String()
 
 	tag := n.Tag.Value
-	ptm, err := parseTag(tag)
+	ptm, err := parseTag(reflect.StructTag(tag))
 	if err != nil {
 		log.WithFields(log.Fields{
 			"fieldname": fieldName,
