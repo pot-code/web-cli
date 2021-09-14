@@ -16,37 +16,42 @@ type serverRegistryVisitor interface {
 }
 
 type addHandlerVisitor struct {
-	cfg                    *GenerateGoApiService
-	handlerName            string
-	handlerConstructorName string
+	cfg         *GenerateGoApiService
+	handlerName string
+	// handlerConstructorName string
 }
 
 var _ serverRegistryVisitor = &addHandlerVisitor{}
 
 func newAddHandlerVisitor(cfg *GenerateGoApiService) *addHandlerVisitor {
 	handlerName := fmt.Sprintf(constants.GoApiHandlerPattern, cfg.CamelModuleName)
-	handlerConstructorName := constants.GoConstructorPrefix + handlerName
-	return &addHandlerVisitor{cfg, handlerName, handlerConstructorName}
+	// handlerConstructorName := constants.GoConstructorPrefix + handlerName
+	// return &addHandlerVisitor{cfg, handlerName, handlerConstructorName}
+	return &addHandlerVisitor{cfg, handlerName}
 }
 
 func (srv *addHandlerVisitor) visitHttpSet(node *ast.ValueSpec) error {
-	handlerConstructorName := srv.handlerConstructorName
-	pkgName := srv.cfg.PackageName
-	ce := node.Values[0].(*ast.CallExpr)
+	// handlerConstructorName := srv.handlerConstructorName
+	// pkgName := srv.cfg.PackageName
+	// ce := node.Values[0].(*ast.CallExpr)
 
-	ce.Args = append(ce.Args,
-		&ast.Ident{Name: handlerConstructorName},
-		&ast.SelectorExpr{X: &ast.Ident{Name: pkgName}, Sel: &ast.Ident{Name: varWireSet}},
-	)
+	// ce.Args = append(ce.Args,
+	// 	&ast.Ident{Name: handlerConstructorName},
+	// 	&ast.SelectorExpr{X: &ast.Ident{Name: pkgName}, Sel: &ast.Ident{Name: varWireSet}},
+	// )
 	return nil
 }
 
 func (srv *addHandlerVisitor) visitHandlerCollection(node *ast.StructType) error {
+	pkgName := srv.cfg.PackageName
 	handlerName := srv.handlerName
 
 	node.Fields.List = append(node.Fields.List, &ast.Field{
 		Names: []*ast.Ident{{Name: handlerName}},
-		Type:  &ast.StarExpr{X: &ast.Ident{Name: handlerName}},
+		Type: &ast.StarExpr{X: &ast.SelectorExpr{
+			X:   &ast.Ident{Name: pkgName},
+			Sel: &ast.Ident{Name: handlerName},
+		}},
 	})
 	return nil
 }

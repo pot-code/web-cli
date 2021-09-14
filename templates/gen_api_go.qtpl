@@ -1,4 +1,4 @@
-{% func GoApiModel(pkg, svc, repo string) -%}
+{% func GoApiModel(pkg, svc, repo, handler string) -%}
 package {%v pkg %}
 
 import "github.com/google/wire"
@@ -10,7 +10,7 @@ type I{%s repo %} interface {
 }
 
 var WireSet = wire.NewSet(
-	New{%s svc %}, New{%s repo %},
+	New{%s svc %}, New{%s repo %}, New{%s handler %},
 	wire.Bind(new(I{%s svc %}), new(*{%s svc %})),
 	wire.Bind(new(I{%s repo %}), new(*{%s repo %})),
 )
@@ -48,17 +48,15 @@ func New{%s svc %}(repo I{%s repo %}, logger *zap.Logger) *{%s svc %} {
 }
 {% endfunc %}
 
-{% func GoApiHandler(project, author, pkg, svc, handler string) -%}
-package server
-
-import "github.com/{%s author %}/{%s project %}/{%s pkg %}"
+{% func GoApiHandler(pkg, svc, handler string) -%}
+package {%v pkg %}
 
 type {%s handler %} struct {
-	svc {%s pkg %}.I{%s svc %}
+	svc I{%s svc %}
 }
 
 func New{%s handler %}(
-	svc {%s pkg %}.I{%s svc %},
+	svc I{%s svc %},
 ) *{%s handler %} {
 	return &{%s handler %}{svc}
 }

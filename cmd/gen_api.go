@@ -91,38 +91,36 @@ func (gga *GenerateGoApiService) Handle(c *cli.Context, cfg interface{}) error {
 }
 
 func (gga *GenerateGoApiService) generateFiles() core.Runner {
-	projectName := gga.ProjectName
-	authorName := gga.AuthorName
 	modelName := gga.CamelModuleName
 	pkgName := gga.PackageName
-	handlerFile := fmt.Sprintf("%s_handler.go", pkgName)
+
 	handlerName := fmt.Sprintf(constants.GoApiHandlerPattern, modelName)
 	svcName := fmt.Sprintf(constants.GoApiServicePattern, modelName)
 	repoName := fmt.Sprintf(constants.GoApiRepositoryPattern, modelName)
 
-	return util.NewTaskComposer("").AddFile(
+	return util.NewTaskComposer(pkgName).AddFile(
 		&core.FileDesc{
-			Path: path.Join("server", handlerFile),
+			Path: "http_handler.go",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHandler(&buf, projectName, authorName, pkgName, svcName, handlerName)
+				templates.WriteGoApiHandler(&buf, pkgName, svcName, handlerName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: path.Join(pkgName, "def.go"),
+			Path: "def.go",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiModel(&buf, pkgName, svcName, repoName)
+				templates.WriteGoApiModel(&buf, pkgName, svcName, repoName, handlerName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: path.Join(pkgName, "repo.go"),
+			Path: "repo.go",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
@@ -132,7 +130,7 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: path.Join(pkgName, "service.go"),
+			Path: "service.go",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
