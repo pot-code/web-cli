@@ -12,7 +12,7 @@ type GenFEConfig struct {
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`                              // project name
 }
 
-var GenerateFECmd = core.NewCliLeafCommand("frontend", "generate frontends",
+var GenFECmd = core.NewCliLeafCommand("frontend", "generate frontends",
 	&GenFEConfig{
 		GenType: "react",
 	},

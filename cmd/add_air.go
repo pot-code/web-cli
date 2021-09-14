@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var AddGoAirCmd = core.NewCliLeafCommand("air", "add air live reload support", nil).
+var AddGoAirCmd = core.NewCliLeafCommand("air", "add air live reload config", nil).
 	AddService(AddGoAirService).ExportCommand()
 
 var AddGoAirService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {

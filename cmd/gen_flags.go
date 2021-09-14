@@ -20,7 +20,7 @@ type GenFlagsConfig struct {
 	FileName   string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
 }
 
-var GenFlagsCmd = core.NewCliLeafCommand("flags", "generate flags registration go file",
+var GenFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration based on struct",
 	&GenFlagsConfig{
 		FileName: "config_gen",
 	},

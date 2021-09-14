@@ -20,7 +20,7 @@ type GenBeConfig struct {
 	GoVersion   string `flag:"version" alias:"v" usage:"specify go version" validate:"required,version"`
 }
 
-var GenBeCmd = core.NewCliLeafCommand("backend", "generate backends",
+var GenBECmd = core.NewCliLeafCommand("backend", "generate backends",
 	&GenBeConfig{
 		GenType:   "go",
 		GoVersion: "1.16",

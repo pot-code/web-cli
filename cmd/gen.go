@@ -2,14 +2,14 @@ package cmd
 
 import "github.com/urfave/cli/v2"
 
-var GenerateCmd = &cli.Command{
+var GenerationSet = &cli.Command{
 	Name:    "generate",
 	Aliases: []string{"g", "gen"},
-	Usage:   "generate modules or project",
+	Usage:   "generate modules or project structure",
 	Subcommands: []*cli.Command{
-		GenBeCmd,
+		GenBECmd,
 		GenAPICmd,
-		GenerateFECmd,
+		GenFECmd,
 		GenFlagsCmd,
 	},
 }
