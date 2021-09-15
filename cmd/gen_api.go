@@ -100,7 +100,7 @@ func (gga *GenerateGoApiService) generateFiles() core.Runner {
 
 	return util.NewTaskComposer(pkgName).AddFile(
 		&core.FileDesc{
-			Path: "http_handler.go",
+			Path: "http.go",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
