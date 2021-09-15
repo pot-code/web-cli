@@ -50,7 +50,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 
 	return util.NewTaskComposer(projectName).AddFile(
 		&core.FileDesc{
-			Path: "cmd/web.go",
+			Path: path.Join("cmd", "web.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
@@ -60,26 +60,37 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "bootstrap/config.go",
+			Path: path.Join("infra", "config.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendBootstrapConfig(&buf, projectName)
+				templates.WriteGoBackendInfraConfig(&buf, projectName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "bootstrap/create.go",
+			Path: path.Join("infra", "wire_set.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendBootstrapCreate(&buf, projectName, authorName)
+				templates.WriteGoBackendInfraWireSet(&buf)
 				return buf.Bytes(), nil
 			},
+			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "server/routes.go",
+			Path: path.Join("infra", "providers.go"),
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoBackendInfraProviders(&buf, projectName, authorName)
+				return buf.Bytes(), nil
+			},
+			Transforms: []core.Transform{transform.GoFormatSource},
+		},
+		&core.FileDesc{
+			Path: path.Join("web", "routes.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
@@ -89,21 +100,21 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "server/server.go",
+			Path: path.Join("web", "server.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendServerServer(&buf)
+				templates.WriteGoBackendWebServer(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "server/wire.go",
+			Path: path.Join("web", "wire.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendServerWire(&buf, projectName, authorName)
+				templates.WriteGoBackendWebWire(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},

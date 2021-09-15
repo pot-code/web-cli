@@ -1,5 +1,5 @@
-{% func GoBackendBootstrapCreate(projectName string, author string) -%}
-package bootstrap
+{% func GoBackendInfraProviders(projectName string, author string) -%}
+package infra
 
 import (
 	"context"
@@ -77,14 +77,17 @@ func NewEchoServer(cfg *AppConfig, logger *zap.Logger, lm *util.LifecycleManager
 }
 {% endfunc %}
 
-{% func GoBackendBootstrapConfig(projectName string) -%}
-package bootstrap
+{% func GoBackendInfraConfig(projectName string) -%}
+package infra
 
 import (
-	"github.com/google/wire"
+	"log"
+
 	"github.com/pot-code/gobit/pkg/config"
 	"github.com/pot-code/gobit/pkg/db"
 	"github.com/pot-code/gobit/pkg/logging"
+	"github.com/pot-code/gobit/pkg/util"
+	"github.com/pot-code/gobit/pkg/validate"
 )
 
 type AppConfig struct {
@@ -93,20 +96,42 @@ type AppConfig struct {
 	Logging  *logging.LoggingConfig `mapstructure:"logging" yaml:"logging"`
 }
 
-var ConfigSet = wire.FieldsOf(
+func NewAppConfig() *AppConfig {
+	cfg := new(AppConfig)
+	cm := config.NewConfigManager()
+	util.HandleFatalError("failed to load config", cm.LoadConfig(cfg))
+
+	v := validate.NewValidator()
+	if err := v.Struct(cfg, "en"); err != nil {
+		log.Fatalf("failed to validate config: \n%s", err)
+	}
+	return cfg
+}
+{% endfunc %}
+
+{% func GoBackendInfraWireSet() -%}
+package infra
+
+import (
+	"github.com/google/wire"
+	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/logging"
+)
+
+var ConfigFields = wire.FieldsOf(
 	new(*AppConfig),
 	"Base",
 	"Database",
 	"Logging",
 )
 
-var InfraSet = wire.NewSet(
-	ConfigSet,
+var WebSet = wire.NewSet(
+	ConfigFields,
+	NewAppConfig,
 	NewEchoServer,
 	logging.NewZapLoggerProvider,
 	db.NewSqlxProvider,
 )
-
 {% endfunc %}
 
 {% func GoBackendCmdWeb(projectName string, author string) -%}
@@ -118,36 +143,21 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/{%s author %}/{%s projectName %}/bootstrap"
-	"github.com/{%s author %}/{%s projectName %}/server"
+	"github.com/{%s author %}/{%s projectName %}/web"
 	"github.com/pot-code/gobit/pkg/api"
-	"github.com/pot-code/gobit/pkg/config"
 	"github.com/pot-code/gobit/pkg/util"
-	"github.com/pot-code/gobit/pkg/validate"
 )
 
 func Serve() {
-	cfg := new(bootstrap.AppConfig)
-	cm := config.NewConfigManager()
-	v := validate.NewValidator()
-
-	if err := cm.LoadConfig(cfg); err != nil {
-		log.Fatalf("failed to load config: %s", err)
-	}
-	if err := v.Struct(cfg, "en"); err != nil {
-		log.Fatalf("failed to validate config: \n%s", err)
-	}
-
 	lm := util.NewLifecycleManager()
 	defer lm.WaitExitSignal(30 * time.Second)
 
-	hs := server.InitHttpServer(cfg, lm)
-
-	server.OnExitRoutes(cfg, hs)
+	hs := web.InitHttpServer(lm)
+	web.RegisterRoutes(hs)
 	api.PrintRoutes(hs.Server, hs.Logger)
 
 	go func() {
-		if err := hs.Server.Start(cfg.Base.Port); err != nil {
+		if err := hs.Server.Start(hs.Config.Base.Port); err != nil {
 			if !errors.Is(err, http.ErrServerClosed) {
 				log.Fatal(err)
 			}
@@ -161,7 +171,7 @@ package main
 
 import "github.com/{%s author %}/{%s projectName %}/cmd"
 
-//go:generate wire ./server
+//go:generate wire ./web
 //go:generate go generate ./ent
 func main() {
 	cmd.Serve()
@@ -178,14 +188,13 @@ require (
 {% endfunc %}
 
 {% func GoBackendServerRoutes(projectName string, author string) -%}
-package server
+package web
 
 import (
-	"github.com/{%s author %}/{%s projectName %}/bootstrap"
 	"github.com/pot-code/gobit/pkg/api"
 )
 
-func OnExitRoutes(cfg *bootstrap.AppConfig, hs *HttpServer) {
+func RegisterRoutes(hs *HttpServer) {
 	api.CreateEndpoint(hs.Server,
 		&api.Endpoint{
 			Prefix: "api",
@@ -194,12 +203,13 @@ func OnExitRoutes(cfg *bootstrap.AppConfig, hs *HttpServer) {
 }
 {% endfunc %}
 
-{% func GoBackendServerServer() -%}
-package server
+{% func GoBackendWebServer(projectName, author string) -%}
+package web
 
 import (
 	"github.com/google/wire"
 	"github.com/labstack/echo/v4"
+	"github.com/{%s author %}/{%s projectName %}/infra"
 	"go.uber.org/zap"
 )
 
@@ -207,17 +217,19 @@ type HandlerCollection struct {
 }
 
 type HttpServer struct {
+	Config    *infra.AppConfig
 	Logger    *zap.Logger
 	Server    *echo.Echo
 	Handlers  *HandlerCollection
 }
 
 func NewHttpServer(
+	cfg *infra.AppConfig,
 	logger *zap.Logger,
 	server *echo.Echo,
 	handlers *HandlerCollection,
 ) *HttpServer {
-	return &HttpServer{Logger: logger, Server: server, Handlers: handlers}
+	return &HttpServer{Config: cfg, Logger: logger, Server: server, Handlers: handlers}
 }
 
 var HttpSet = wire.NewSet(
@@ -225,20 +237,20 @@ var HttpSet = wire.NewSet(
 )
 {% endfunc %}
 
-{% func GoBackendServerWire(projectName string, author string) -%}
+{% func GoBackendWebWire(projectName, author string) -%}
 //+build wireinject
 
-package server
+package web
 
 import (
 	"github.com/google/wire"
-	"github.com/{%s author %}/{%s projectName %}/bootstrap"
+	"github.com/{%s author %}/{%s projectName %}/infra"
 	"github.com/pot-code/gobit/pkg/util"
 )
 
-func InitHttpServer(cfg *bootstrap.AppConfig, lm *util.LifecycleManager) *HttpServer {
+func InitHttpServer(lm *util.LifecycleManager) *HttpServer {
 	wire.Build(
-		NewHttpServer, HttpSet, bootstrap.InfraSet,
+		NewHttpServer, HttpSet, infra.WebSet,
 	)
 	return &HttpServer{}
 }
