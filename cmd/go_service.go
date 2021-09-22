@@ -3,10 +3,7 @@ package cmd
 import (
 	"bytes"
 	"fmt"
-	"go/ast"
 	"go/format"
-	"go/parser"
-	"go/token"
 	"os"
 	"path"
 	"strings"
@@ -21,13 +18,6 @@ import (
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
-	"golang.org/x/tools/go/ast/astutil"
-)
-
-const (
-	structHandlerCollection = "HandlerCollection"
-	varHttpSet              = "HttpSet"
-	varWireSet              = "WireSet"
 )
 
 type GoServiceConfig struct {
@@ -35,19 +25,19 @@ type GoServiceConfig struct {
 	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
 }
 
-var GoServiceCmd = core.NewCliLeafCommand("service", "generate a service",
+var GoServiceCmd = core.NewCliLeafCommand("service", "add a go service",
 	&GoServiceConfig{
 		GenType: "go",
 	},
 	core.WithAlias([]string{"svc"}),
 	core.WithArgUsage("module_name"),
 ).AddService(
-	&GenerateGoApiService{
-		RegistryFile: path.Join("server", "server.go"),
+	&GenerateGoSimpleService{
+		RegistryFile: path.Join("web", "server.go"),
 	},
 ).ExportCommand()
 
-type GenerateGoApiService struct {
+type GenerateGoSimpleService struct {
 	RegistryFile    string
 	PackageName     string
 	ProjectName     string
@@ -56,13 +46,13 @@ type GenerateGoApiService struct {
 	Config          *GoServiceConfig
 }
 
-var _ core.CommandService = &GenerateGoApiService{}
+var _ core.CommandService = &GenerateGoSimpleService{}
 
-func (gga *GenerateGoApiService) Cond(c *cli.Context) bool {
-	return c.String("type") == "go"
+func (gga *GenerateGoSimpleService) Cond(c *cli.Context) bool {
+	return true
 }
 
-func (gga *GenerateGoApiService) Handle(c *cli.Context, cfg interface{}) error {
+func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoServiceConfig)
 	pkgName := strings.ReplaceAll(config.ArgName, "-", "_")
 	pkgName = strcase.ToSnake(pkgName)
@@ -84,110 +74,106 @@ func (gga *GenerateGoApiService) Handle(c *cli.Context, cfg interface{}) error {
 		return nil
 	}
 
-	if err := gga.updateServerRegistry(newAddHandlerVisitor(gga)); err != nil {
+	if err := gga.updateServerRegistry(); err != nil {
 		return errors.Wrap(err, "failed to update registry")
 	}
 
 	return gga.generateFiles().Run()
 }
 
-func (gga *GenerateGoApiService) generateFiles() core.Runner {
+func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 	modelName := gga.CamelModuleName
 	pkgName := gga.PackageName
+	projectName := gga.ProjectName
+	authorName := gga.AuthorName
 
-	handlerName := fmt.Sprintf(constants.GoApiHandlerPattern, modelName)
-	svcName := fmt.Sprintf(constants.GoApiServicePattern, modelName)
-	repoName := fmt.Sprintf(constants.GoApiRepositoryPattern, modelName)
+	handlerDeclName := fmt.Sprintf(constants.GoApiHandlerPattern, modelName)
+	svcDeclName := fmt.Sprintf(constants.GoApiServicePattern, modelName)
+	repoDeclName := fmt.Sprintf(constants.GoApiRepositoryPattern, modelName)
 
-	return util.NewTaskComposer(pkgName).AddFile(
+	return util.NewTaskComposer(path.Join("internal", pkgName)).AddFile(
 		&core.FileDesc{
-			Path: "http.go",
+			Path: path.Join("port", "http.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiHandler(&buf, pkgName, svcName, handlerName)
+				templates.WriteGoServiceWebHandler(&buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "def.go",
+			Path: path.Join("service", "service.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiModel(&buf, pkgName, svcName, repoName, handlerName)
+				templates.WriteGoServiceService(&buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "repo.go",
+			Path: path.Join("repository", "pgsql.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiRepo(&buf, pkgName, repoName)
+				templates.WriteGoServiceRepo(&buf, projectName, authorName, pkgName, repoDeclName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "service.go",
+			Path: path.Join("domain", fmt.Sprintf("%s.%s", pkgName, constants.GoSuffix)),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoApiService(&buf, pkgName, svcName, repoName)
+				templates.WriteGoServiceDomainModel(&buf, modelName)
+				return buf.Bytes(), nil
+			},
+			Transforms: []core.Transform{transform.GoFormatSource},
+		},
+		&core.FileDesc{
+			Path: path.Join("domain", "type.go"),
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoServiceDomainType(&buf, svcDeclName, repoDeclName)
+				return buf.Bytes(), nil
+			},
+			Transforms: []core.Transform{transform.GoFormatSource},
+		},
+		&core.FileDesc{
+			Path: "wire_set.go",
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoServiceWireSet(&buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 	).AddCommand(
-		commands.GoEntInit(modelName),
-		commands.GoWire("./server"),
+		// commands.GoEntInit(modelName),
+		commands.GoWire("./web"),
 		commands.GoModTidy(),
 	)
 }
 
-func (gga *GenerateGoApiService) updateServerRegistry(visitor serverRegistryVisitor) error {
-	registryFile := gga.RegistryFile
-	fset := token.NewFileSet()
-	f, err := parser.ParseFile(fset, registryFile, nil, parser.ParseComments)
+func (gga *GenerateGoSimpleService) updateServerRegistry() error {
+	pkg := gga.PackageName
+	rf := gga.RegistryFile
+	ps := util.NewGoFileParser(rf)
+
+	ps.AddActor(NewAddWireSetActor(pkg))
+	ps.AddImport(fmt.Sprintf("%s/%s/%s/internal/%s", constants.GoGithubPrefix, gga.AuthorName, gga.ProjectName, pkg))
+	fset, at, err := ps.Parse()
 	if err != nil {
-		return fmt.Errorf("failed to parse '%s': %w", registryFile, err)
+		return err
 	}
 
-	visitor.visitRoot(f, fset)
-	modifiedAst := astutil.Apply(f, func(c *astutil.Cursor) bool {
-		n := c.Node()
-
-		if _, ok := n.(*ast.File); ok {
-			return true
-		}
-
-		if g, ok := n.(*ast.GenDecl); ok {
-			return g.Tok == token.TYPE || g.Tok == token.VAR
-		}
-
-		if ts, ok := n.(*ast.TypeSpec); ok {
-			return ts.Name.String() == structHandlerCollection
-		}
-
-		if vs, ok := n.(*ast.ValueSpec); ok {
-			switch vs.Names[0].String() {
-			case varHttpSet:
-				visitor.visitHttpSet(vs)
-			}
-		}
-
-		if st, ok := n.(*ast.StructType); ok {
-			visitor.visitHandlerCollection(st)
-		}
-
-		return false
-	}, nil)
-
-	out, err := os.OpenFile(registryFile, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
+	out, err := os.OpenFile(rf, os.O_WRONLY|os.O_TRUNC, os.ModePerm)
 	if err != nil {
-		return fmt.Errorf("failed to update '%s': %w", registryFile, err)
+		return fmt.Errorf("failed to update '%s': %w", rf, err)
 	}
-	return format.Node(out, fset, modifiedAst)
+	return format.Node(out, fset, at)
 }

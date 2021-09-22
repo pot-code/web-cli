@@ -51,30 +51,39 @@ type GoAstActor interface {
 }
 
 type GoFileParser struct {
-	file   string
-	fset   *token.FileSet
-	actors []GoAstActor
+	file    string
+	fset    *token.FileSet
+	actors  []GoAstActor
+	imports []string
 }
 
 func NewGoFileParser(file string) *GoFileParser {
-	return &GoFileParser{file: file, actors: []GoAstActor{}}
+	return &GoFileParser{file: file, actors: []GoAstActor{}, imports: make([]string, 0)}
 }
 
 func (gas *GoFileParser) AddActor(actor ...GoAstActor) {
 	gas.actors = append(gas.actors, actor...)
 }
 
-func (gas *GoFileParser) Parse() (n ast.Node, err error) {
-	fset := token.NewFileSet()
+func (gas *GoFileParser) AddImport(p string) {
+	gas.imports = append(gas.imports, p)
+}
+
+func (gas *GoFileParser) Parse() (fset *token.FileSet, n ast.Node, err error) {
+	fset = token.NewFileSet()
 	f, err := parser.ParseFile(fset, gas.file, nil, parser.ParseComments)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
+	}
+
+	for _, p := range gas.imports {
+		astutil.AddImport(fset, f, p)
 	}
 
 	gas.fset = fset
 	actors := gas.actors
 	halt := false
-	modifiedAst := astutil.Apply(f, func(c *astutil.Cursor) bool {
+	n = astutil.Apply(f, func(c *astutil.Cursor) bool {
 		for _, a := range actors {
 			if a.Selector(c) {
 				if e := a.Action(c); e != nil {
@@ -87,5 +96,5 @@ func (gas *GoFileParser) Parse() (n ast.Node, err error) {
 		return !halt
 	}, nil)
 
-	return modifiedAst, nil
+	return
 }

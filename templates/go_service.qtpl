@@ -1,62 +1,86 @@
-{% func GoApiModel(pkg, svc, repo, handler string) -%}
-package {%v pkg %}
+{% func GoServiceDomainType(svc, repo string) -%}
+package domain
 
-import "github.com/google/wire"
+type I{%s svc %} interface {}
 
-type I{%s svc %} interface {
-}
+type I{%s repo %} interface {}
+{% endfunc %}
 
-type I{%s repo %} interface {
-}
+{% func GoServiceWireSet(project, author, pkg, handler, svc, repo string) -%}
+package {%s pkg %}
 
-var WireSet = wire.NewSet(
-	New{%s svc %}, New{%s repo %}, New{%s handler %},
-	wire.Bind(new(I{%s svc %}), new(*{%s svc %})),
-	wire.Bind(new(I{%s repo %}), new(*{%s repo %})),
+import (
+	"github.com/google/wire"
+	"github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/domain"
+	"github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/port"
+	repo "github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/repository"
+	"github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/service"
+)
+
+var HttpSet = wire.NewSet(
+	wire.Bind(new(domain.I{%s svc %}), new(*service.{%s svc %})),
+	wire.Bind(new(domain.I{%s repo %}), new(*repo.{%s repo %})),
+	service.New{%s svc %},
+	repo.New{%s repo %},
+	port.New{%s handler %},
 )
 {% endfunc %}
 
-{% func GoApiRepo(pkg, repo string) -%}
-package {%s pkg %}
+{% func GoServiceDomainModel(model string) -%}
+package domain
 
-type {%s repo %} struct {
-}
+type {%s model %} struct {}
+{% endfunc %}
 
-var _ I{%s repo %} = &{%s repo %}{}
+{% func GoServiceRepo(project, author, pkg, repo string) -%}
+package repo
+
+import (
+	"github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/domain"
+)
+
+type {%s repo %} struct {}
+
+var _ domain.I{%s repo %} = &{%s repo %}{}
 
 func New{%s repo %}() *{%s repo %} {
 	return &{%s repo %}{}
 }
 {% endfunc %}
 
-{% func GoApiService(pkg, svc, repo string) -%}
-package {%v pkg %}
+{% func GoServiceService(project, author, pkg, svc, repo string) -%}
+package service
 
 import (
+	"github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/domain"
 	"go.uber.org/zap"
 )
 
 type {%s svc %} struct {
-	repo   I{%s repo %}
+	repo   domain.I{%s repo %}
 	logger *zap.Logger
 }
 
-var _ I{%s svc %} = &{%s svc %}{}
+var _ domain.I{%s svc %} = &{%s svc %}{}
 
-func New{%s svc %}(repo I{%s repo %}, logger *zap.Logger) *{%s svc %} {
+func New{%s svc %}(repo domain.I{%s repo %}, logger *zap.Logger) *{%s svc %} {
 	return &{%s svc %}{repo, logger.With(zap.String("context", "{%s svc %}"))}
 }
 {% endfunc %}
 
-{% func GoApiHandler(pkg, svc, handler string) -%}
-package {%v pkg %}
+{% func GoServiceWebHandler(project, author, pkg, svc, handler string) -%}
+package port
+
+import (
+	"github.com/{%s author %}/{%s project %}/internal/{%s pkg %}/domain"
+)
 
 type {%s handler %} struct {
-	svc I{%s svc %}
+	svc domain.I{%s svc %}
 }
 
 func New{%s handler %}(
-	svc I{%s svc %},
+	svc domain.I{%s svc %},
 ) *{%s handler %} {
 	return &{%s handler %}{svc}
 }

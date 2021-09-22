@@ -124,8 +124,7 @@ func NewEchoServer(cfg *config.AppConfig, logger *zap.Logger, lm *util.Lifecycle
 }
 
 var HttpSet = wire.NewSet(
-	wire.Struct(new(HandlerCollection), "*"),
-	NewEchoServer,
+	wire.Struct(new(HandlerCollection), "*"), NewEchoServer,
 )
 {% endfunc %}
 
