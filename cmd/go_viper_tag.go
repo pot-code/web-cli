@@ -8,13 +8,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type AddViperTagConfig struct {
+type GoViperTagConfig struct {
 	ConfigPath string `arg:"0" alias:"config_path" validate:"required"`
 	StructName string `flag:"struct" alias:"s" usage:"struct name" validate:"required"`
 }
 
-var AddViperTagCmd = core.NewCliLeafCommand("viper", "transform config struct to pflag",
-	&AddViperTagConfig{
+var GoViperTagCmd = core.NewCliLeafCommand("viper", "transform config struct to pflag",
+	&GoViperTagConfig{
 		StructName: "AppConfig",
 	},
 	core.WithAlias([]string{"v"}),
@@ -22,7 +22,7 @@ var AddViperTagCmd = core.NewCliLeafCommand("viper", "transform config struct to
 ).AddService(AddViperTagService).ExportCommand()
 
 var AddViperTagService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*AddViperTagConfig)
+	config := cfg.(*GoViperTagConfig)
 
 	var outData bytes.Buffer
 	return util.NewTaskComposer("").AddFile(

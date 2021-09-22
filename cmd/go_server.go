@@ -13,20 +13,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type GenBeConfig struct {
+type GoServerConfig struct {
 	GenType     string `flag:"type" alias:"t" usage:"backend type" validate:"required,oneof=go"`
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
 	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,var"`
 	GoVersion   string `flag:"version" alias:"v" usage:"specify go version" validate:"required,version"`
 }
 
-var GenBECmd = core.NewCliLeafCommand("backend", "generate backends",
-	&GenBeConfig{
+var GoServerCmd = core.NewCliLeafCommand("server", "generate backends",
+	&GoServerConfig{
 		GenType:   "go",
 		GoVersion: "1.16",
 	},
 	core.WithArgUsage("project_name"),
-	core.WithAlias([]string{"be"}),
+	core.WithAlias([]string{"s"}),
 ).AddService(new(GenGolangBeService)).ExportCommand()
 
 type GenGolangBeService struct{}
@@ -38,7 +38,7 @@ func (ggb *GenGolangBeService) Cond(c *cli.Context) bool {
 }
 
 func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GenBeConfig)
+	config := cfg.(*GoServerConfig)
 	projectName := config.ProjectName
 	authorName := config.AuthorName
 

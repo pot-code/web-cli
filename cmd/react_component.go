@@ -13,7 +13,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type AddReactConfig struct {
+type ReactComponentConfig struct {
 	Hook    bool   `flag:"hook" usage:"add react hook"`
 	Scss    bool   `flag:"scss" alias:"S" usage:"add scss module"`
 	Story   bool   `flag:"story" alias:"sb" usage:"add storybook"`
@@ -22,10 +22,10 @@ type AddReactConfig struct {
 	Name    string `arg:"0" alias:"component_name" validate:"required,var"`
 }
 
-var AddReactCmd = core.NewCliLeafCommand("react", "add React components",
-	new(AddReactConfig),
+var ReactComponentCmd = core.NewCliLeafCommand("component", "add react component",
+	new(ReactComponentConfig),
 	core.WithArgUsage("component_name"),
-	core.WithAlias([]string{"r"}),
+	core.WithAlias([]string{"c"}),
 ).AddService(
 	new(AddReactComponentService),
 	new(AddReactEmotionService),
@@ -42,14 +42,14 @@ func (arc *AddReactComponentService) Cond(c *cli.Context) bool {
 }
 
 func (arc *AddReactComponentService) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*AddReactConfig)
+	config := cfg.(*ReactComponentConfig)
 	name := config.Name
 
 	arc.ComponentName = strings.ReplaceAll(name, "-", "_")
 	return arc.addReactComponent(config).Run()
 }
 
-func (arc *AddReactComponentService) addScss(cfg *AddReactConfig) *core.FileDesc {
+func (arc *AddReactComponentService) addScss(cfg *ReactComponentConfig) *core.FileDesc {
 	rootClass := strcase.ToKebab(arc.ComponentName)
 
 	return &core.FileDesc{
@@ -63,7 +63,7 @@ func (arc *AddReactComponentService) addScss(cfg *AddReactConfig) *core.FileDesc
 	}
 }
 
-func (arc *AddReactComponentService) addStoryBook(cfg *AddReactConfig) *core.FileDesc {
+func (arc *AddReactComponentService) addStoryBook(cfg *ReactComponentConfig) *core.FileDesc {
 	name := arc.ComponentName
 
 	return &core.FileDesc{
@@ -77,7 +77,7 @@ func (arc *AddReactComponentService) addStoryBook(cfg *AddReactConfig) *core.Fil
 	}
 }
 
-func (arc *AddReactComponentService) addReactComponent(cfg *AddReactConfig) core.Runner {
+func (arc *AddReactComponentService) addReactComponent(cfg *ReactComponentConfig) core.Runner {
 	dir := cfg.Dir
 	name := arc.ComponentName
 

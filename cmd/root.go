@@ -11,8 +11,9 @@ var RootCmd = &cli.App{
 	Name:  "web-cli",
 	Usage: "A toolkit to ease your development experience",
 	Commands: []*cli.Command{
-		GenerationSet,
-		AddSet,
+		GolangSet,
+		ReactSet,
+		MiscSet,
 	},
 	Version: AppVersion,
 	Flags: []cli.Flag{

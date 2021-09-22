@@ -30,15 +30,16 @@ const (
 	varWireSet              = "WireSet"
 )
 
-type GenApiConfig struct {
+type GoServiceConfig struct {
 	GenType string `flag:"type" alias:"t" usage:"api type" validate:"required,oneof=go"` // generation type
 	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
 }
 
-var GenAPICmd = core.NewCliLeafCommand("api", "generate an api module",
-	&GenApiConfig{
+var GoServiceCmd = core.NewCliLeafCommand("service", "generate a service",
+	&GoServiceConfig{
 		GenType: "go",
 	},
+	core.WithAlias([]string{"svc"}),
 	core.WithArgUsage("module_name"),
 ).AddService(
 	&GenerateGoApiService{
@@ -52,7 +53,7 @@ type GenerateGoApiService struct {
 	ProjectName     string
 	CamelModuleName string
 	AuthorName      string
-	Config          *GenApiConfig
+	Config          *GoServiceConfig
 }
 
 var _ core.CommandService = &GenerateGoApiService{}
@@ -62,7 +63,7 @@ func (gga *GenerateGoApiService) Cond(c *cli.Context) bool {
 }
 
 func (gga *GenerateGoApiService) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GenApiConfig)
+	config := cfg.(*GoServiceConfig)
 	pkgName := strings.ReplaceAll(config.ArgName, "-", "_")
 	pkgName = strcase.ToSnake(pkgName)
 	gga.PackageName = pkgName

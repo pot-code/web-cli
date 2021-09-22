@@ -9,18 +9,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var AddGoMakefileCmd = core.NewCliLeafCommand("makefile", "add Makefile", nil,
-	core.WithAlias([]string{"m"}),
-).AddService(AddGoMakefileService).ExportCommand()
+var GoAirCmd = core.NewCliLeafCommand("air", "add air live reload config", nil).
+	AddService(GoAirService).ExportCommand()
 
-var AddGoMakefileService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
+var GoAirService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
-			Path: "Makefile",
+			Path: "air.toml",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoMakefile(&buf)
+				templates.WriteGoAirConfig(&buf)
 				return buf.Bytes(), nil
 			},
 		},

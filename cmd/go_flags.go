@@ -15,13 +15,13 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type GenFlagsConfig struct {
+type GoFlagsConfig struct {
 	ConfigPath string `arg:"0" alias:"CONFIG_PATH" validate:"required"`
 	FileName   string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
 }
 
-var GenFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration based on struct",
-	&GenFlagsConfig{
+var GoFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration based on struct",
+	&GoFlagsConfig{
 		FileName: "config_gen",
 	},
 	core.WithAlias([]string{"f"}),
@@ -29,7 +29,7 @@ var GenFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration 
 ).AddService(GenViperFlagsService).ExportCommand()
 
 var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GenFlagsConfig)
+	config := cfg.(*GoFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {
 		return errors.WithStack(fmt.Errorf("failed to parse pflags: %w", err))

@@ -42,7 +42,7 @@ func parseTag(tag reflect.StructTag) (*tagMeta, error) {
 	return tg, nil
 }
 
-func parseConfigFile(config *GenFlagsConfig) (*configStructVisitor, error) {
+func parseConfigFile(config *GoFlagsConfig) (*configStructVisitor, error) {
 	fset := token.NewFileSet()
 	f, err := parser.ParseFile(fset, config.ConfigPath, nil, parser.ParseComments)
 	if err != nil {

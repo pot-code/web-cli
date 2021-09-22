@@ -7,17 +7,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type GenFEConfig struct {
+type ReactTemplateConfig struct {
 	GenType     string `flag:"type" alias:"t" usage:"framework type" validate:"required,oneof=react next"` // generation type
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`                              // project name
 }
 
-var GenFECmd = core.NewCliLeafCommand("frontend", "generate frontends",
-	&GenFEConfig{
+var ReactTemplateCmd = core.NewCliLeafCommand("template", "choose react template",
+	&ReactTemplateConfig{
 		GenType: "react",
 	},
 	core.WithArgUsage("project_name"),
-	core.WithAlias([]string{"fe"}),
+	core.WithAlias([]string{"t"}),
 ).AddService(
 	new(GenerateReactFeService),
 	new(GenerateNextJsFeService),
@@ -32,7 +32,7 @@ func (grf *GenerateReactFeService) Cond(c *cli.Context) bool {
 }
 
 func (grf *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GenFEConfig)
+	config := cfg.(*ReactTemplateConfig)
 
 	return util.NewTaskComposer("").AddCommand(
 		commands.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
@@ -48,7 +48,7 @@ func (gnf *GenerateNextJsFeService) Cond(c *cli.Context) bool {
 }
 
 func (gnf *GenerateNextJsFeService) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GenFEConfig)
+	config := cfg.(*ReactTemplateConfig)
 
 	return util.NewTaskComposer("").AddCommand(
 		commands.YarnCreate("next-app", "--ts", config.ProjectName),
