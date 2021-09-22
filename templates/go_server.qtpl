@@ -214,6 +214,14 @@ logging:
   format: console
 {% endfunc %}
 
+{% func GoServerTools() -%}
+// +build tools
+
+package tools
+
+import _ "github.com/google/wire/cmd/wire"
+{% endfunc %}
+
 {% func GoServerDockerfile() -%}
 FROM golang:1.16 as builder
 

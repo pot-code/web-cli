@@ -100,6 +100,16 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
+			Path: "tools.go",
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoServerTools(&buf)
+				return buf.Bytes(), nil
+			},
+			Transforms: []core.Transform{transform.GoFormatSource},
+		},
+		&core.FileDesc{
 			Path: "go.mod",
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
