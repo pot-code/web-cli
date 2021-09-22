@@ -12,5 +12,6 @@ var GolangSet = &cli.Command{
 		GoFlagsCmd,
 		GoAirCmd,
 		GoMakefileCmd,
+		GoViperTagCmd,
 	},
 }
