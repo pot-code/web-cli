@@ -1,23 +1,40 @@
-{% func GoMakefile() -%}
+{% func GoServerMakefile() -%}
 GO:=go
-GO_WIN:=GOOS=windows GOARCH=amd64 go
 LDFLAGS:=-s -w
-BIN_NAME:=app
-BIN_NAME_WIN:=app.exe
+APP_BIN:=app-server
+APP_BIN_UNIX:=app-server-linux
 OUT_PATH:=./.out
+LINUX_ENV:=GOARCH=amd64 GOOS=linux CGO_ENABLED=0
 
-build: test
-	@$(GO) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(BIN_NAME) .
+.PHONY: migrate clean test up down
 
-build-win64: test
-	@$(GO_WIN) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(BIN_NAME_WIN) .
+all: app app-linux
+
+app: 
+	@$(GO) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(APP_BIN) ./cmd/web
+
+app-linux: 
+	@$(LINUX_ENV) $(GO) build -ldflags '$(LDFLAGS)' -o $(OUT_PATH)/$(APP_BIN_UNIX) ./cmd/web
 
 clean: 
 	@rm -rf .out
 
-test:
-	@$(GO) test -v ./
+generate: 
+	@$(GO) generate ./web
+	@$(GO) generate ./migrate
 
-dev:
-	@air -c air.toml
+generate-ent:
+	@$(GO) generate ./ent
+
+migrate:
+	@$(GO) run ./cmd/migrate
+
+test:
+	@$(GO) test -v ./...
+
+up:
+	@docker compose up -d
+
+down:
+	@docker compose down
 {% endfunc -%}

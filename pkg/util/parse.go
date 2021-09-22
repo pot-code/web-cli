@@ -56,7 +56,7 @@ type GoFileParser struct {
 	actors []GoAstActor
 }
 
-func NewGoAstStore(file string) *GoFileParser {
+func NewGoFileParser(file string) *GoFileParser {
 	return &GoFileParser{file: file, actors: []GoAstActor{}}
 }
 

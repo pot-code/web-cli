@@ -20,7 +20,7 @@ var GoMakefileService = util.NoCondFunctionService(func(c *cli.Context, cfg inte
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoMakefile(&buf)
+				templates.WriteGoServerMakefile(&buf)
 				return buf.Bytes(), nil
 			},
 		},

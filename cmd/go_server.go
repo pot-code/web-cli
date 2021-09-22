@@ -20,7 +20,7 @@ type GoServerConfig struct {
 	GoVersion   string `flag:"version" alias:"v" usage:"specify go version" validate:"required,version"`
 }
 
-var GoServerCmd = core.NewCliLeafCommand("server", "generate backends",
+var GoServerCmd = core.NewCliLeafCommand("server", "generate golang web project",
 	&GoServerConfig{
 		GenType:   "go",
 		GoVersion: "1.16",
@@ -50,61 +50,21 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 
 	return util.NewTaskComposer(projectName).AddFile(
 		&core.FileDesc{
-			Path: path.Join("cmd", "web.go"),
+			Path: path.Join("cmd", "web", "main.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendCmdWeb(&buf, projectName, authorName)
+				templates.WriteGoServerCmdWebMain(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: path.Join("infra", "config.go"),
+			Path: path.Join("config", "config.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendInfraConfig(&buf, projectName)
-				return buf.Bytes(), nil
-			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("infra", "wire_set.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoBackendInfraWireSet(&buf)
-				return buf.Bytes(), nil
-			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("infra", "providers.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoBackendInfraProviders(&buf, projectName, authorName)
-				return buf.Bytes(), nil
-			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("web", "routes.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoBackendServerRoutes(&buf, projectName, authorName)
-				return buf.Bytes(), nil
-			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("web", "server.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoBackendWebServer(&buf, projectName, authorName)
+				templates.WriteGoServerConfig(&buf, projectName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
@@ -114,17 +74,27 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendWebWire(&buf, projectName, authorName)
+				templates.WriteGoServerWebWire(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 		&core.FileDesc{
-			Path: "main.go",
+			Path: path.Join("web", "server.go"),
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendMain(&buf, projectName, authorName)
+				templates.WriteGoServerWebServer(&buf, projectName, authorName)
+				return buf.Bytes(), nil
+			},
+			Transforms: []core.Transform{transform.GoFormatSource},
+		},
+		&core.FileDesc{
+			Path: path.Join("web", "router.go"),
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoServerWebRouter(&buf, projectName, authorName)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
@@ -134,7 +104,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendMod(&buf, projectName, authorName, config.GoVersion)
+				templates.WriteGoMod(&buf, projectName, authorName, config.GoVersion)
 				return buf.Bytes(), nil
 			},
 		},
@@ -143,7 +113,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendVscodeSettings(&buf)
+				templates.WriteGoServerVscodeSettings(&buf)
 				return buf.Bytes(), nil
 			},
 		},
@@ -152,7 +122,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendDockerfile(&buf)
+				templates.WriteGoServerDockerfile(&buf)
 				return buf.Bytes(), nil
 			},
 		},
@@ -161,7 +131,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoMakefile(&buf)
+				templates.WriteGoServerMakefile(&buf)
 				return buf.Bytes(), nil
 			},
 		},
@@ -179,7 +149,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoBackendConfigYml(&buf, projectName)
+				templates.WriteGoServerConfigYml(&buf, projectName)
 				return buf.Bytes(), nil
 			},
 		},
@@ -200,7 +170,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 		},
 		&core.ShellCommand{
 			Bin:  "wire",
-			Args: []string{"./server"},
+			Args: []string{"./web"},
 			Cwd:  path.Join("./" + projectName),
 		},
 	).Run()

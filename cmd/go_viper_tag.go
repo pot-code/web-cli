@@ -39,8 +39,9 @@ var AddViperTagService = util.NoCondFunctionService(func(c *cli.Context, cfg int
 			Args: []string{
 				"-file",
 				config.ConfigPath,
-				"-struct",
-				config.StructName,
+				// "-struct",
+				// config.StructName,
+				"-all",
 				"-add-tags",
 				"mapstructure,yaml",
 			},
