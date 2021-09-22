@@ -16,13 +16,13 @@ import (
 )
 
 type GoFlagsConfig struct {
-	ConfigPath string `arg:"0" alias:"CONFIG_PATH" validate:"required"`
-	FileName   string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
+	ConfigPath  string `arg:"0" alias:"CONFIG_PATH" validate:"required"`
+	OutFileName string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
 }
 
 var GoFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration based on struct",
 	&GoFlagsConfig{
-		FileName: "config_gen",
+		OutFileName: "config_gen",
 	},
 	core.WithAlias([]string{"f"}),
 	core.WithArgUsage("CONFIG_PATH"),
@@ -47,10 +47,10 @@ var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 	}
 
 	pkg := visitor.pkg
-	fileName := config.FileName + constants.GoSuffix
+	out := fmt.Sprintf("%s.%s", config.OutFileName, constants.GoSuffix)
 	return util.NewTaskComposer(pkg).AddFile(
 		&core.FileDesc{
-			Path:      fileName,
+			Path:      out,
 			Overwrite: true,
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
@@ -61,7 +61,7 @@ var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 			Transforms: []core.Transform{transform.GoFormatSource},
 		},
 	).AddCommand(
-		commands.GoImports(path.Join(pkg, fileName)),
+		commands.GoImports(path.Join(pkg, out)),
 		commands.GoModTidy(),
 	).Run()
 })
