@@ -7,6 +7,7 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/commands"
+	"github.com/pot-code/web-cli/pkg/constants"
 	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
@@ -107,15 +108,15 @@ func (arc *AddReactComponentService) addReactComponent(cfg *ReactComponentConfig
 }
 
 func (arc *AddReactComponentService) getScssFileName() string {
-	return fmt.Sprintf("%s.%s.%s", arc.ComponentName, "module", "scss")
+	return fmt.Sprintf(constants.ReactScssPattern, arc.ComponentName)
 }
 
 func (arc *AddReactComponentService) getStoryFileName() string {
-	return fmt.Sprintf("%s.%s.%s", arc.ComponentName, "stories", "tsx")
+	return fmt.Sprintf(constants.ReactStorybookPattern, arc.ComponentName, constants.TsxSuffix)
 }
 
 func (arc *AddReactComponentService) getComponentFileName() string {
-	return fmt.Sprintf("%s.%s", arc.ComponentName, "tsx")
+	return fmt.Sprintf(constants.ReactComponentPattern, arc.ComponentName, constants.TsxSuffix)
 }
 
 type AddReactEmotionService struct{}
