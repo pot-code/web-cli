@@ -9,7 +9,7 @@ var AppVersion string
 
 var RootCmd = &cli.App{
 	Name:  "web-cli",
-	Usage: "A toolkit to ease your development experience",
+	Usage: "A toolset to improve your development experience",
 	Commands: []*cli.Command{
 		GolangSet,
 		ReactSet,
@@ -20,7 +20,7 @@ var RootCmd = &cli.App{
 		&cli.BoolFlag{
 			Name:        "debug",
 			Aliases:     []string{"D"},
-			Usage:       "enable debug",
+			Usage:       "enable debugging",
 			Value:       false,
 			DefaultText: "false",
 		},
