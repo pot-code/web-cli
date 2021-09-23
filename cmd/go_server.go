@@ -64,7 +64,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoServerConfig(&buf, projectName)
+				templates.WriteGoServerConfig(&buf)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},
@@ -94,7 +94,7 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 			Data: func() ([]byte, error) {
 				var buf bytes.Buffer
 
-				templates.WriteGoServerWebRouter(&buf, projectName, authorName)
+				templates.WriteGoServerWebRouter(&buf)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},

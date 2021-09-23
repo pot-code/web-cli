@@ -1,4 +1,4 @@
-{% func GoServerConfig(projectName string) -%}
+{% func GoServerConfig() -%}
 package config
 
 import (
@@ -35,7 +35,7 @@ var ConfigSet = wire.NewSet(
 )
 {% endfunc %}
 
-{% func GoServerWebRouter(projectName string, author string) -%}
+{% func GoServerWebRouter() -%}
 package web
 
 import (
@@ -50,7 +50,7 @@ func NewEndpoint(hs *HttpServer) *api.Endpoint {
 }
 {% endfunc %}
 
-{% func GoServerWebServer(projectName, author string) -%}
+{% func GoServerWebServer(project, author string) -%}
 package web
 
 import (
@@ -61,7 +61,7 @@ import (
 	
 	"github.com/google/wire"
 	"github.com/labstack/echo/v4"
-	"github.com/{%s author %}/{%s projectName %}/config"
+	"github.com/{%s author %}/{%s project %}/config"
 	echo_middleware "github.com/labstack/echo/v4/middleware"
 	gobit "github.com/pot-code/gobit/pkg"
 	"github.com/pot-code/gobit/pkg/api"
@@ -128,7 +128,7 @@ var HttpSet = wire.NewSet(
 )
 {% endfunc %}
 
-{% func GoServerCmdWebMain(projectName, author string) -%}
+{% func GoServerCmdWebMain(project, author string) -%}
 package main
 
 import (
@@ -138,7 +138,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/{%s author %}/{%s projectName %}/web"
+	"github.com/{%s author %}/{%s project %}/web"
 	"github.com/pot-code/gobit/pkg/api"
 	"github.com/pot-code/gobit/pkg/util"
 )
@@ -162,14 +162,14 @@ func main() {
 }
 {% endfunc %}
 
-{% func GoServerWebWire(projectName, author string) -%}
+{% func GoServerWebWire(project, author string) -%}
 //+build wireinject
 
 package web
 
 import (
 	"github.com/google/wire"
-	"github.com/{%s author %}/{%s projectName %}/config"
+	"github.com/{%s author %}/{%s project %}/config"
 	"github.com/pot-code/gobit/pkg/util"
 	"github.com/pot-code/gobit/pkg/logging"
 )
@@ -194,8 +194,8 @@ func InitHttpServer(lm *util.LifecycleManager) *HttpServer {
 }
 {% endfunc %}
 
-{% func GoMod(projectName string, author string, version string) -%}
-module github.com/{%s author %}/{%s projectName %}
+{% func GoMod(project string, author string, version string) -%}
+module github.com/{%s author %}/{%s project %}
 
 go {%s version %}
 
@@ -204,10 +204,10 @@ require (
 {% endfunc %}
 
 
-{% func GoServerConfigYml(projectName string) -%}
+{% func GoServerConfigYml(project string) -%}
 port: 8080
 base:
-  app_id: {%s projectName %}
+  app_id: {%s project %}
   env: development
 logging:
   level: debug
