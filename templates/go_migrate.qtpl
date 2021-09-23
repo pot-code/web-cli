@@ -1,0 +1,107 @@
+{% func GoMigrateConfig() -%}
+package config
+
+import (
+	"log"
+
+	"github.com/google/wire"
+	"github.com/pot-code/gobit/pkg/config"
+	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/util"
+	"github.com/pot-code/gobit/pkg/validate"
+)
+
+type AppConfig struct {
+	Base       *config.BaseConfig   `validate:"required" mapstructure:"base" yaml:"base"`
+	Database   *db.DatabaseConfig   `validate:"required" mapstructure:"database" yaml:"database"`
+}
+
+func NewAppConfig() *AppConfig {
+	cfg := new(AppConfig)
+	cm := config.NewConfigManager(config.WithConfigName("migrate"))
+	util.HandleFatalError("failed to load config", cm.LoadConfig(cfg))
+
+	v := validate.NewValidator()
+	if err := v.Struct(cfg); err != nil {
+		log.Fatalf("failed to validate config: \n%v", err)
+	}
+	return cfg
+}
+
+var ConfigSet = wire.NewSet(
+	wire.FieldsOf(new(*AppConfig), "Base", "Database"),
+	NewAppConfig,
+)
+{% endfunc %}
+
+{% func GoMigrateMigration(project, author string) -%}
+package migrate
+
+import (
+	"github.com/{%s author %}/{%s project %}/ent"
+)
+
+type Migration struct {
+	Client     *ent.Client
+}
+
+func NewMigration(client *ent.Client) *Migration {
+	return &Migration{Client: client}
+}
+{% endfunc %}
+
+{% func GoMigrateWire(project, author string) -%}
+//+build wireinject
+
+package migrate
+
+import (
+	"github.com/google/wire"
+	"github.com/{%s author %}/{%s project %}/migrate/config"
+	pdb "github.com/{%s author %}/{%s project %}/pkg/db"
+	"github.com/pot-code/gobit/pkg/db"
+	"github.com/pot-code/gobit/pkg/util"
+)
+
+func InitMigrate(lm *util.LifecycleManager) *Migration {
+	wire.Build(
+		NewMigration, pdb.NewEntClient, db.NewSqlxProvider, config.ConfigSet,
+	)
+	return &Migration{}
+}
+{% endfunc %}
+
+{% func GoMigratePkgEnt(project, author string) -%}
+package db
+
+import (
+	"context"
+	"log"
+
+	"entgo.io/ent/dialect"
+	entsql "entgo.io/ent/dialect/sql"
+	_ "github.com/jackc/pgx/v4/stdlib"
+	"github.com/jmoiron/sqlx"
+	"github.com/{%s author %}/{%s project %}/ent"
+	gobit "github.com/pot-code/gobit/pkg"
+	"github.com/pot-code/gobit/pkg/config"
+	"github.com/pot-code/gobit/pkg/util"
+)
+
+func NewEntClient(bc *config.BaseConfig, sc *sqlx.DB, lm *util.LifecycleManager) *ent.Client {
+	var drv dialect.Driver
+
+	drv = entsql.OpenDB(dialect.Postgres, sc.DB)
+	if bc.Env == gobit.EnvDevelop {
+		drv = dialect.Debug(drv)
+	}
+	client := ent.NewClient(ent.Driver(drv))
+
+	lm.OnExit(func(ctx context.Context) {
+		log.Println("[ent.Client] close ent client")
+		client.Close()
+	})
+
+	return client
+}
+{% endfunc %}

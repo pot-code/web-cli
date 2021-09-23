@@ -13,5 +13,6 @@ var GolangSet = &cli.Command{
 		GoAirCmd,
 		GoMakefileCmd,
 		GoViperTagCmd,
+		GoMigrateCmd,
 	},
 }
