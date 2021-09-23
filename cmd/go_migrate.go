@@ -14,8 +14,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type GoMigrateConfig struct {
-}
+type GoMigrateConfig struct{}
 
 var GoMigrateCmd = core.NewCliLeafCommand("migrate", "add migration",
 	&GoMigrateConfig{},
@@ -26,6 +25,18 @@ var GoMigrateService = util.NoCondFunctionService(func(c *cli.Context, cfg inter
 	meta, err := util.ParseGoMod(constants.GoModFile)
 	if err != nil {
 		return errors.WithStack(err)
+	}
+
+	found := false
+	for _, r := range meta.Requires {
+		if r.Mod.Path == "entgo.io/ent" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return errors.New("ent is not used in the project")
 	}
 
 	return util.NewTaskComposer("").AddFile(
@@ -55,6 +66,16 @@ var GoMigrateService = util.NoCondFunctionService(func(c *cli.Context, cfg inter
 				var buf bytes.Buffer
 
 				templates.WriteGoMigrateWire(&buf, meta.ProjectName, meta.Author)
+				return buf.Bytes(), nil
+			},
+			Transforms: []core.Transform{transform.GoFormatSource},
+		},
+		&core.FileDesc{
+			Path: path.Join("cmd", "migrate", "main.go"),
+			Data: func() ([]byte, error) {
+				var buf bytes.Buffer
+
+				templates.WriteGoMigrateCmdMain(&buf, meta.ProjectName, meta.Author)
 				return buf.Bytes(), nil
 			},
 			Transforms: []core.Transform{transform.GoFormatSource},

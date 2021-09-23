@@ -1,19 +1,23 @@
 package util
 
 import (
-	"bufio"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/ioutil"
 	"os"
 	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/pot-code/web-cli/pkg/constants"
+	"golang.org/x/mod/modfile"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
 type GoModMeta struct {
-	Author, ProjectName string
+	Author      string
+	ProjectName string
+	Requires    []*modfile.Require
 }
 
 func ParseGoMod(path string) (*GoModMeta, error) {
@@ -25,22 +29,28 @@ func ParseGoMod(path string) (*GoModMeta, error) {
 		return nil, errors.Wrap(err, "failed to open go.mod")
 	}
 
-	var author, projectName string
-	reader := bufio.NewScanner(fd)
-	for reader.Scan() {
-		line := reader.Text()
-		if strings.HasPrefix(line, "module") {
-			url := strings.TrimPrefix(line, "module ")
-			parts := strings.Split(url, "/")
-			author = parts[len(parts)-2]
-			projectName = parts[len(parts)-1]
-			break
-		}
+	content, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to read")
 	}
-	if author == "" || projectName == "" {
+
+	mp, err := modfile.Parse(constants.GoModFile, content, nil)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to parse mod file")
+	}
+
+	meta := new(GoModMeta)
+	meta.Requires = mp.Require
+
+	url := mp.Module.Mod.Path
+	parts := strings.Split(url, "/")
+	meta.Author = parts[len(parts)-2]
+	meta.ProjectName = parts[len(parts)-1]
+
+	if meta.Author == "" || meta.ProjectName == "" {
 		return nil, errors.New("failed to extrace meta data from go.mod")
 	}
-	return &GoModMeta{author, projectName}, nil
+	return meta, nil
 }
 
 type GoAstActor interface {

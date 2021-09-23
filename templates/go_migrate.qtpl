@@ -105,3 +105,27 @@ func NewEntClient(bc *config.BaseConfig, sc *sqlx.DB, lm *util.LifecycleManager)
 	return client
 }
 {% endfunc %}
+
+{% func GoMigrateCmdMain(project, author string) %}
+package main
+
+import (
+	"context"
+	"log"
+	"time"
+
+	"github.com/{%s author %}/{%s project %}/migrate"
+	"github.com/pot-code/gobit/pkg/util"
+)
+
+func main() {
+	lm := util.NewLifecycleManager()
+	defer lm.Exit(30 * time.Second)
+
+	m := migrate.InitMigrate(lm)
+	ctx := context.Background()
+	if err := m.Client.Schema.Create(ctx); err != nil {
+		log.Fatalf("failed creating schema resources: %s", err)
+	}
+}
+{% endfunc %}
