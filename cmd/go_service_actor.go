@@ -6,16 +6,16 @@ import (
 	"golang.org/x/tools/go/ast/astutil"
 )
 
-type AddWireSetActor struct {
+type AddWireSetMod struct {
 	pkg string
 }
 
-func NewAddWireSetActor(pkg string) *AddWireSetActor {
-	return &AddWireSetActor{pkg: pkg}
+func NewAddWireSetMod(pkg string) *AddWireSetMod {
+	return &AddWireSetMod{pkg: pkg}
 }
 
 //Selector select target node
-func (ah *AddWireSetActor) Selector(c *astutil.Cursor) bool {
+func (ah *AddWireSetMod) Selector(c *astutil.Cursor) bool {
 	n := c.Node()
 
 	vs, ok := n.(*ast.ValueSpec)
@@ -27,7 +27,7 @@ func (ah *AddWireSetActor) Selector(c *astutil.Cursor) bool {
 }
 
 // Action do action on selected node
-func (ah *AddWireSetActor) Action(c *astutil.Cursor) error {
+func (ah *AddWireSetMod) Action(c *astutil.Cursor) error {
 	n := c.Node()
 	vs, _ := n.(*ast.ValueSpec)
 

@@ -162,11 +162,11 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 func (gga *GenerateGoSimpleService) updateServerRegistry() error {
 	pkg := gga.PackageName
 	rf := gga.RegistryFile
-	ps := util.NewGoFileParser(rf)
+	am := util.NewGoAstModifier(rf)
 
-	ps.AddActor(NewAddWireSetActor(pkg))
-	ps.AddImport(fmt.Sprintf("%s/%s/%s/internal/%s", constants.GoGithubPrefix, gga.AuthorName, gga.ProjectName, pkg))
-	fset, at, err := ps.Parse()
+	am.AddModification(NewAddWireSetMod(pkg))
+	am.AddImport(fmt.Sprintf("%s/%s/%s/internal/%s", constants.GoGithubPrefix, gga.AuthorName, gga.ProjectName, pkg))
+	fset, at, err := am.ParseAndModify()
 	if err != nil {
 		return err
 	}
