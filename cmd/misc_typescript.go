@@ -17,20 +17,20 @@ type AddTypescriptConfig struct {
 var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript support",
 	new(AddTypescriptConfig),
 	core.WithAlias([]string{"ts"}),
-).AddService(
-	new(AddTypescriptToNodeService),
-	new(AddTypescriptToReactService),
+).AddFeature(
+	new(AddTypescriptToNode),
+	new(AddTypescriptToReact),
 ).ExportCommand()
 
-type AddTypescriptToNodeService struct{}
+type AddTypescriptToNode struct{}
 
-var _ core.CommandService = &AddTypescriptToNodeService{}
+var _ core.CommandFeature = &AddTypescriptToNode{}
 
-func (arc *AddTypescriptToNodeService) Cond(c *cli.Context) bool {
+func (arc *AddTypescriptToNode) Cond(c *cli.Context) bool {
 	return c.String("target") == "node"
 }
 
-func (arc *AddTypescriptToNodeService) Handle(c *cli.Context, cfg interface{}) error {
+func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
@@ -61,15 +61,15 @@ func (arc *AddTypescriptToNodeService) Handle(c *cli.Context, cfg interface{}) e
 	).Run()
 }
 
-type AddTypescriptToReactService struct{}
+type AddTypescriptToReact struct{}
 
-var _ core.CommandService = &AddTypescriptToReactService{}
+var _ core.CommandFeature = &AddTypescriptToReact{}
 
-func (arc *AddTypescriptToReactService) Cond(c *cli.Context) bool {
+func (arc *AddTypescriptToReact) Cond(c *cli.Context) bool {
 	return c.String("target") == "react"
 }
 
-func (arc *AddTypescriptToReactService) Handle(c *cli.Context, cfg interface{}) error {
+func (arc *AddTypescriptToReact) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",

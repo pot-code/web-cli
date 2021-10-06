@@ -18,20 +18,20 @@ var ReactTemplateCmd = core.NewCliLeafCommand("template", "choose react template
 	},
 	core.WithArgUsage("project_name"),
 	core.WithAlias([]string{"t"}),
-).AddService(
-	new(GenerateReactFeService),
-	new(GenerateNextJsFeService),
+).AddFeature(
+	new(GenReactTemplate),
+	new(GenNextJsTemplate),
 ).ExportCommand()
 
-type GenerateReactFeService struct{}
+type GenReactTemplate struct{}
 
-var _ core.CommandService = &GenerateReactFeService{}
+var _ core.CommandFeature = &GenReactTemplate{}
 
-func (grf *GenerateReactFeService) Cond(c *cli.Context) bool {
+func (grf *GenReactTemplate) Cond(c *cli.Context) bool {
 	return c.String("type") == "react"
 }
 
-func (grf *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error {
+func (grf *GenReactTemplate) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactTemplateConfig)
 
 	return util.NewTaskComposer("").AddCommand(
@@ -39,15 +39,15 @@ func (grf *GenerateReactFeService) Handle(c *cli.Context, cfg interface{}) error
 	).Run()
 }
 
-type GenerateNextJsFeService struct{}
+type GenNextJsTemplate struct{}
 
-var _ core.CommandService = &GenerateNextJsFeService{}
+var _ core.CommandFeature = &GenNextJsTemplate{}
 
-func (gnf *GenerateNextJsFeService) Cond(c *cli.Context) bool {
+func (gnf *GenNextJsTemplate) Cond(c *cli.Context) bool {
 	return c.String("type") == "next"
 }
 
-func (gnf *GenerateNextJsFeService) Handle(c *cli.Context, cfg interface{}) error {
+func (gnf *GenNextJsTemplate) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactTemplateConfig)
 
 	return util.NewTaskComposer("").AddCommand(

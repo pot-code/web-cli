@@ -26,9 +26,9 @@ var GoFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration b
 	},
 	core.WithAlias([]string{"f"}),
 	core.WithArgUsage("CONFIG_PATH"),
-).AddService(GenViperFlagsService).ExportCommand()
+).AddFeature(GenViperFlags).ExportCommand()
 
-var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
+var GenViperFlags = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {

@@ -27,17 +27,17 @@ var GoWebCmd = core.NewCliLeafCommand("web", "generate golang web project",
 	},
 	core.WithAlias([]string{"w"}),
 	core.WithArgUsage("project_name"),
-).AddService(new(GenGolangBeService)).ExportCommand()
+).AddFeature(new(GenWebProject)).ExportCommand()
 
-type GenGolangBeService struct{}
+type GenWebProject struct{}
 
-var _ core.CommandService = &GenGolangBeService{}
+var _ core.CommandFeature = &GenWebProject{}
 
-func (ggb *GenGolangBeService) Cond(c *cli.Context) bool {
+func (gwp *GenWebProject) Cond(c *cli.Context) bool {
 	return c.String("type") == "go"
 }
 
-func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
+func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoWebConfig)
 	projectName := config.ProjectName
 	authorName := config.AuthorName

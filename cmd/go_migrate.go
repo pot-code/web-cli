@@ -19,9 +19,9 @@ type GoMigrateConfig struct{}
 var GoMigrateCmd = core.NewCliLeafCommand("migrate", "add migration",
 	&GoMigrateConfig{},
 	core.WithAlias([]string{"M"}),
-).AddService(GoMigrateService).ExportCommand()
+).AddFeature(AddGoMigration).ExportCommand()
 
-var GoMigrateService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
+var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	meta, err := util.ParseGoMod(constants.GoModFile)
 	if err != nil {
 		return errors.WithStack(err)

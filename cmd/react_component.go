@@ -27,22 +27,22 @@ var ReactComponentCmd = core.NewCliLeafCommand("component", "add react component
 	new(ReactComponentConfig),
 	core.WithArgUsage("component_name"),
 	core.WithAlias([]string{"c"}),
-).AddService(
-	new(AddReactComponentService),
-	new(AddReactEmotionService),
+).AddFeature(
+	new(AddReactComponent),
+	new(AddReactEmotionFeat),
 ).ExportCommand()
 
-type AddReactComponentService struct {
+type AddReactComponent struct {
 	ComponentName string
 }
 
-var _ core.CommandService = &AddReactComponentService{}
+var _ core.CommandFeature = &AddReactComponent{}
 
-func (arc *AddReactComponentService) Cond(c *cli.Context) bool {
+func (arc *AddReactComponent) Cond(c *cli.Context) bool {
 	return true
 }
 
-func (arc *AddReactComponentService) Handle(c *cli.Context, cfg interface{}) error {
+func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactComponentConfig)
 	name := config.Name
 
@@ -50,7 +50,7 @@ func (arc *AddReactComponentService) Handle(c *cli.Context, cfg interface{}) err
 	return arc.addReactComponent(config).Run()
 }
 
-func (arc *AddReactComponentService) addScss(cfg *ReactComponentConfig) *core.FileDesc {
+func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *core.FileDesc {
 	rootClass := strcase.ToKebab(arc.ComponentName)
 
 	return &core.FileDesc{
@@ -62,7 +62,7 @@ func (arc *AddReactComponentService) addScss(cfg *ReactComponentConfig) *core.Fi
 	}
 }
 
-func (arc *AddReactComponentService) addStoryBook(cfg *ReactComponentConfig) *core.FileDesc {
+func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *core.FileDesc {
 	name := arc.ComponentName
 
 	return &core.FileDesc{
@@ -74,7 +74,7 @@ func (arc *AddReactComponentService) addStoryBook(cfg *ReactComponentConfig) *co
 	}
 }
 
-func (arc *AddReactComponentService) addReactComponent(cfg *ReactComponentConfig) core.Runner {
+func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) core.Runner {
 	dir := cfg.Dir
 	name := arc.ComponentName
 
@@ -101,27 +101,27 @@ func (arc *AddReactComponentService) addReactComponent(cfg *ReactComponentConfig
 	return util.NewTaskComposer(dir).AddFile(files...)
 }
 
-func (arc *AddReactComponentService) getScssFileName() string {
+func (arc *AddReactComponent) getScssFileName() string {
 	return fmt.Sprintf(constants.ReactScssPattern, arc.ComponentName)
 }
 
-func (arc *AddReactComponentService) getStoryFileName() string {
+func (arc *AddReactComponent) getStoryFileName() string {
 	return fmt.Sprintf(constants.ReactStorybookPattern, arc.ComponentName, constants.TsxSuffix)
 }
 
-func (arc *AddReactComponentService) getComponentFileName() string {
+func (arc *AddReactComponent) getComponentFileName() string {
 	return fmt.Sprintf(constants.ReactComponentPattern, arc.ComponentName, constants.TsxSuffix)
 }
 
-type AddReactEmotionService struct{}
+type AddReactEmotionFeat struct{}
 
-var _ core.CommandService = &AddReactEmotionService{}
+var _ core.CommandFeature = &AddReactEmotionFeat{}
 
-func (arc *AddReactEmotionService) Cond(c *cli.Context) bool {
+func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
 	return c.Bool("emotion")
 }
 
-func (arc *AddReactEmotionService) Handle(c *cli.Context, cfg interface{}) error {
+func (arc *AddReactEmotionFeat) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".babelrc",

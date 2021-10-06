@@ -10,9 +10,9 @@ import (
 )
 
 var GoAirCmd = core.NewCliLeafCommand("air", "add air live reload config", nil).
-	AddService(GoAirService).ExportCommand()
+	AddFeature(AddAirConfig).ExportCommand()
 
-var GoAirService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
+var AddAirConfig = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "air.toml",

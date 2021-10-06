@@ -31,7 +31,7 @@ var GoServiceCmd = core.NewCliLeafCommand("service", "add a go service",
 	},
 	core.WithAlias([]string{"svc"}),
 	core.WithArgUsage("module_name"),
-).AddService(
+).AddFeature(
 	&GenerateGoSimpleService{
 		RegistryFile: path.Join("web", "server.go"),
 	},
@@ -46,7 +46,7 @@ type GenerateGoSimpleService struct {
 	Config          *GoServiceConfig
 }
 
-var _ core.CommandService = &GenerateGoSimpleService{}
+var _ core.CommandFeature = &GenerateGoSimpleService{}
 
 func (gga *GenerateGoSimpleService) Cond(c *cli.Context) bool {
 	return true

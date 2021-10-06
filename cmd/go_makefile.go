@@ -11,9 +11,9 @@ import (
 
 var GoMakefileCmd = core.NewCliLeafCommand("makefile", "add Makefile", nil,
 	core.WithAlias([]string{"m"}),
-).AddService(GoMakefileService).ExportCommand()
+).AddFeature(AddMakefile).ExportCommand()
 
-var GoMakefileService = util.NoCondFunctionService(func(c *cli.Context, cfg interface{}) error {
+var AddMakefile = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "Makefile",

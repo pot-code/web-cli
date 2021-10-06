@@ -9,7 +9,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type CommandService interface {
+type CommandFeature interface {
 	Cond(c *cli.Context) bool
 	Handle(c *cli.Context, cfg interface{}) error
 }
@@ -23,7 +23,7 @@ type ConfigStructVisitor interface {
 type CliLeafCommand struct {
 	cmd      *cli.Command
 	cfg      interface{}
-	services []CommandService
+	services []CommandFeature
 }
 
 type CommandOption interface {
@@ -67,11 +67,11 @@ func NewCliLeafCommand(name, usage string, cfg interface{}, options ...CommandOp
 	for _, option := range options {
 		option.apply(cmd)
 	}
-	return &CliLeafCommand{cmd, cfg, []CommandService{}}
+	return &CliLeafCommand{cmd, cfg, []CommandFeature{}}
 }
 
-func (cc *CliLeafCommand) AddService(services ...CommandService) *CliLeafCommand {
-	cc.services = append(cc.services, services...)
+func (cc *CliLeafCommand) AddFeature(feats ...CommandFeature) *CliLeafCommand {
+	cc.services = append(cc.services, feats...)
 	return cc
 }
 
