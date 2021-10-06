@@ -17,11 +17,9 @@ var GoMakefileService = util.NoCondFunctionService(func(c *cli.Context, cfg inte
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: "Makefile",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoServerMakefile(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteGoServerMakefile(buf)
+				return nil
 			},
 		},
 	).Run()

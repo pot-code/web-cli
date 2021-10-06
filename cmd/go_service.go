@@ -95,63 +95,51 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 		[]*core.FileDesc{
 			{
 				Path: path.Join("port", "http.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServiceWebHandler(&buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServiceWebHandler(buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("service", "service.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServiceService(&buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServiceService(buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("repository", "pgsql.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServiceRepo(&buf, projectName, authorName, pkgName, repoDeclName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServiceRepo(buf, projectName, authorName, pkgName, repoDeclName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("domain", fmt.Sprintf("%s.%s", pkgName, constants.GoSuffix)),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServiceDomainModel(&buf, modelName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServiceDomainModel(buf, modelName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("domain", "type.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServiceDomainType(&buf, svcDeclName, repoDeclName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServiceDomainType(buf, svcDeclName, repoDeclName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: "wire_set.go",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServiceWireSet(&buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServiceWireSet(buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 		}...).AddCommand(
 		// commands.GoEntInit(modelName),

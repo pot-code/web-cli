@@ -55,11 +55,9 @@ func (arc *AddReactComponentService) addScss(cfg *ReactComponentConfig) *core.Fi
 
 	return &core.FileDesc{
 		Path: arc.getScssFileName(),
-		Data: func() ([]byte, error) {
-			var buf bytes.Buffer
-
-			templates.WriteReactSCSS(&buf, rootClass)
-			return buf.Bytes(), nil
+		Source: func(buf *bytes.Buffer) error {
+			templates.WriteReactSCSS(buf, rootClass)
+			return nil
 		},
 	}
 }
@@ -69,11 +67,9 @@ func (arc *AddReactComponentService) addStoryBook(cfg *ReactComponentConfig) *co
 
 	return &core.FileDesc{
 		Path: arc.getStoryFileName(),
-		Data: func() ([]byte, error) {
-			var buf bytes.Buffer
-
-			templates.WriteReactStory(&buf, name)
-			return buf.Bytes(), nil
+		Source: func(buf *bytes.Buffer) error {
+			templates.WriteReactStory(buf, name)
+			return nil
 		},
 	}
 }
@@ -86,11 +82,9 @@ func (arc *AddReactComponentService) addReactComponent(cfg *ReactComponentConfig
 	var files = []*core.FileDesc{
 		{
 			Path: arc.getComponentFileName(),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteReactComponent(&buf, name, styleFile)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteReactComponent(buf, name, styleFile)
+				return nil
 			},
 		},
 	}
@@ -131,11 +125,9 @@ func (arc *AddReactEmotionService) Handle(c *cli.Context, cfg interface{}) error
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".babelrc",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteReactEmotion(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteReactEmotion(buf)
+				return nil
 			},
 		},
 	).AddCommand(

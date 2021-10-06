@@ -34,20 +34,16 @@ func (arc *AddTypescriptToNodeService) Handle(c *cli.Context, cfg interface{}) e
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteNodeEslintrc(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteNodeEslintrc(buf)
+				return nil
 			},
 		},
 		&core.FileDesc{
 			Path: "tsconfig.json",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteNodeTsConfig(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteNodeTsConfig(buf)
+				return nil
 			},
 		},
 	).AddCommand(
@@ -77,20 +73,16 @@ func (arc *AddTypescriptToReactService) Handle(c *cli.Context, cfg interface{}) 
 	return util.NewTaskComposer("").AddFile(
 		&core.FileDesc{
 			Path: ".eslintrc.js",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteReactEslintrc(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteReactEslintrc(buf)
+				return nil
 			},
 		},
 		&core.FileDesc{
 			Path: "tsconfig.json",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteReactTsConfig(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteReactTsConfig(buf)
+				return nil
 			},
 		},
 	).AddCommand(

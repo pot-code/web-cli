@@ -52,13 +52,11 @@ var GenViperFlagsService = util.NoCondFunctionService(func(c *cli.Context, cfg i
 		&core.FileDesc{
 			Path:      out,
 			Overwrite: true,
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoGenPflags(&buf, pkg, fm)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteGoGenPflags(buf, pkg, fm)
+				return nil
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
+			Transforms: []core.Pipeline{transform.GoFormatSource},
 		},
 	).AddCommand(
 		commands.GoImports(path.Join(pkg, out)),

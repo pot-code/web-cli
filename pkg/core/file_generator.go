@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"fmt"
 	"io/fs"
 	"os"
@@ -11,15 +12,15 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type DataProvider = func() ([]byte, error)
+type DataSource = func(buf *bytes.Buffer) error
 
-type Transform = func([]byte) ([]byte, error)
+type Pipeline = func(buf *bytes.Buffer) (*bytes.Buffer, error)
 
 type FileDesc struct {
 	Path       string
-	Data       DataProvider
+	Source     DataSource
 	Overwrite  bool
-	Transforms []Transform
+	Transforms []Pipeline
 }
 
 func (fd *FileDesc) String() string {
@@ -27,15 +28,13 @@ func (fd *FileDesc) String() string {
 }
 
 type FileGenerator struct {
-	file       string // file path to be generated
-	data       DataProvider
-	overwrite  bool
-	transforms []Transform
+	file string // file path to be generated
+	fd   *FileDesc
 }
 
 func NewFileGenerator(fd *FileDesc) Runner {
 	file := strings.TrimPrefix(fd.Path, "/")
-	return &FileGenerator{file, fd.Data, fd.Overwrite, fd.Transforms}
+	return &FileGenerator{file, fd}
 }
 
 func (fg *FileGenerator) Run() error {
@@ -45,13 +44,13 @@ func (fg *FileGenerator) Run() error {
 		return nil
 	}
 
-	provider := fg.data
+	provider := fg.fd.Source
 	if provider == nil {
 		log.WithField("file", file).Warnf("no provider found [skipped]")
 		return nil
 	}
 
-	overwrite := fg.overwrite
+	overwrite := fg.fd.Overwrite
 	if !overwrite {
 		if _, err := os.Stat(file); err == nil {
 			log.WithFields(log.Fields{"file": file, "overwrite": overwrite}).Info("emit file [skipped]")
@@ -59,19 +58,20 @@ func (fg *FileGenerator) Run() error {
 		}
 	}
 
-	data, err := provider()
+	buf := new(bytes.Buffer)
+	err := provider(buf)
 	if err != nil {
-		return errors.Wrapf(err, "failed to get from provider [ %s ]", file)
+		return errors.Wrapf(err, "failed to get data from provider [ %s ]", file)
 	}
 
-	for _, t := range fg.transforms {
-		data, err = t(data)
+	for _, t := range fg.fd.Transforms {
+		buf, err = t(buf)
 		if err != nil {
 			return errors.Wrapf(err, "failed to apply transformation to [ %s ]", file)
 		}
 	}
 
-	err = fg.write(file, data)
+	err = fg.write(file, buf.Bytes())
 	if err == nil {
 		log.WithFields(log.Fields{
 			"overwrite": overwrite,

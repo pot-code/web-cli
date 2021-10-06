@@ -29,8 +29,9 @@ var AddViperTagService = util.NoCondFunctionService(func(c *cli.Context, cfg int
 		&core.FileDesc{
 			Path:      config.ConfigPath,
 			Overwrite: true,
-			Data: func() ([]byte, error) {
-				return outData.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				buf.Write(buf.Bytes())
+				return nil
 			},
 		},
 	).AddBeforeCommand(

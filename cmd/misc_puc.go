@@ -24,20 +24,16 @@ var AddPriceUpdateConfigService = util.NoCondFunctionService(func(c *cli.Context
 	return util.NewTaskComposer(config.Name).AddFile(
 		&core.FileDesc{
 			Path: "provider.yml",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoProviders(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteGoProviders(buf)
+				return nil
 			},
 		},
 		&core.FileDesc{
 			Path: "consumers.yml",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
-
-				templates.WriteGoConsumers(&buf)
-				return buf.Bytes(), nil
+			Source: func(buf *bytes.Buffer) error {
+				templates.WriteGoConsumers(buf)
+				return nil
 			},
 		},
 	).Run()

@@ -13,20 +13,20 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type GoServerConfig struct {
+type GoWebConfig struct {
 	GenType     string `flag:"type" alias:"t" usage:"backend type" validate:"required,oneof=go"`
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
 	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,var"`
-	GoVersion   string `flag:"version" alias:"v" usage:"specify go version" validate:"required,version"`
+	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"required,version"`
 }
 
-var GoServerCmd = core.NewCliLeafCommand("server", "generate golang web project",
-	&GoServerConfig{
+var GoWebCmd = core.NewCliLeafCommand("web", "generate golang web project",
+	&GoWebConfig{
 		GenType:   "go",
 		GoVersion: "1.16",
 	},
+	core.WithAlias([]string{"w"}),
 	core.WithArgUsage("project_name"),
-	core.WithAlias([]string{"s"}),
 ).AddService(new(GenGolangBeService)).ExportCommand()
 
 type GenGolangBeService struct{}
@@ -38,7 +38,7 @@ func (ggb *GenGolangBeService) Cond(c *cli.Context) bool {
 }
 
 func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GoServerConfig)
+	config := cfg.(*GoWebConfig)
 	projectName := config.ProjectName
 	authorName := config.AuthorName
 
@@ -52,125 +52,99 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 		[]*core.FileDesc{
 			{
 				Path: path.Join("cmd", "web", "main.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerCmdWebMain(&buf, projectName, authorName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerCmdWebMain(buf, projectName, authorName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("config", "config.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerConfig(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerConfig(buf)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("web", "wire.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerWebWire(&buf, projectName, authorName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerWebWire(buf, projectName, authorName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("web", "server.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerWebServer(&buf, projectName, authorName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerWebServer(buf, projectName, authorName)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: path.Join("web", "router.go"),
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerWebRouter(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerWebRouter(buf)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: "tools.go",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerTools(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerTools(buf)
+					return nil
 				},
-				Transforms: []core.Transform{transform.GoFormatSource},
+				Transforms: []core.Pipeline{transform.GoFormatSource},
 			},
 			{
 				Path: "go.mod",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoMod(&buf, projectName, authorName, config.GoVersion)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoMod(buf, projectName, authorName, config.GoVersion)
+					return nil
 				},
 			},
 			{
 				Path: ".vscode/settings.json",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerVscodeSettings(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerVscodeSettings(buf)
+					return nil
 				},
 			},
 			{
 				Path: "Dockerfile",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerDockerfile(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerDockerfile(buf)
+					return nil
 				},
 			},
 			{
 				Path: "Makefile",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerMakefile(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerMakefile(buf)
+					return nil
 				},
 			},
 			{
 				Path: "air.toml",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoAirConfig(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoAirConfig(buf)
+					return nil
 				},
 			},
 			{
 				Path: "config.yml",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoServerConfigYml(&buf, projectName)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoServerConfigYml(buf, projectName)
+					return nil
 				},
 			},
 			{
 				Path: ".dockerignore",
-				Data: func() ([]byte, error) {
-					var buf bytes.Buffer
-
-					templates.WriteGoDockerignore(&buf)
-					return buf.Bytes(), nil
+				Source: func(buf *bytes.Buffer) error {
+					templates.WriteGoDockerignore(buf)
+					return nil
 				},
 			},
 		}...).AddCommand(

@@ -7,7 +7,7 @@ var GolangSet = &cli.Command{
 	Aliases: []string{"g"},
 	Usage:   "golang toolkit",
 	Subcommands: []*cli.Command{
-		GoServerCmd,
+		GoWebCmd,
 		GoServiceCmd,
 		GoFlagsCmd,
 		GoAirCmd,
