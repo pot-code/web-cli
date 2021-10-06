@@ -92,67 +92,68 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 	repoDeclName := fmt.Sprintf(constants.GoApiRepositoryPattern, modelName)
 
 	return util.NewTaskComposer(path.Join("internal", pkgName)).AddFile(
-		&core.FileDesc{
-			Path: path.Join("port", "http.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+		[]*core.FileDesc{
+			{
+				Path: path.Join("port", "http.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServiceWebHandler(&buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
-				return buf.Bytes(), nil
+					templates.WriteGoServiceWebHandler(&buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("service", "service.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("service", "service.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServiceService(&buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
-				return buf.Bytes(), nil
+					templates.WriteGoServiceService(&buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("repository", "pgsql.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("repository", "pgsql.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServiceRepo(&buf, projectName, authorName, pkgName, repoDeclName)
-				return buf.Bytes(), nil
+					templates.WriteGoServiceRepo(&buf, projectName, authorName, pkgName, repoDeclName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("domain", fmt.Sprintf("%s.%s", pkgName, constants.GoSuffix)),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("domain", fmt.Sprintf("%s.%s", pkgName, constants.GoSuffix)),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServiceDomainModel(&buf, modelName)
-				return buf.Bytes(), nil
+					templates.WriteGoServiceDomainModel(&buf, modelName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("domain", "type.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("domain", "type.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServiceDomainType(&buf, svcDeclName, repoDeclName)
-				return buf.Bytes(), nil
+					templates.WriteGoServiceDomainType(&buf, svcDeclName, repoDeclName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: "wire_set.go",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "wire_set.go",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServiceWireSet(&buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
-				return buf.Bytes(), nil
+					templates.WriteGoServiceWireSet(&buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-	).AddCommand(
+		}...).AddCommand(
 		// commands.GoEntInit(modelName),
 		commands.GoWire("./web"),
 		commands.GoModTidy(),

@@ -49,130 +49,131 @@ func (ggb *GenGolangBeService) Handle(c *cli.Context, cfg interface{}) error {
 	}
 
 	return util.NewTaskComposer(projectName).AddFile(
-		&core.FileDesc{
-			Path: path.Join("cmd", "web", "main.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+		[]*core.FileDesc{
+			{
+				Path: path.Join("cmd", "web", "main.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerCmdWebMain(&buf, projectName, authorName)
-				return buf.Bytes(), nil
+					templates.WriteGoServerCmdWebMain(&buf, projectName, authorName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("config", "config.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("config", "config.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerConfig(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoServerConfig(&buf)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("web", "wire.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("web", "wire.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerWebWire(&buf, projectName, authorName)
-				return buf.Bytes(), nil
+					templates.WriteGoServerWebWire(&buf, projectName, authorName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("web", "server.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("web", "server.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerWebServer(&buf, projectName, authorName)
-				return buf.Bytes(), nil
+					templates.WriteGoServerWebServer(&buf, projectName, authorName)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("web", "router.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("web", "router.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerWebRouter(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoServerWebRouter(&buf)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: "tools.go",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "tools.go",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerTools(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoServerTools(&buf)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: "go.mod",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "go.mod",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoMod(&buf, projectName, authorName, config.GoVersion)
-				return buf.Bytes(), nil
+					templates.WriteGoMod(&buf, projectName, authorName, config.GoVersion)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-		&core.FileDesc{
-			Path: ".vscode/settings.json",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: ".vscode/settings.json",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerVscodeSettings(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoServerVscodeSettings(&buf)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-		&core.FileDesc{
-			Path: "Dockerfile",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "Dockerfile",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerDockerfile(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoServerDockerfile(&buf)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-		&core.FileDesc{
-			Path: "Makefile",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "Makefile",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerMakefile(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoServerMakefile(&buf)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-		&core.FileDesc{
-			Path: "air.toml",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "air.toml",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoAirConfig(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoAirConfig(&buf)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-		&core.FileDesc{
-			Path: "config.yml",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: "config.yml",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoServerConfigYml(&buf, projectName)
-				return buf.Bytes(), nil
+					templates.WriteGoServerConfigYml(&buf, projectName)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-		&core.FileDesc{
-			Path: ".dockerignore",
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: ".dockerignore",
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoDockerignore(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoDockerignore(&buf)
+					return buf.Bytes(), nil
+				},
 			},
-		},
-	).AddCommand(
+		}...).AddCommand(
 		&core.ShellCommand{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},

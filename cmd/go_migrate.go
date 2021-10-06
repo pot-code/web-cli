@@ -40,57 +40,58 @@ var GoMigrateService = util.NoCondFunctionService(func(c *cli.Context, cfg inter
 	}
 
 	return util.NewTaskComposer("").AddFile(
-		&core.FileDesc{
-			Path: path.Join("migrate", "config", "config.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+		[]*core.FileDesc{
+			{
+				Path: path.Join("migrate", "config", "config.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoMigrateConfig(&buf)
-				return buf.Bytes(), nil
+					templates.WriteGoMigrateConfig(&buf)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("migrate", "migrate.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("migrate", "migrate.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoMigrateMigration(&buf, meta.ProjectName, meta.Author)
-				return buf.Bytes(), nil
+					templates.WriteGoMigrateMigration(&buf, meta.ProjectName, meta.Author)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("migrate", "wire.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("migrate", "wire.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoMigrateWire(&buf, meta.ProjectName, meta.Author)
-				return buf.Bytes(), nil
+					templates.WriteGoMigrateWire(&buf, meta.ProjectName, meta.Author)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("cmd", "migrate", "main.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("cmd", "migrate", "main.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoMigrateCmdMain(&buf, meta.ProjectName, meta.Author)
-				return buf.Bytes(), nil
+					templates.WriteGoMigrateCmdMain(&buf, meta.ProjectName, meta.Author)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-		&core.FileDesc{
-			Path: path.Join("pkg", "db", "ent.go"),
-			Data: func() ([]byte, error) {
-				var buf bytes.Buffer
+			{
+				Path: path.Join("pkg", "db", "ent.go"),
+				Data: func() ([]byte, error) {
+					var buf bytes.Buffer
 
-				templates.WriteGoMigratePkgEnt(&buf, meta.ProjectName, meta.Author)
-				return buf.Bytes(), nil
+					templates.WriteGoMigratePkgEnt(&buf, meta.ProjectName, meta.Author)
+					return buf.Bytes(), nil
+				},
+				Transforms: []core.Transform{transform.GoFormatSource},
 			},
-			Transforms: []core.Transform{transform.GoFormatSource},
-		},
-	).AddCommand(
+		}...).AddCommand(
 		commands.GoModTidy(),
 		commands.GoWire("./migrate"),
 	).Run()
