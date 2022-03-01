@@ -14,7 +14,7 @@ import (
 
 type DataSource = func(buf *bytes.Buffer) error
 
-type Pipeline = func(buf *bytes.Buffer) (*bytes.Buffer, error)
+type Pipeline = func(src *bytes.Buffer, dst *bytes.Buffer) error
 
 type FileDesc struct {
 	Path       string
@@ -44,8 +44,8 @@ func (fg *FileGenerator) Run() error {
 		return nil
 	}
 
-	provider := fg.fd.Source
-	if provider == nil {
+	Source := fg.fd.Source
+	if Source == nil {
 		log.WithField("file", file).Warnf("no provider found [skipped]")
 		return nil
 	}
@@ -59,16 +59,18 @@ func (fg *FileGenerator) Run() error {
 	}
 
 	buf := new(bytes.Buffer)
-	err := provider(buf)
+	err := Source(buf)
 	if err != nil {
 		return errors.Wrapf(err, "failed to get data from provider [ %s ]", file)
 	}
 
 	for _, t := range fg.fd.Transforms {
-		buf, err = t(buf)
+		out := new(bytes.Buffer)
+		err = t(buf, out)
 		if err != nil {
 			return errors.Wrapf(err, "failed to apply transformation to [ %s ]", file)
 		}
+		buf = out
 	}
 
 	err = fg.write(file, buf.Bytes())
