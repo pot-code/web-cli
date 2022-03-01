@@ -36,6 +36,7 @@ func (grf *GenReactTemplate) Handle(c *cli.Context, cfg interface{}) error {
 
 	return util.NewTaskComposer("").AddCommand(
 		commands.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
+		commands.GitDeleteHistory(config.ProjectName),
 	).Run()
 }
 

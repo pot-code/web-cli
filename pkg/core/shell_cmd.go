@@ -35,7 +35,7 @@ func NewShellCmdExecutor(cmd *ShellCommand) *ShellCmdExecutor {
 
 func (ce ShellCmdExecutor) Run() error {
 	cmd := ce.cmd
-	log.WithFields(log.Fields{"cmd": cmd, "context": "ShellCmdExecutor.Run"}).Info("execute command")
+	log.WithFields(log.Fields{"cmd": cmd, "caller": "ShellCmdExecutor.Run"}).Info("execute command")
 	proc := exec.Command(cmd.Bin, cmd.Args...)
 
 	if cmd.Cwd != "" {
