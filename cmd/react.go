@@ -7,7 +7,7 @@ var ReactSet = &cli.Command{
 	Aliases: []string{"r"},
 	Usage:   "react toolkit",
 	Subcommands: []*cli.Command{
-		ReactTemplateCmd,
+		ReactInitCmd,
 		ReactComponentCmd,
 	},
 }
