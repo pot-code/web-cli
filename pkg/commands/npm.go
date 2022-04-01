@@ -1,20 +1,20 @@
 package commands
 
-import "github.com/pot-code/web-cli/pkg/core"
+import "github.com/pot-code/web-cli/pkg/task"
 
-func NpmAdd(deps ...string) *core.ShellCommand {
+func NpmAdd(deps ...string) *task.ShellCommand {
 	args := []string{"i"}
 	args = append(args, deps...)
-	return &core.ShellCommand{
+	return &task.ShellCommand{
 		Bin:  "npm",
 		Args: args,
 	}
 }
 
-func NpmAddDev(deps ...string) *core.ShellCommand {
+func NpmAddDev(deps ...string) *task.ShellCommand {
 	args := []string{"i", "-D"}
 	args = append(args, deps...)
-	return &core.ShellCommand{
+	return &task.ShellCommand{
 		Bin:  "npm",
 		Args: args,
 	}

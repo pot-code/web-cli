@@ -1,4 +1,4 @@
-package core
+package util
 
 import (
 	"fmt"
@@ -6,10 +6,144 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
+	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/pkg/validate"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
+
+type CommandFeature interface {
+	Cond(c *cli.Context) bool
+	Handle(c *cli.Context, cfg interface{}) error
+}
+
+type ConfigStructVisitor interface {
+	VisitStringType(reflect.StructField, reflect.Value, *cli.Context) error
+	VisitBooleanType(reflect.StructField, reflect.Value, *cli.Context) error
+	VisitIntType(reflect.StructField, reflect.Value, *cli.Context) error
+}
+
+type CliCommand struct {
+	cmd      *cli.Command
+	cfg      interface{}
+	services []CommandFeature
+}
+
+type CommandOption interface {
+	apply(*cli.Command)
+}
+
+type optionFunc func(*cli.Command)
+
+func (o optionFunc) apply(c *cli.Command) {
+	o(c)
+}
+
+func WithAlias(alias []string) CommandOption {
+	return optionFunc(func(c *cli.Command) {
+		c.Aliases = alias
+	})
+}
+
+func WithArgUsage(usage string) CommandOption {
+	return optionFunc(func(c *cli.Command) {
+		c.ArgsUsage = usage
+	})
+}
+
+func WithFlags(flags cli.Flag) CommandOption {
+	return optionFunc(func(c *cli.Command) {
+		c.Flags = append(c.Flags, flags)
+	})
+}
+
+func NewCliCommand(name, usage string, defaultConfig interface{}, options ...CommandOption) *CliCommand {
+	cmd := &cli.Command{
+		Name:  name,
+		Usage: usage,
+	}
+
+	visitor := NewExtractFlagsVisitor()
+	IterateCliConfig(defaultConfig, visitor, nil)
+	cmd.Flags = append(cmd.Flags, visitor.Flags...)
+
+	for _, option := range options {
+		option.apply(cmd)
+	}
+	return &CliCommand{cmd, defaultConfig, []CommandFeature{}}
+}
+
+func (cc *CliCommand) AddFeature(feats ...CommandFeature) *CliCommand {
+	cc.services = append(cc.services, feats...)
+	return cc
+}
+
+func (cc *CliCommand) ExportCommand() *cli.Command {
+	cc.cmd.Action = func(c *cli.Context) error {
+		cfg := cc.cfg
+
+		if cfg != nil {
+			IterateCliConfig(cfg, NewSetCliValueVisitor(), c)
+			if err := validate.V.Struct(cfg); err != nil {
+				if v, ok := err.(validator.ValidationErrors); ok {
+					msg := v[0].Translate(validate.T)
+					cli.ShowCommandHelp(c, c.Command.Name)
+					return NewCommandError(c.Command.Name, errors.New(msg))
+				}
+				return err
+			}
+		}
+
+		for _, s := range cc.services {
+			if s.Cond(c) {
+				if err := s.Handle(c, cfg); err != nil {
+					return err
+				}
+			}
+		}
+
+		return nil
+	}
+	return cc.cmd
+}
+
+func IterateCliConfig(config interface{}, visitor ConfigStructVisitor, runtime *cli.Context) {
+	if config == nil {
+		return
+	}
+
+	t := reflect.TypeOf(config)
+	if t.Kind() != reflect.Ptr {
+		panic("config must be of pointer type")
+	}
+
+	t = t.Elem()
+	v := reflect.ValueOf(config)
+	v = reflect.Indirect(v)
+	for i := v.NumField() - 1; i >= 0; i-- {
+		tf := t.Field(i)
+		vf := v.Field(i)
+
+		if !vf.CanSet() {
+			log.WithFields(log.Fields{
+				"caller": "ParseCliConfig",
+			}).Warnf("config field [ %s ] can't be set, maybe it's not exported", tf.Name)
+			continue
+		}
+
+		switch tf.Type.Kind() {
+		case reflect.String:
+			visitor.VisitStringType(tf, vf, runtime)
+		case reflect.Bool:
+			visitor.VisitBooleanType(tf, vf, runtime)
+		case reflect.Int:
+			visitor.VisitIntType(tf, vf, runtime)
+		default:
+			panic("not implemented")
+		}
+	}
+}
 
 type ExtractFlagsVisitor struct {
 	Flags []cli.Flag

@@ -4,7 +4,7 @@ import (
 	"bytes"
 
 	"github.com/pot-code/web-cli/pkg/commands"
-	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
@@ -14,9 +14,9 @@ type AddTypescriptConfig struct {
 	Target string `flag:"target" alias:"t" usage:"project target" validate:"required,oneof=node react"`
 }
 
-var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript support",
+var AddTypescriptCmd = util.NewCliCommand("typescript", "add typescript support",
 	new(AddTypescriptConfig),
-	core.WithAlias([]string{"ts"}),
+	util.WithAlias([]string{"ts"}),
 ).AddFeature(
 	new(AddTypescriptToNode),
 	new(AddTypescriptToReact),
@@ -24,7 +24,7 @@ var AddTypescriptCmd = core.NewCliLeafCommand("typescript", "add typescript supp
 
 type AddTypescriptToNode struct{}
 
-var _ core.CommandFeature = &AddTypescriptToNode{}
+var _ util.CommandFeature = &AddTypescriptToNode{}
 
 func (arc *AddTypescriptToNode) Cond(c *cli.Context) bool {
 	return c.String("target") == "node"
@@ -32,14 +32,14 @@ func (arc *AddTypescriptToNode) Cond(c *cli.Context) bool {
 
 func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
-		&core.FileDesc{
+		&task.FileDesc{
 			Path: ".eslintrc.js",
 			Source: func(buf *bytes.Buffer) error {
 				templates.WriteNodeEslintrc(buf)
 				return nil
 			},
 		},
-		&core.FileDesc{
+		&task.FileDesc{
 			Path: "tsconfig.json",
 			Source: func(buf *bytes.Buffer) error {
 				templates.WriteNodeTsConfig(buf)
@@ -63,7 +63,7 @@ func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
 
 type AddTypescriptToReact struct{}
 
-var _ core.CommandFeature = &AddTypescriptToReact{}
+var _ util.CommandFeature = &AddTypescriptToReact{}
 
 func (arc *AddTypescriptToReact) Cond(c *cli.Context) bool {
 	return c.String("target") == "react"
@@ -71,14 +71,14 @@ func (arc *AddTypescriptToReact) Cond(c *cli.Context) bool {
 
 func (arc *AddTypescriptToReact) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
-		&core.FileDesc{
+		&task.FileDesc{
 			Path: ".eslintrc.js",
 			Source: func(buf *bytes.Buffer) error {
 				templates.WriteReactEslintrc(buf)
 				return nil
 			},
 		},
-		&core.FileDesc{
+		&task.FileDesc{
 			Path: "tsconfig.json",
 			Source: func(buf *bytes.Buffer) error {
 				templates.WriteReactTsConfig(buf)

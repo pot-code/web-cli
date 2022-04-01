@@ -7,8 +7,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/constants"
-	"github.com/pot-code/web-cli/pkg/core"
-	"github.com/pot-code/web-cli/pkg/transform"
+	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/pkg/transformation"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
@@ -16,9 +16,9 @@ import (
 
 type GoMigrateConfig struct{}
 
-var GoMigrateCmd = core.NewCliLeafCommand("migrate", "add migration",
+var GoMigrateCmd = util.NewCliCommand("migrate", "add migration",
 	&GoMigrateConfig{},
-	core.WithAlias([]string{"M"}),
+	util.WithAlias([]string{"M"}),
 ).AddFeature(AddGoMigration).ExportCommand()
 
 var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
@@ -40,7 +40,7 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 	}
 
 	return util.NewTaskComposer("").AddFile(
-		[]*core.FileDesc{
+		[]*task.FileDesc{
 			{
 				Path: path.Join("migrate", "config", "config.go"),
 				Source: func(buf *bytes.Buffer) error {
@@ -54,7 +54,7 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 					templates.WriteGoMigrateMigration(buf, meta.ProjectName, meta.Author)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("migrate", "wire.go"),
@@ -62,7 +62,7 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 					templates.WriteGoMigrateWire(buf, meta.ProjectName, meta.Author)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("cmd", "migrate", "main.go"),
@@ -70,7 +70,7 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 					templates.WriteGoMigrateCmdMain(buf, meta.ProjectName, meta.Author)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("pkg", "db", "ent.go"),
@@ -78,7 +78,7 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 					templates.WriteGoMigratePkgEnt(buf, meta.ProjectName, meta.Author)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 		}...).AddCommand(
 		commands.GoModTidy(),

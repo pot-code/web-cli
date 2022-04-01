@@ -8,8 +8,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/constants"
-	"github.com/pot-code/web-cli/pkg/core"
-	"github.com/pot-code/web-cli/pkg/transform"
+	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/pkg/transformation"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
@@ -20,12 +20,12 @@ type GoFlagsConfig struct {
 	OutFileName string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
 }
 
-var GoFlagsCmd = core.NewCliLeafCommand("flags", "generate pflags registration based on struct",
+var GoFlagsCmd = util.NewCliCommand("flags", "generate pflags registration based on struct",
 	&GoFlagsConfig{
 		OutFileName: "config_gen",
 	},
-	core.WithAlias([]string{"f"}),
-	core.WithArgUsage("CONFIG_PATH"),
+	util.WithAlias([]string{"f"}),
+	util.WithArgUsage("CONFIG_PATH"),
 ).AddFeature(GenViperFlags).ExportCommand()
 
 var GenViperFlags = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
@@ -49,14 +49,14 @@ var GenViperFlags = util.NoCondFeature(func(c *cli.Context, cfg interface{}) err
 	pkg := visitor.pkg
 	out := fmt.Sprintf("%s.%s", config.OutFileName, constants.GoSuffix)
 	return util.NewTaskComposer(pkg).AddFile(
-		&core.FileDesc{
+		&task.FileDesc{
 			Path:      out,
 			Overwrite: true,
 			Source: func(buf *bytes.Buffer) error {
 				templates.WriteGoGenPflags(buf, pkg, fm)
 				return nil
 			},
-			Transforms: []core.Pipeline{transform.GoFormatSource},
+			Transforms: []task.Pipeline{transformation.GoFormatSource},
 		},
 	).AddCommand(
 		commands.GoImports(path.Join(pkg, out)),

@@ -1,29 +1,29 @@
 package commands
 
-import "github.com/pot-code/web-cli/pkg/core"
+import "github.com/pot-code/web-cli/pkg/task"
 
-func YarnAdd(deps ...string) *core.ShellCommand {
+func YarnAdd(deps ...string) *task.ShellCommand {
 	args := []string{"add"}
 	args = append(args, deps...)
-	return &core.ShellCommand{
+	return &task.ShellCommand{
 		Bin:  "yarn",
 		Args: args,
 	}
 }
 
-func YarnAddDev(deps ...string) *core.ShellCommand {
+func YarnAddDev(deps ...string) *task.ShellCommand {
 	args := []string{"add", "-D"}
 	args = append(args, deps...)
-	return &core.ShellCommand{
+	return &task.ShellCommand{
 		Bin:  "yarn",
 		Args: args,
 	}
 }
 
-func YarnCreate(template string, extra ...string) *core.ShellCommand {
+func YarnCreate(template string, extra ...string) *task.ShellCommand {
 	args := []string{"create", template}
 	args = append(args, extra...)
-	return &core.ShellCommand{
+	return &task.ShellCommand{
 		Bin:  "yarn",
 		Args: args,
 	}

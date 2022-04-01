@@ -5,8 +5,8 @@ import (
 	"os"
 	"path"
 
-	"github.com/pot-code/web-cli/pkg/core"
-	"github.com/pot-code/web-cli/pkg/transform"
+	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/pkg/transformation"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
@@ -20,18 +20,18 @@ type GoWebConfig struct {
 	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"required,version"`
 }
 
-var GoWebCmd = core.NewCliLeafCommand("web", "generate golang web project",
+var GoWebCmd = util.NewCliCommand("web", "generate golang web project",
 	&GoWebConfig{
 		GenType:   "go",
 		GoVersion: "1.16",
 	},
-	core.WithAlias([]string{"w"}),
-	core.WithArgUsage("project_name"),
+	util.WithAlias([]string{"w"}),
+	util.WithArgUsage("project_name"),
 ).AddFeature(new(GenWebProject)).ExportCommand()
 
 type GenWebProject struct{}
 
-var _ core.CommandFeature = &GenWebProject{}
+var _ util.CommandFeature = &GenWebProject{}
 
 func (gwp *GenWebProject) Cond(c *cli.Context) bool {
 	return c.String("type") == "go"
@@ -49,14 +49,14 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 	}
 
 	return util.NewTaskComposer(projectName).AddFile(
-		[]*core.FileDesc{
+		[]*task.FileDesc{
 			{
 				Path: path.Join("cmd", "web", "main.go"),
 				Source: func(buf *bytes.Buffer) error {
 					templates.WriteGoServerCmdWebMain(buf, projectName, authorName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("config", "config.go"),
@@ -64,7 +64,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 					templates.WriteGoServerConfig(buf)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("web", "wire.go"),
@@ -72,7 +72,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 					templates.WriteGoServerWebWire(buf, projectName, authorName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("web", "server.go"),
@@ -80,7 +80,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 					templates.WriteGoServerWebServer(buf, projectName, authorName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("web", "router.go"),
@@ -88,7 +88,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 					templates.WriteGoServerWebRouter(buf)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: "tools.go",
@@ -96,7 +96,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 					templates.WriteGoServerTools(buf)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: "go.mod",
@@ -148,12 +148,12 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 				},
 			},
 		}...).AddCommand(
-		&core.ShellCommand{
+		&task.ShellCommand{
 			Bin:  "go",
 			Args: []string{"mod", "tidy"},
 			Cwd:  path.Join("./" + projectName),
 		},
-		&core.ShellCommand{
+		&task.ShellCommand{
 			Bin:  "wire",
 			Args: []string{"./web"},
 			Cwd:  path.Join("./" + projectName),

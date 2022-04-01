@@ -8,7 +8,7 @@ import (
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/constants"
-	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
@@ -23,10 +23,10 @@ type ReactComponentConfig struct {
 	Name    string `arg:"0" alias:"component_name" validate:"required,var"`
 }
 
-var ReactComponentCmd = core.NewCliLeafCommand("component", "add react component",
+var ReactComponentCmd = util.NewCliCommand("component", "add react component",
 	new(ReactComponentConfig),
-	core.WithArgUsage("component_name"),
-	core.WithAlias([]string{"c"}),
+	util.WithArgUsage("component_name"),
+	util.WithAlias([]string{"c"}),
 ).AddFeature(
 	new(AddReactComponent),
 	new(AddReactEmotionFeat),
@@ -36,7 +36,7 @@ type AddReactComponent struct {
 	ComponentName string
 }
 
-var _ core.CommandFeature = &AddReactComponent{}
+var _ util.CommandFeature = &AddReactComponent{}
 
 func (arc *AddReactComponent) Cond(c *cli.Context) bool {
 	return true
@@ -50,12 +50,12 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	return arc.addReactComponent(config).Run()
 }
 
-func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) core.Runner {
+func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) task.Runner {
 	dir := cfg.Dir
 	name := arc.ComponentName
 
 	var styleFile string
-	var files = []*core.FileDesc{
+	var files = []*task.FileDesc{
 		{
 			Path: arc.getComponentFileName(),
 			Source: func(buf *bytes.Buffer) error {
@@ -77,10 +77,10 @@ func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) core.
 	return util.NewTaskComposer(dir).AddFile(files...)
 }
 
-func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *core.FileDesc {
+func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *task.FileDesc {
 	rootClass := strcase.ToKebab(arc.ComponentName)
 
-	return &core.FileDesc{
+	return &task.FileDesc{
 		Path: arc.getScssFileName(),
 		Source: func(buf *bytes.Buffer) error {
 			templates.WriteReactSCSS(buf, rootClass)
@@ -93,10 +93,10 @@ func (arc *AddReactComponent) getScssFileName() string {
 	return fmt.Sprintf(constants.ReactScssPattern, arc.ComponentName)
 }
 
-func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *core.FileDesc {
+func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *task.FileDesc {
 	name := arc.ComponentName
 
-	return &core.FileDesc{
+	return &task.FileDesc{
 		Path: arc.getStoryFileName(),
 		Source: func(buf *bytes.Buffer) error {
 			templates.WriteReactStory(buf, name)
@@ -115,7 +115,7 @@ func (arc *AddReactComponent) getComponentFileName() string {
 
 type AddReactEmotionFeat struct{}
 
-var _ core.CommandFeature = &AddReactEmotionFeat{}
+var _ util.CommandFeature = &AddReactEmotionFeat{}
 
 func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
 	return c.Bool("emotion")
@@ -123,7 +123,7 @@ func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
 
 func (arc *AddReactEmotionFeat) Handle(c *cli.Context, cfg interface{}) error {
 	return util.NewTaskComposer("").AddFile(
-		&core.FileDesc{
+		&task.FileDesc{
 			Path: ".babelrc",
 			Source: func(buf *bytes.Buffer) error {
 				templates.WriteReactEmotion(buf)

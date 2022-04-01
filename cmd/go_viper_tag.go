@@ -3,7 +3,7 @@ package cmd
 import (
 	"bytes"
 
-	"github.com/pot-code/web-cli/pkg/core"
+	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/urfave/cli/v2"
 )
@@ -13,12 +13,12 @@ type GoViperTagConfig struct {
 	StructName string `flag:"struct" alias:"s" usage:"struct name" validate:"required"`
 }
 
-var GoViperTagCmd = core.NewCliLeafCommand("viper", "transform config struct to pflag",
+var GoViperTagCmd = util.NewCliCommand("viper", "transform config struct to pflag",
 	&GoViperTagConfig{
 		StructName: "AppConfig",
 	},
-	core.WithAlias([]string{"v"}),
-	core.WithArgUsage("config_path"),
+	util.WithAlias([]string{"v"}),
+	util.WithArgUsage("config_path"),
 ).AddFeature(AddViperTag).ExportCommand()
 
 var AddViperTag = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
@@ -26,7 +26,7 @@ var AddViperTag = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error
 
 	var outData bytes.Buffer
 	return util.NewTaskComposer("").AddFile(
-		&core.FileDesc{
+		&task.FileDesc{
 			Path:      config.ConfigPath,
 			Overwrite: true,
 			Source: func(buf *bytes.Buffer) error {
@@ -35,7 +35,7 @@ var AddViperTag = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error
 			},
 		},
 	).AddBeforeCommand(
-		&core.ShellCommand{
+		&task.ShellCommand{
 			Bin: "gomodifytags",
 			Args: []string{
 				"-file",

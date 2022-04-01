@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/pot-code/web-cli/pkg/commands"
-	"github.com/pot-code/web-cli/pkg/core"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/urfave/cli/v2"
 )
@@ -12,11 +11,11 @@ type ReactInitConfig struct {
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
 }
 
-var ReactInitCmd = core.NewCliLeafCommand("init", "create react project",
+var ReactInitCmd = util.NewCliCommand("init", "create react project",
 	&ReactInitConfig{
 		GenType: "vanilla",
 	},
-	core.WithArgUsage("project_name"),
+	util.WithArgUsage("project_name"),
 ).AddFeature(
 	new(VanillaTemplate),
 	new(NextJsTemplate),
@@ -24,7 +23,7 @@ var ReactInitCmd = core.NewCliLeafCommand("init", "create react project",
 
 type VanillaTemplate struct{}
 
-var _ core.CommandFeature = &VanillaTemplate{}
+var _ util.CommandFeature = &VanillaTemplate{}
 
 func (grf *VanillaTemplate) Cond(c *cli.Context) bool {
 	return c.String("type") == "vanilla"
@@ -41,7 +40,7 @@ func (grf *VanillaTemplate) Handle(c *cli.Context, cfg interface{}) error {
 
 type NextJsTemplate struct{}
 
-var _ core.CommandFeature = &NextJsTemplate{}
+var _ util.CommandFeature = &NextJsTemplate{}
 
 func (gnf *NextJsTemplate) Cond(c *cli.Context) bool {
 	return c.String("type") == "next"

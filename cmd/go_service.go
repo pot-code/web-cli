@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/pkg/commands"
 	"github.com/pot-code/web-cli/pkg/constants"
-	"github.com/pot-code/web-cli/pkg/core"
-	"github.com/pot-code/web-cli/pkg/transform"
+	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/pkg/transformation"
 	"github.com/pot-code/web-cli/pkg/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
@@ -25,12 +25,12 @@ type GoServiceConfig struct {
 	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
 }
 
-var GoServiceCmd = core.NewCliLeafCommand("service", "add a go service",
+var GoServiceCmd = util.NewCliCommand("service", "add a go service",
 	&GoServiceConfig{
 		GenType: "go",
 	},
-	core.WithAlias([]string{"svc"}),
-	core.WithArgUsage("module_name"),
+	util.WithAlias([]string{"svc"}),
+	util.WithArgUsage("module_name"),
 ).AddFeature(
 	&GenerateGoSimpleService{
 		RegistryFile: path.Join("web", "server.go"),
@@ -46,7 +46,7 @@ type GenerateGoSimpleService struct {
 	Config          *GoServiceConfig
 }
 
-var _ core.CommandFeature = &GenerateGoSimpleService{}
+var _ util.CommandFeature = &GenerateGoSimpleService{}
 
 func (gga *GenerateGoSimpleService) Cond(c *cli.Context) bool {
 	return true
@@ -81,7 +81,7 @@ func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) erro
 	return gga.generateFiles().Run()
 }
 
-func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
+func (gga *GenerateGoSimpleService) generateFiles() task.Runner {
 	modelName := gga.CamelModuleName
 	pkgName := gga.PackageName
 	projectName := gga.ProjectName
@@ -92,14 +92,14 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 	repoDeclName := fmt.Sprintf(constants.GoApiRepositoryPattern, modelName)
 
 	return util.NewTaskComposer(path.Join("internal", pkgName)).AddFile(
-		[]*core.FileDesc{
+		[]*task.FileDesc{
 			{
 				Path: path.Join("port", "http.go"),
 				Source: func(buf *bytes.Buffer) error {
 					templates.WriteGoServiceWebHandler(buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("service", "service.go"),
@@ -107,7 +107,7 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 					templates.WriteGoServiceService(buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("repository", "pgsql.go"),
@@ -115,7 +115,7 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 					templates.WriteGoServiceRepo(buf, projectName, authorName, pkgName, repoDeclName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("domain", fmt.Sprintf("%s.%s", pkgName, constants.GoSuffix)),
@@ -123,7 +123,7 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 					templates.WriteGoServiceDomainModel(buf, modelName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: path.Join("domain", "type.go"),
@@ -131,7 +131,7 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 					templates.WriteGoServiceDomainType(buf, svcDeclName, repoDeclName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 			{
 				Path: "wire_set.go",
@@ -139,7 +139,7 @@ func (gga *GenerateGoSimpleService) generateFiles() core.Runner {
 					templates.WriteGoServiceWireSet(buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
 					return nil
 				},
-				Transforms: []core.Pipeline{transform.GoFormatSource},
+				Transforms: []task.Pipeline{transformation.GoFormatSource},
 			},
 		}...).AddCommand(
 		// commands.GoEntInit(modelName),
