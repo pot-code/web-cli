@@ -54,20 +54,20 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewCliLeafCommand(name, usage string, cfg interface{}, options ...CommandOption) *CliLeafCommand {
+func NewCliLeafCommand(name, usage string, defaultConfig interface{}, options ...CommandOption) *CliLeafCommand {
 	cmd := &cli.Command{
 		Name:  name,
 		Usage: usage,
 	}
 
 	visitor := NewExtractFlagsVisitor()
-	IterateCliConfig(cfg, visitor, nil)
+	IterateCliConfig(defaultConfig, visitor, nil)
 	cmd.Flags = append(cmd.Flags, visitor.Flags...)
 
 	for _, option := range options {
 		option.apply(cmd)
 	}
-	return &CliLeafCommand{cmd, cfg, []CommandFeature{}}
+	return &CliLeafCommand{cmd, defaultConfig, []CommandFeature{}}
 }
 
 func (cc *CliLeafCommand) AddFeature(feats ...CommandFeature) *CliLeafCommand {

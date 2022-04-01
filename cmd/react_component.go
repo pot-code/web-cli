@@ -17,7 +17,7 @@ import (
 type ReactComponentConfig struct {
 	Hook    bool   `flag:"hook" usage:"add react hook"`
 	Scss    bool   `flag:"scss" alias:"S" usage:"add scss module"`
-	Story   bool   `flag:"story" alias:"sb" usage:"add storybook"`
+	Story   bool   `flag:"storybook" alias:"sb" usage:"add storybook"`
 	Emotion bool   `flag:"emotion" alias:"e" usage:"add @emotion/react"`
 	Dir     string `flag:"dir" alias:"d" usage:"output dir"`
 	Name    string `arg:"0" alias:"component_name" validate:"required,var"`
@@ -50,30 +50,6 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	return arc.addReactComponent(config).Run()
 }
 
-func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *core.FileDesc {
-	rootClass := strcase.ToKebab(arc.ComponentName)
-
-	return &core.FileDesc{
-		Path: arc.getScssFileName(),
-		Source: func(buf *bytes.Buffer) error {
-			templates.WriteReactSCSS(buf, rootClass)
-			return nil
-		},
-	}
-}
-
-func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *core.FileDesc {
-	name := arc.ComponentName
-
-	return &core.FileDesc{
-		Path: arc.getStoryFileName(),
-		Source: func(buf *bytes.Buffer) error {
-			templates.WriteReactStory(buf, name)
-			return nil
-		},
-	}
-}
-
 func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) core.Runner {
 	dir := cfg.Dir
 	name := arc.ComponentName
@@ -101,8 +77,32 @@ func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) core.
 	return util.NewTaskComposer(dir).AddFile(files...)
 }
 
+func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *core.FileDesc {
+	rootClass := strcase.ToKebab(arc.ComponentName)
+
+	return &core.FileDesc{
+		Path: arc.getScssFileName(),
+		Source: func(buf *bytes.Buffer) error {
+			templates.WriteReactSCSS(buf, rootClass)
+			return nil
+		},
+	}
+}
+
 func (arc *AddReactComponent) getScssFileName() string {
 	return fmt.Sprintf(constants.ReactScssPattern, arc.ComponentName)
+}
+
+func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *core.FileDesc {
+	name := arc.ComponentName
+
+	return &core.FileDesc{
+		Path: arc.getStoryFileName(),
+		Source: func(buf *bytes.Buffer) error {
+			templates.WriteReactStory(buf, name)
+			return nil
+		},
+	}
 }
 
 func (arc *AddReactComponent) getStoryFileName() string {
