@@ -1,4 +1,4 @@
-package util
+package command
 
 import (
 	"fmt"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
+	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/internal/validate"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -89,7 +90,7 @@ func (cc *CliCommand) ExportCommand() *cli.Command {
 				if v, ok := err.(validator.ValidationErrors); ok {
 					msg := v[0].Translate(validate.T)
 					cli.ShowCommandHelp(c, c.Command.Name)
-					return NewCommandError(c.Command.Name, errors.New(msg))
+					return util.NewCommandError(c.Command.Name, errors.New(msg))
 				}
 				return err
 			}

@@ -1,9 +1,7 @@
 package cmd
 
 import (
-	"bytes"
-
-	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/command"
 	"github.com/pot-code/web-cli/internal/util"
 	"github.com/urfave/cli/v2"
 )
@@ -13,40 +11,41 @@ type GoViperTagConfig struct {
 	StructName string `flag:"struct" alias:"s" usage:"struct name" validate:"required"`
 }
 
-var GoViperTagCmd = util.NewCliCommand("viper", "transform config struct to pflag",
+var GoViperTagCmd = command.NewCliCommand("viper", "transform config struct to pflag",
 	&GoViperTagConfig{
 		StructName: "AppConfig",
 	},
-	util.WithAlias([]string{"v"}),
-	util.WithArgUsage("config_path"),
+	command.WithAlias([]string{"v"}),
+	command.WithArgUsage("config_path"),
 ).AddFeature(AddViperTag).ExportCommand()
 
 var AddViperTag = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*GoViperTagConfig)
+	// config := cfg.(*GoViperTagConfig)
 
-	var outData bytes.Buffer
-	return util.NewTaskComposer("").AddFile(
-		&task.FileDesc{
-			Path:      config.ConfigPath,
-			Overwrite: true,
-			Source: func(buf *bytes.Buffer) error {
-				buf.Write(buf.Bytes())
-				return nil
-			},
-		},
-	).AddBeforeCommand(
-		&task.ShellCommand{
-			Bin: "gomodifytags",
-			Args: []string{
-				"-file",
-				config.ConfigPath,
-				// "-struct",
-				// config.StructName,
-				"-all",
-				"-add-tags",
-				"mapstructure,yaml",
-			},
-			Out: &outData,
-		},
-	).Run()
+	// var outData bytes.Buffer
+	// return util.NewTaskComposer("").AddFile(
+	// 	&task.FileRequest{
+	// 		Path:      config.ConfigPath,
+	// 		Overwrite: true,
+	// 		Data: func(buf *bytes.Buffer) error {
+	// 			buf.Write(buf.Bytes())
+	// 			return nil
+	// 		},
+	// 	},
+	// ).AddBeforeCommand(
+	// 	&task.ShellCommand{
+	// 		Bin: "gomodifytags",
+	// 		Args: []string{
+	// 			"-file",
+	// 			config.ConfigPath,
+	// 			// "-struct",
+	// 			// config.StructName,
+	// 			"-all",
+	// 			"-add-tags",
+	// 			"mapstructure,yaml",
+	// 		},
+	// 		Out: &outData,
+	// 	},
+	// ).Run()
+	return nil
 })

@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/internal/constants"
+	"github.com/pot-code/web-cli/internal/constant"
 	"golang.org/x/mod/modfile"
 )
 
@@ -30,7 +30,7 @@ func ParseGoMod(path string) (*GoModMeta, error) {
 		return nil, errors.Wrap(err, "failed to read")
 	}
 
-	mp, err := modfile.Parse(constants.GoModFile, content, nil)
+	mp, err := modfile.Parse(constant.GoModFile, content, nil)
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to parse mod file")
 	}

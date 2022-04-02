@@ -1,6 +1,8 @@
 package util
 
-import "github.com/urfave/cli/v2"
+import (
+	"github.com/urfave/cli/v2"
+)
 
 type NoCondFeature func(c *cli.Context, cfg interface{}) error
 

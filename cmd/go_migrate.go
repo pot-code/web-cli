@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"bytes"
-	"path"
 
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/internal/commands"
-	"github.com/pot-code/web-cli/internal/constants"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/constant"
+	"github.com/pot-code/web-cli/internal/shell"
 	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/internal/transformation"
+	"github.com/pot-code/web-cli/internal/transformer"
 	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
@@ -16,13 +16,13 @@ import (
 
 type GoMigrateConfig struct{}
 
-var GoMigrateCmd = util.NewCliCommand("migrate", "add migration",
+var GoMigrateCmd = command.NewCliCommand("migrate", "add migration",
 	&GoMigrateConfig{},
-	util.WithAlias([]string{"M"}),
+	command.WithAlias([]string{"M"}),
 ).AddFeature(AddGoMigration).ExportCommand()
 
 var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
-	meta, err := util.ParseGoMod(constants.GoModFile)
+	meta, err := util.ParseGoMod(constant.GoModFile)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -39,49 +39,48 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 		return errors.New("ent is not used in the project")
 	}
 
-	return util.NewTaskComposer("").AddFile(
-		[]*task.FileDesc{
-			{
-				Path: path.Join("migrate", "config", "config.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoMigrateConfig(buf)
-					return nil
-				},
-			},
-			{
-				Path: path.Join("migrate", "migrate.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoMigrateMigration(buf, meta.ProjectName, meta.Author)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("migrate", "wire.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoMigrateWire(buf, meta.ProjectName, meta.Author)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("cmd", "migrate", "main.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoMigrateCmdMain(buf, meta.ProjectName, meta.Author)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("pkg", "db", "ent.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoMigratePkgEnt(buf, meta.ProjectName, meta.Author)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-		}...).AddCommand(
-		commands.GoModTidy(),
-		commands.GoWire("./migrate"),
+	return task.NewSequentialExecutor(
+		task.NewParallelExecutor(
+			task.BatchFileRequest(
+				task.NewFileRequestTree("").
+					Branch("migrate").Branch("config").
+					AddNode( // migrate/config
+						&task.FileRequest{
+							Name: "config.go",
+							Data: bytes.NewBufferString(templates.GoMigrateConfig()),
+							}).Up().
+					AddNode( // migrate/
+						&task.FileRequest{
+							Name: "migrate.go",
+							Data: bytes.NewBufferString(templates.GoMigrateMigration(meta.ProjectName, meta.Author)),
+						},
+						&task.FileRequest{
+							Name: "wire.go",
+							Data: bytes.NewBufferString(templates.GoMigrateWire(meta.ProjectName, meta.Author)),
+						},
+					).Up().
+					Branch("cmd").
+					AddNode( // cmd
+						&task.FileRequest{
+							Name: "main.go",
+							Data: bytes.NewBufferString(templates.GoMigrateCmdMain(meta.ProjectName, meta.Author)),
+						},
+					).Up().
+					Branch("pkg").Branch("db").
+					AddNode( // pkg/db
+						&task.FileRequest{
+							Name: "ent.go",
+							Data: bytes.NewBufferString(templates.GoMigratePkgEnt(meta.ProjectName, meta.Author)),
+						}).
+					Flatten(),
+				transformer.GoFormatSource(),
+			)...,
+		),
+		task.NewShellCmdExecutor(
+			shell.GoModTidy(),
+		),
+		task.NewShellCmdExecutor(
+			shell.GoWire("./migrate"),
+		),
 	).Run()
 })

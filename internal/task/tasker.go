@@ -1,5 +1,5 @@
 package task
 
-type Runner interface {
+type Task interface {
 	Run() error
 }

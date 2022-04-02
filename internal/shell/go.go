@@ -1,4 +1,4 @@
-package commands
+package shell
 
 import "github.com/pot-code/web-cli/internal/task"
 

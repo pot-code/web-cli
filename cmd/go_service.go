@@ -10,10 +10,10 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/internal/commands"
-	"github.com/pot-code/web-cli/internal/constants"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/constant"
+	"github.com/pot-code/web-cli/internal/shell"
 	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/internal/transformation"
 	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
@@ -25,12 +25,12 @@ type GoServiceConfig struct {
 	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
 }
 
-var GoServiceCmd = util.NewCliCommand("service", "add a go service",
+var GoServiceCmd = command.NewCliCommand("service", "add a go service",
 	&GoServiceConfig{
 		GenType: "go",
 	},
-	util.WithAlias([]string{"svc"}),
-	util.WithArgUsage("module_name"),
+	command.WithAlias([]string{"svc"}),
+	command.WithArgUsage("module_name"),
 ).AddFeature(
 	&GenerateGoSimpleService{
 		RegistryFile: path.Join("web", "server.go"),
@@ -46,7 +46,7 @@ type GenerateGoSimpleService struct {
 	Config          *GoServiceConfig
 }
 
-var _ util.CommandFeature = &GenerateGoSimpleService{}
+var _ command.CommandFeature = &GenerateGoSimpleService{}
 
 func (gga *GenerateGoSimpleService) Cond(c *cli.Context) bool {
 	return true
@@ -58,7 +58,7 @@ func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) erro
 	pkgName = strcase.ToSnake(pkgName)
 	gga.PackageName = pkgName
 
-	meta, err := util.ParseGoMod(constants.GoModFile)
+	meta, err := util.ParseGoMod(constant.GoModFile)
 	if err != nil {
 		return errors.WithStack(err)
 	}
@@ -81,70 +81,61 @@ func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) erro
 	return gga.generateFiles().Run()
 }
 
-func (gga *GenerateGoSimpleService) generateFiles() task.Runner {
+func (gga *GenerateGoSimpleService) generateFiles() task.Task {
 	modelName := gga.CamelModuleName
 	pkgName := gga.PackageName
 	projectName := gga.ProjectName
 	authorName := gga.AuthorName
 
-	handlerDeclName := fmt.Sprintf(constants.GoApiHandlerPattern, modelName)
-	svcDeclName := fmt.Sprintf(constants.GoApiServicePattern, modelName)
-	repoDeclName := fmt.Sprintf(constants.GoApiRepositoryPattern, modelName)
+	handlerDeclName := fmt.Sprintf(constant.GoApiHandlerPattern, modelName)
+	svcDeclName := fmt.Sprintf(constant.GoApiServicePattern, modelName)
+	repoDeclName := fmt.Sprintf(constant.GoApiRepositoryPattern, modelName)
 
-	return util.NewTaskComposer(path.Join("internal", pkgName)).AddFile(
-		[]*task.FileDesc{
-			{
-				Path: path.Join("port", "http.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServiceWebHandler(buf, projectName, authorName, pkgName, svcDeclName, handlerDeclName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("service", "service.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServiceService(buf, projectName, authorName, pkgName, svcDeclName, repoDeclName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("repository", "pgsql.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServiceRepo(buf, projectName, authorName, pkgName, repoDeclName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("domain", fmt.Sprintf("%s.%s", pkgName, constants.GoSuffix)),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServiceDomainModel(buf, modelName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("domain", "type.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServiceDomainType(buf, svcDeclName, repoDeclName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: "wire_set.go",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServiceWireSet(buf, projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-		}...).AddCommand(
-		// commands.GoEntInit(modelName),
-		commands.GoWire("./web"),
-		commands.GoModTidy(),
+	return task.NewSequentialExecutor(
+		task.NewParallelExecutor(
+			task.BatchFileRequest(
+				task.NewFileRequestTree(path.Join("internal", pkgName)).
+					AddNode( // root
+						&task.FileRequest{
+							Name: "wire_set.go",
+							Data: bytes.NewBufferString(templates.GoServiceWireSet(projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)),
+						},
+					).
+					Branch("domain").
+					AddNode( // root/domain
+						&task.FileRequest{
+							Name: fmt.Sprintf("%s.go", pkgName),
+							Data: bytes.NewBufferString(templates.GoServiceDomainModel(modelName)),
+						},
+						&task.FileRequest{
+							Name: "type.go",
+							Data: bytes.NewBufferString(templates.GoServiceDomainType(svcDeclName, repoDeclName)),
+						},
+					).Up().
+					Branch("repository").
+					AddNode( // root/repository
+						&task.FileRequest{
+							Name: "pgsql.go",
+							Data: bytes.NewBufferString(templates.GoServiceRepo(projectName, authorName, pkgName, repoDeclName)),
+						},
+					).Up().
+					Branch("port").
+					AddNode( // root/port
+						&task.FileRequest{
+							Name: "http.go",
+							Data: bytes.NewBufferString(templates.GoServiceWebHandler(projectName, authorName, pkgName, svcDeclName, handlerDeclName)),
+						},
+					).Up().
+					Branch("service").
+					AddNode( // root/service
+						&task.FileRequest{
+							Name: "service.go",
+							Data: bytes.NewBufferString(templates.GoServiceService(projectName, authorName, pkgName, svcDeclName, repoDeclName)),
+						}).Flatten(),
+			)...,
+		),
+		task.NewShellCmdExecutor(shell.GoWire("./web")),
+		task.NewShellCmdExecutor(shell.GoModTidy()),
 	)
 }
 
@@ -154,7 +145,7 @@ func (gga *GenerateGoSimpleService) updateServerRegistry() error {
 	am := util.NewGoAstModifier(rf)
 
 	am.AddModification(NewAddWireSetMod(pkg))
-	am.AddImport(fmt.Sprintf("%s/%s/%s/internal/%s", constants.GoGithubPrefix, gga.AuthorName, gga.ProjectName, pkg))
+	am.AddImport(fmt.Sprintf("%s/%s/%s/internal/%s", constant.GoGithubPrefix, gga.AuthorName, gga.ProjectName, pkg))
 	fset, at, err := am.ParseAndModify()
 	if err != nil {
 		return err

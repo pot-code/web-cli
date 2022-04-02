@@ -12,14 +12,13 @@ import (
 )
 
 type ShellCommand struct {
-	Bin    string
-	Cwd    string
-	Before bool // run before file generation
-	Args   []string
-	Out    io.Writer
+	Bin  string
+	Cwd  string
+	Args []string
+	Out  io.Writer
 }
 
-func (c *ShellCommand) String() string {
+func (c ShellCommand) String() string {
 	return fmt.Sprintf("cwd=%s bin=%s args=%s", c.Cwd, c.Bin, strings.Join(c.Args, " "))
 }
 
@@ -27,16 +26,17 @@ type ShellCmdExecutor struct {
 	cmd *ShellCommand
 }
 
-var _ Runner = ShellCmdExecutor{}
+var _ Task = &ShellCmdExecutor{}
 
 func NewShellCmdExecutor(cmd *ShellCommand) *ShellCmdExecutor {
 	return &ShellCmdExecutor{cmd}
 }
 
-func (ce ShellCmdExecutor) Run() error {
+func (ce *ShellCmdExecutor) Run() error {
 	cmd := ce.cmd
-	log.WithFields(log.Fields{"cmd": cmd, "caller": "ShellCmdExecutor.Run"}).Info("execute command")
 	proc := exec.Command(cmd.Bin, cmd.Args...)
+
+	log.WithField("cmd", cmd).Info("execute command")
 
 	if cmd.Cwd != "" {
 		proc.Dir = cmd.Cwd
@@ -46,6 +46,6 @@ func (ce ShellCmdExecutor) Run() error {
 	if cmd.Out != nil {
 		proc.Stdout = cmd.Out
 	}
-	proc.Stderr = os.Stdout
+	proc.Stderr = os.Stderr
 	return errors.Wrapf(proc.Run(), "failed to execute command '%s'", cmd)
 }

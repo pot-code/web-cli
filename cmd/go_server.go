@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"bytes"
-	"os"
 	"path"
 
+	"github.com/pot-code/web-cli/internal/command"
 	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/internal/transformation"
+	"github.com/pot-code/web-cli/internal/transformer"
 	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
@@ -20,18 +20,18 @@ type GoWebConfig struct {
 	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"required,version"`
 }
 
-var GoWebCmd = util.NewCliCommand("web", "generate golang web project",
+var GoWebCmd = command.NewCliCommand("web", "generate golang web project",
 	&GoWebConfig{
 		GenType:   "go",
 		GoVersion: "1.16",
 	},
-	util.WithAlias([]string{"w"}),
-	util.WithArgUsage("project_name"),
+	command.WithAlias([]string{"w"}),
+	command.WithArgUsage("project_name"),
 ).AddFeature(new(GenWebProject)).ExportCommand()
 
 type GenWebProject struct{}
 
-var _ util.CommandFeature = &GenWebProject{}
+var _ command.CommandFeature = &GenWebProject{}
 
 func (gwp *GenWebProject) Cond(c *cli.Context) bool {
 	return c.String("type") == "go"
@@ -42,121 +42,108 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 	projectName := config.ProjectName
 	authorName := config.AuthorName
 
-	_, err := os.Stat(projectName)
-	if err == nil {
-		log.Infof("[skipped]'%s' already exists", projectName)
+	if util.IsFileExist(projectName) {
+		log.Infof("folder '%s' already exists", projectName)
 		return nil
 	}
 
-	return util.NewTaskComposer(projectName).AddFile(
-		[]*task.FileDesc{
-			{
-				Path: path.Join("cmd", "web", "main.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerCmdWebMain(buf, projectName, authorName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
+	return task.NewSequentialExecutor(
+		task.NewParallelExecutor(
+			task.BatchFileRequest(
+				task.NewFileRequestTree(projectName).
+					AddNode( // root/
+						&task.FileRequest{
+							Name: "tools.go",
+							Data: bytes.NewBufferString(templates.GoServerTools()),
+						},
+					).
+					Branch("config").
+					AddNode( // root/config
+						&task.FileRequest{
+							Name: "config.go",
+							Data: bytes.NewBufferString(templates.GoServerConfig()),
+						},
+					).Up().
+					Branch("web").
+					AddNode( // root/web
+						&task.FileRequest{
+							Name: "wire.go",
+							Data: bytes.NewBufferString(templates.GoServerWebWire(projectName, authorName)),
+						},
+						&task.FileRequest{
+							Name: "server.go",
+							Data: bytes.NewBufferString(templates.GoServerWebServer(projectName, authorName)),
+						},
+						&task.FileRequest{
+							Name: "router.go",
+							Data: bytes.NewBufferString(templates.GoServerWebRouter()),
+						},
+					).Up().
+					Branch("cmd").Branch("web").
+					AddNode( // root/cmd/web
+						&task.FileRequest{
+							Name: "main.go",
+							Data: bytes.NewBufferString(templates.GoServerCmdWebMain(projectName, authorName)),
+						},
+					).
+					Flatten(),
+				transformer.GoFormatSource(),
+			)...,
+		),
+		task.NewParallelExecutor(
+			task.BatchFileRequest(
+				task.NewFileRequestTree(projectName).
+					AddNode(
+						[]*task.FileRequest{
+							{
+								Name: "go.mod",
+								Data: bytes.NewBufferString(templates.GoMod(projectName, authorName, config.GoVersion)),
+							},
+							{
+								Name: "Dockerfile",
+								Data: bytes.NewBufferString(templates.GoServerDockerfile()),
+							},
+							{
+								Name: "Makefile",
+								Data: bytes.NewBufferString(templates.GoServerMakefile()),
+							},
+							{
+								Name: "air.toml",
+								Data: bytes.NewBufferString(templates.GoAirConfig()),
+							},
+							{
+								Name: "config.yml",
+								Data: bytes.NewBufferString(templates.GoServerConfigYml(projectName)),
+							},
+							{
+								Name: ".dockerignore",
+								Data: bytes.NewBufferString(templates.GoDockerignore()),
+							},
+						}...,
+					).
+					Branch(".vscode").
+					AddNode(
+						&task.FileRequest{
+							Name: "settings.json",
+							Data: bytes.NewBufferString(templates.GoServerVscodeSettings()),
+						},
+					).
+					Flatten(),
+			)...,
+		),
+		task.NewShellCmdExecutor(
+			&task.ShellCommand{
+				Bin:  "go",
+				Args: []string{"mod", "tidy"},
+				Cwd:  path.Join("./" + projectName),
 			},
-			{
-				Path: path.Join("config", "config.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerConfig(buf)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
+		),
+		task.NewShellCmdExecutor(
+			&task.ShellCommand{
+				Bin:  "wire",
+				Args: []string{"./web"},
+				Cwd:  path.Join("./" + projectName),
 			},
-			{
-				Path: path.Join("web", "wire.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerWebWire(buf, projectName, authorName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("web", "server.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerWebServer(buf, projectName, authorName)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: path.Join("web", "router.go"),
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerWebRouter(buf)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: "tools.go",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerTools(buf)
-					return nil
-				},
-				Transforms: []task.Pipeline{transformation.GoFormatSource},
-			},
-			{
-				Path: "go.mod",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoMod(buf, projectName, authorName, config.GoVersion)
-					return nil
-				},
-			},
-			{
-				Path: ".vscode/settings.json",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerVscodeSettings(buf)
-					return nil
-				},
-			},
-			{
-				Path: "Dockerfile",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerDockerfile(buf)
-					return nil
-				},
-			},
-			{
-				Path: "Makefile",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerMakefile(buf)
-					return nil
-				},
-			},
-			{
-				Path: "air.toml",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoAirConfig(buf)
-					return nil
-				},
-			},
-			{
-				Path: "config.yml",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoServerConfigYml(buf, projectName)
-					return nil
-				},
-			},
-			{
-				Path: ".dockerignore",
-				Source: func(buf *bytes.Buffer) error {
-					templates.WriteGoDockerignore(buf)
-					return nil
-				},
-			},
-		}...).AddCommand(
-		&task.ShellCommand{
-			Bin:  "go",
-			Args: []string{"mod", "tidy"},
-			Cwd:  path.Join("./" + projectName),
-		},
-		&task.ShellCommand{
-			Bin:  "wire",
-			Args: []string{"./web"},
-			Cwd:  path.Join("./" + projectName),
-		},
+		),
 	).Run()
 }
