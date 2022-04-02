@@ -49,7 +49,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileRequest(
+			task.BatchFileTask(
 				task.NewFileRequestTree(projectName).
 					AddNode( // root/
 						&task.FileRequest{
@@ -91,7 +91,7 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 			)...,
 		),
 		task.NewParallelExecutor(
-			task.BatchFileRequest(
+			task.BatchFileTask(
 				task.NewFileRequestTree(projectName).
 					AddNode(
 						[]*task.FileRequest{

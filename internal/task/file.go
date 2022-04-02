@@ -117,7 +117,7 @@ func (fg *FileGenerator) mkdirIfNecessary() error {
 	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
 }
 
-func BatchFileRequest(requests []*FileRequest, trans ...transformer.Transformer) []Task {
+func BatchFileTask(requests []*FileRequest, trans ...transformer.Transformer) []Task {
 	tasks := make([]Task, len(requests))
 
 	for i, r := range requests {

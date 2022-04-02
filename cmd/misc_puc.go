@@ -20,16 +20,20 @@ var AddPriceUpdateConfigCmd = command.NewCliCommand("cp", "add a price update co
 ).AddFeature(AddPriceUpdateConfigFile).ExportCommand()
 
 var AddPriceUpdateConfigFile = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
-	// config := cfg.(*AddPriceUpdateConfig)
+	config := cfg.(*AddPriceUpdateConfig)
 
 	return task.NewParallelExecutor(
-		task.NewFileGenerator(&task.FileRequest{
-			Name: "provider.yml",
-			Data:     bytes.NewBufferString(templates.GoProviders()),
-		}),
-		task.NewFileGenerator(&task.FileRequest{
-			Name: "consumers.yml",
-			Data:     bytes.NewBufferString(templates.GoConsumers()),
-		}),
+		task.BatchFileTask(
+			task.NewFileRequestTree(config.Name).AddNode(
+				&task.FileRequest{
+					Name: "provider.yml",
+					Data: bytes.NewBufferString(templates.GoProviders()),
+				},
+				&task.FileRequest{
+					Name: "consumers.yml",
+					Data: bytes.NewBufferString(templates.GoConsumers()),
+				},
+			).Flatten(),
+		)...,
 	).Run()
 })

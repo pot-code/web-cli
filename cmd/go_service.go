@@ -93,7 +93,7 @@ func (gga *GenerateGoSimpleService) generateFiles() task.Task {
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileRequest(
+			task.BatchFileTask(
 				task.NewFileRequestTree(path.Join("internal", pkgName)).
 					AddNode( // root
 						&task.FileRequest{
@@ -131,7 +131,8 @@ func (gga *GenerateGoSimpleService) generateFiles() task.Task {
 						&task.FileRequest{
 							Name: "service.go",
 							Data: bytes.NewBufferString(templates.GoServiceService(projectName, authorName, pkgName, svcDeclName, repoDeclName)),
-						}).Flatten(),
+						},
+					).Flatten(),
 			)...,
 		),
 		task.NewShellCmdExecutor(shell.GoWire("./web")),
