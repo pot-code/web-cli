@@ -15,11 +15,9 @@ var GoAirCmd = command.NewCliCommand("air", "add air live reload config", nil).
 
 var AddAirConfig = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	return task.NewParallelExecutor(
-		task.NewFileGenerator(
-			&task.FileRequest{
-				Name: "air.toml",
-				Data:     bytes.NewBufferString(templates.GoAirConfig()),
-			},
-		),
+		&task.FileGenerator{
+			Name: "air.toml",
+			Data: bytes.NewBufferString(templates.GoAirConfig()),
+		},
 	).Run()
 })

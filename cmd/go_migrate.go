@@ -41,47 +41,44 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileTask(
-				task.NewFileRequestTree("").
+			task.BatchFileTransformation(
+				task.NewFileGenerationTree("").
 					Branch("migrate").Branch("config").
-					AddNode( // migrate/config
-						&task.FileRequest{
+					AddNodes( // migrate/config
+						&task.FileGenerator{
 							Name: "config.go",
 							Data: bytes.NewBufferString(templates.GoMigrateConfig()),
 						},
 					).Up().
-					AddNode( // migrate/
-						&task.FileRequest{
+					AddNodes( // migrate/
+						&task.FileGenerator{
 							Name: "migrate.go",
 							Data: bytes.NewBufferString(templates.GoMigrateMigration(meta.ProjectName, meta.Author)),
 						},
-						&task.FileRequest{
+						&task.FileGenerator{
 							Name: "wire.go",
 							Data: bytes.NewBufferString(templates.GoMigrateWire(meta.ProjectName, meta.Author)),
 						},
 					).Up().
 					Branch("cmd").
-					AddNode( // cmd
-						&task.FileRequest{
+					AddNodes( // cmd
+						&task.FileGenerator{
 							Name: "main.go",
 							Data: bytes.NewBufferString(templates.GoMigrateCmdMain(meta.ProjectName, meta.Author)),
 						},
 					).Up().
 					Branch("pkg").Branch("db").
-					AddNode( // pkg/db
-						&task.FileRequest{
+					AddNodes( // pkg/db
+						&task.FileGenerator{
 							Name: "ent.go",
 							Data: bytes.NewBufferString(templates.GoMigratePkgEnt(meta.ProjectName, meta.Author)),
-						}).
+						},
+					).
 					Flatten(),
 				transformer.GoFormatSource(),
 			)...,
 		),
-		task.NewShellCmdExecutor(
-			shell.GoModTidy(),
-		),
-		task.NewShellCmdExecutor(
-			shell.GoWire("./migrate"),
-		),
+		shell.GoModTidy(),
+		shell.GoWire("./migrate"),
 	).Run()
 })

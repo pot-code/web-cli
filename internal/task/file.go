@@ -12,29 +12,22 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type FileRequest struct {
-	Name      string
-	Data      *bytes.Buffer
-	Overwrite bool
-}
-
 type FileGenerator struct {
-	fr           *FileRequest
+	Name         string
+	Data         *bytes.Buffer
+	Overwrite    bool
 	transformers []transformer.Transformer
 }
 
-func NewFileGenerator(req *FileRequest) *FileGenerator {
-	return &FileGenerator{req, []transformer.Transformer{}}
-}
+var _ Task = &FileGenerator{}
 
 func (fg *FileGenerator) Run() error {
-	req := fg.fr
 	if err := fg.validateRequest(); err != nil {
 		return errors.Wrapf(err, "validate error")
 	}
 
 	if fg.shouldSkip() {
-		log.WithFields(log.Fields{"file": req.Name, "overwrite": req.Overwrite}).Info("emit file [skipped]")
+		log.WithFields(log.Fields{"file": fg.Name, "overwrite": fg.Overwrite}).Info("emit file [skipped]")
 		return nil
 	}
 
@@ -47,67 +40,64 @@ func (fg *FileGenerator) Run() error {
 	}
 
 	log.WithFields(log.Fields{
-		"overwrite": req.Overwrite,
-		"file":      req.Name,
+		"overwrite": fg.Overwrite,
+		"file":      fg.Name,
 	}).Infof("emit file")
 	return nil
 }
 
-// UseTransformer the order matters
-func (fg *FileGenerator) UseTransformer(tc ...transformer.Transformer) *FileGenerator {
+// UseTransformers the order matters
+func (fg *FileGenerator) UseTransformers(tc ...transformer.Transformer) *FileGenerator {
 	fg.transformers = append(fg.transformers, tc...)
 	return fg
 }
 
 func (fg *FileGenerator) applyTransformers() error {
-	req := fg.fr
 	trans := fg.transformers
 	var tf transformer.TransformerFunc = func(result *bytes.Buffer) error {
-		req.Data = result
+		fg.Data = result
 		return nil
 	}
 	tf = transformer.ApplyTransformers(tf, trans...)
-	return errors.Wrap(tf(req.Data), "failed to apply transformers")
+	return errors.Wrap(tf(fg.Data), "failed to apply transformers")
 }
 
 func (fg *FileGenerator) shouldSkip() bool {
-	req := fg.fr
-	return util.IsFileExist(req.Name) && !req.Overwrite
+	return util.IsFileExist(fg.Name) && !fg.Overwrite
 }
 
 func (fg *FileGenerator) validateRequest() error {
-	req := fg.fr
-	if req.Name == "" {
+	if fg.Name == "" {
 		return errors.New("empty path")
 	}
-	if req.Data.Len() == 0 {
+	if fg.Data.Len() == 0 {
 		return errors.New("empty data")
 	}
 	return nil
 }
 
 func (fg *FileGenerator) writeToDisk() error {
-	req := fg.fr
 	if err := fg.mkdirIfNecessary(); err != nil {
 		return err
 	}
 
-	fd, err := os.OpenFile(req.Name, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
+	fn := fg.Name
+	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
 	if err != nil {
 		return errors.Wrap(err, "failed to create target file")
 	}
 
-	w, err := req.Data.WriteTo(fd)
+	w, err := fg.Data.WriteTo(fd)
 	if err != nil {
-		return errors.Wrapf(err, "failed to write data to '%s'", req.Name)
+		return errors.Wrapf(err, "failed to write data to '%s'", fn)
 	}
 
-	log.WithFields(log.Fields{"length": w, "file": req.Name}).Debug("write info")
+	log.WithFields(log.Fields{"length": w, "file": fn}).Debug("write info")
 	return nil
 }
 
 func (fg *FileGenerator) mkdirIfNecessary() error {
-	dir := path.Dir(fg.fr.Name)
+	dir := path.Dir(fg.Name)
 	if dir == "" {
 		return nil
 	}
@@ -117,51 +107,50 @@ func (fg *FileGenerator) mkdirIfNecessary() error {
 	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
 }
 
-func BatchFileTask(requests []*FileRequest, trans ...transformer.Transformer) []Task {
-	tasks := make([]Task, len(requests))
-
-	for i, r := range requests {
-		tasks[i] = NewFileGenerator(r).UseTransformer(trans...)
+func BatchFileTransformation(gens []*FileGenerator, trans ...transformer.Transformer) []Task {
+	tasks := make([]Task, len(gens))
+	for i, g := range gens {
+		tasks[i] = g.UseTransformers(trans...)
 	}
 	return tasks
 }
 
-type FileRequestTree struct {
+type FileGenerationTree struct {
 	name     string
-	parent   *FileRequestTree
-	branches []*FileRequestTree
-	requests []*FileRequest
+	parent   *FileGenerationTree
+	branches []*FileGenerationTree
+	gens     []*FileGenerator
 }
 
-func NewFileRequestTree(root string) *FileRequestTree {
-	return &FileRequestTree{name: root}
+func NewFileGenerationTree(root string) *FileGenerationTree {
+	return &FileGenerationTree{name: root}
 }
 
-func (ftr *FileRequestTree) Branch(name string) *FileRequestTree {
-	nb := NewFileRequestTree(name)
+func (ftr *FileGenerationTree) Branch(name string) *FileGenerationTree {
+	nb := NewFileGenerationTree(name)
 	nb.parent = ftr
 	ftr.branches = append(ftr.branches, nb)
 	return nb
 }
 
-func (ftr *FileRequestTree) Up() *FileRequestTree {
+func (ftr *FileGenerationTree) Up() *FileGenerationTree {
 	return ftr.parent
 }
 
-func (ftr *FileRequestTree) AddNode(req ...*FileRequest) *FileRequestTree {
-	ftr.requests = append(ftr.requests, req...)
+func (ftr *FileGenerationTree) AddNodes(req ...*FileGenerator) *FileGenerationTree {
+	ftr.gens = append(ftr.gens, req...)
 	return ftr
 }
 
-func (ftr *FileRequestTree) Flatten() []*FileRequest {
-	var result []*FileRequest
+func (ftr *FileGenerationTree) Flatten() []*FileGenerator {
+	var result []*FileGenerator
 
 	root := ftr.root()
 	ftr.flatten(&result, root, "")
 	return result
 }
 
-func (ftr *FileRequestTree) root() *FileRequestTree {
+func (ftr *FileGenerationTree) root() *FileGenerationTree {
 	node := ftr
 	for node.parent != nil {
 		node = node.parent
@@ -169,10 +158,10 @@ func (ftr *FileRequestTree) root() *FileRequestTree {
 	return node
 }
 
-func (ftr *FileRequestTree) flatten(result *[]*FileRequest, branch *FileRequestTree, prefix string) {
+func (ftr *FileGenerationTree) flatten(result *[]*FileGenerator, branch *FileGenerationTree, prefix string) {
 	name := branch.name
 	prefix = path.Join(prefix, name)
-	for _, r := range branch.requests {
+	for _, r := range branch.gens {
 		r.Name = path.Join(prefix, r.Name)
 		*result = append(*result, r)
 	}

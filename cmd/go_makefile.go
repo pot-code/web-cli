@@ -15,10 +15,8 @@ var GoMakefileCmd = command.NewCliCommand("makefile", "add Makefile", nil,
 ).AddFeature(AddMakefile).ExportCommand()
 
 var AddMakefile = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
-	return task.NewFileGenerator(
-		&task.FileRequest{
-			Name: "Makefile",
-			Data:     bytes.NewBufferString(templates.GoServerMakefile()),
-		},
-	).Run()
+	return (&task.FileGenerator{
+		Name: "Makefile",
+		Data: bytes.NewBufferString(templates.GoServerMakefile()),
+	}).Run()
 })

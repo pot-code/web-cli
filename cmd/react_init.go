@@ -34,8 +34,8 @@ func (grf *VanillaTemplate) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactInitConfig)
 
 	return task.NewSequentialExecutor(
-		task.NewShellCmdExecutor(shell.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName)),
-		task.NewShellCmdExecutor(shell.GitDeleteHistory(config.ProjectName)),
+		shell.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
+		shell.GitDeleteHistory(config.ProjectName),
 	).Run()
 }
 
@@ -50,5 +50,5 @@ func (gnf *NextJsTemplate) Cond(c *cli.Context) bool {
 func (gnf *NextJsTemplate) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactInitConfig)
 
-	return task.NewShellCmdExecutor(shell.YarnCreate("next-app", "--ts", config.ProjectName)).Run()
+	return shell.YarnCreate("next-app", "--ts", config.ProjectName).Run()
 }

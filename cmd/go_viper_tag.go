@@ -27,25 +27,21 @@ var AddViperTag = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error
 
 	var buf bytes.Buffer
 	return task.NewSequentialExecutor(
-		task.NewShellCmdExecutor(
-			&task.ShellCommand{
-				Bin: "gomodifytags",
-				Args: []string{
-					"-file",
-					config.ConfigPath,
-					"-all",
-					"-add-tags",
-					"mapstructure,yaml",
-				},
-				Out: &buf,
+		&task.ShellCommand{
+			Bin: "gomodifytags",
+			Args: []string{
+				"-file",
+				config.ConfigPath,
+				"-all",
+				"-add-tags",
+				"mapstructure,yaml",
 			},
-		),
-		task.NewFileGenerator(
-			&task.FileRequest{
-				Name:      config.ConfigPath,
-				Overwrite: true,
-				Data:      &buf,
-			},
-		),
+			Out: &buf,
+		},
+		&task.FileGenerator{
+			Name:      config.ConfigPath,
+			Overwrite: true,
+			Data:      &buf,
+		},
 	).Run()
 })

@@ -50,14 +50,12 @@ var GenViperFlags = util.NoCondFeature(func(c *cli.Context, cfg interface{}) err
 	pkg := visitor.pkg
 	out := fmt.Sprintf("%s.%s", config.OutFileName, constant.GoSuffix)
 	return task.NewSequentialExecutor(
-		task.NewFileGenerator(
-			&task.FileRequest{
-				Name:  out,
-				Overwrite: true,
-				Data:      bytes.NewBufferString(templates.GoGenPflags(pkg, fm)),
-			},
-		).UseTransformer(transformer.GoFormatSource()),
-		task.NewShellCmdExecutor(shell.GoImports(path.Join(pkg, out))),
-		task.NewShellCmdExecutor(shell.GoModTidy()),
+		(&task.FileGenerator{
+			Name:      out,
+			Overwrite: true,
+			Data:      bytes.NewBufferString(templates.GoGenPflags(pkg, fm)),
+		}).UseTransformers(transformer.GoFormatSource()),
+		shell.GoImports(path.Join(pkg, out)),
+		shell.GoModTidy(),
 	).Run()
 })

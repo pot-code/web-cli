@@ -55,10 +55,10 @@ func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) task.
 	name := arc.ComponentName
 
 	var styleFile string
-	var files = []*task.FileRequest{
+	var files = []*task.FileGenerator{
 		{
 			Name: arc.getComponentFileName(),
-			Data:     bytes.NewBufferString(templates.ReactComponent(name, styleFile)),
+			Data: bytes.NewBufferString(templates.ReactComponent(name, styleFile)),
 		},
 	}
 
@@ -71,15 +71,15 @@ func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) task.
 		files = append(files, arc.addStoryBook(cfg))
 	}
 
-	return task.NewParallelExecutor(task.BatchFileTask(files)...)
+	return task.NewParallelExecutor(task.BatchFileTransformation(files)...)
 }
 
-func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *task.FileRequest {
+func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *task.FileGenerator {
 	rootClass := strcase.ToKebab(arc.ComponentName)
 
-	return &task.FileRequest{
+	return &task.FileGenerator{
 		Name: arc.getScssFileName(),
-		Data:     bytes.NewBufferString(templates.ReactSCSS(rootClass)),
+		Data: bytes.NewBufferString(templates.ReactSCSS(rootClass)),
 	}
 }
 
@@ -87,12 +87,12 @@ func (arc *AddReactComponent) getScssFileName() string {
 	return fmt.Sprintf(constant.ReactScssPattern, arc.ComponentName)
 }
 
-func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *task.FileRequest {
+func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *task.FileGenerator {
 	name := arc.ComponentName
 
-	return &task.FileRequest{
+	return &task.FileGenerator{
 		Name: arc.getStoryFileName(),
-		Data:     bytes.NewBufferString(templates.ReactStory(name)),
+		Data: bytes.NewBufferString(templates.ReactStory(name)),
 	}
 }
 
@@ -114,12 +114,11 @@ func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
 
 func (arc *AddReactEmotionFeat) Handle(c *cli.Context, cfg interface{}) error {
 	return task.NewParallelExecutor(
-		task.NewFileGenerator(
-			&task.FileRequest{
-				Name: ".babelrc",
-				Data:     bytes.NewBufferString(templates.ReactEmotion()),
-			}),
-		task.NewShellCmdExecutor(shell.YarnAdd("@emotion/react")),
-		task.NewShellCmdExecutor(shell.YarnAddDev("@emotion/babel-preset-css-prop")),
+		&task.FileGenerator{
+			Name: ".babelrc",
+			Data: bytes.NewBufferString(templates.ReactEmotion()),
+		},
+		shell.YarnAdd("@emotion/react"),
+		shell.YarnAddDev("@emotion/babel-preset-css-prop"),
 	).Run()
 }

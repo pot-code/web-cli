@@ -32,26 +32,24 @@ func (arc *AddTypescriptToNode) Cond(c *cli.Context) bool {
 
 func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
 	return task.NewParallelExecutor(
-		task.NewFileGenerator(&task.FileRequest{
+		&task.FileGenerator{
 			Name: ".eslintrc.js",
-			Data:     bytes.NewBufferString(templates.NodeEslintrc()),
-		}),
-		task.NewFileGenerator(&task.FileRequest{
+			Data: bytes.NewBufferString(templates.NodeEslintrc()),
+		},
+		&task.FileGenerator{
 			Name: "tsconfig.json",
-			Data:     bytes.NewBufferString(templates.NodeTsConfig()),
-		}),
-		task.NewShellCmdExecutor(
-			shell.YarnAddDev(
-				"typescript",
-				"eslint",
-				"@typescript-eslint/eslint-plugin",
-				"eslint-plugin-prettier",
-				"@typescript-eslint/parser",
-				"eslint-config-prettier",
-				"eslint-plugin-import",
-				"prettier",
-				"prettier-eslint",
-			),
+			Data: bytes.NewBufferString(templates.NodeTsConfig()),
+		},
+		shell.YarnAddDev(
+			"typescript",
+			"eslint",
+			"@typescript-eslint/eslint-plugin",
+			"eslint-plugin-prettier",
+			"@typescript-eslint/parser",
+			"eslint-config-prettier",
+			"eslint-plugin-import",
+			"prettier",
+			"prettier-eslint",
 		),
 	).Run()
 }
@@ -66,32 +64,30 @@ func (arc *AddTypescriptToReact) Cond(c *cli.Context) bool {
 
 func (arc *AddTypescriptToReact) Handle(c *cli.Context, cfg interface{}) error {
 	return task.NewParallelExecutor(
-		task.NewFileGenerator(&task.FileRequest{
+		&task.FileGenerator{
 			Name: ".eslintrc.js",
-			Data:     bytes.NewBufferString(templates.ReactEslintrc()),
-		}),
-		task.NewFileGenerator(&task.FileRequest{
+			Data: bytes.NewBufferString(templates.ReactEslintrc()),
+		},
+		&task.FileGenerator{
 			Name: "tsconfig.json",
-			Data:     bytes.NewBufferString(templates.ReactTsConfig()),
-		}),
-		task.NewShellCmdExecutor(
-			shell.YarnAddDev(
-				"@types/react",
-				"@typescript-eslint/eslint-plugin",
-				"@typescript-eslint/parser",
-				"eslint",
-				"eslint-config-airbnb",
-				"eslint-config-prettier",
-				"eslint-import-resolver-typescript",
-				"eslint-plugin-import",
-				"eslint-plugin-jsx-a11y",
-				"eslint-plugin-prettier",
-				"eslint-plugin-react",
-				"eslint-plugin-react-hooks",
-				"prettier",
-				"prettier-eslint",
-				"typescript",
-			),
+			Data: bytes.NewBufferString(templates.ReactTsConfig()),
+		},
+		shell.YarnAddDev(
+			"@types/react",
+			"@typescript-eslint/eslint-plugin",
+			"@typescript-eslint/parser",
+			"eslint",
+			"eslint-config-airbnb",
+			"eslint-config-prettier",
+			"eslint-import-resolver-typescript",
+			"eslint-plugin-import",
+			"eslint-plugin-jsx-a11y",
+			"eslint-plugin-prettier",
+			"eslint-plugin-react",
+			"eslint-plugin-react-hooks",
+			"prettier",
+			"prettier-eslint",
+			"typescript",
 		),
 	).Run()
 }

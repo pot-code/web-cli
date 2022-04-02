@@ -93,50 +93,50 @@ func (gga *GenerateGoSimpleService) generateFiles() task.Task {
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileTask(
-				task.NewFileRequestTree(path.Join("internal", pkgName)).
-					AddNode( // root
-						&task.FileRequest{
+			task.BatchFileTransformation(
+				task.NewFileGenerationTree(path.Join("internal", pkgName)).
+					AddNodes( // root
+						&task.FileGenerator{
 							Name: "wire_set.go",
 							Data: bytes.NewBufferString(templates.GoServiceWireSet(projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)),
 						},
 					).
 					Branch("domain").
-					AddNode( // root/domain
-						&task.FileRequest{
+					AddNodes( // root/domain
+						&task.FileGenerator{
 							Name: fmt.Sprintf("%s.go", pkgName),
 							Data: bytes.NewBufferString(templates.GoServiceDomainModel(modelName)),
 						},
-						&task.FileRequest{
+						&task.FileGenerator{
 							Name: "type.go",
 							Data: bytes.NewBufferString(templates.GoServiceDomainType(svcDeclName, repoDeclName)),
 						},
 					).Up().
 					Branch("repository").
-					AddNode( // root/repository
-						&task.FileRequest{
+					AddNodes( // root/repository
+						&task.FileGenerator{
 							Name: "pgsql.go",
 							Data: bytes.NewBufferString(templates.GoServiceRepo(projectName, authorName, pkgName, repoDeclName)),
 						},
 					).Up().
 					Branch("port").
-					AddNode( // root/port
-						&task.FileRequest{
+					AddNodes( // root/port
+						&task.FileGenerator{
 							Name: "http.go",
 							Data: bytes.NewBufferString(templates.GoServiceWebHandler(projectName, authorName, pkgName, svcDeclName, handlerDeclName)),
 						},
 					).Up().
 					Branch("service").
-					AddNode( // root/service
-						&task.FileRequest{
+					AddNodes( // root/service
+						&task.FileGenerator{
 							Name: "service.go",
 							Data: bytes.NewBufferString(templates.GoServiceService(projectName, authorName, pkgName, svcDeclName, repoDeclName)),
 						},
 					).Flatten(),
 			)...,
 		),
-		task.NewShellCmdExecutor(shell.GoWire("./web")),
-		task.NewShellCmdExecutor(shell.GoModTidy()),
+		shell.GoWire("./web"),
+		shell.GoModTidy(),
 	)
 }
 

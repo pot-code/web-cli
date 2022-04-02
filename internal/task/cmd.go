@@ -18,34 +18,25 @@ type ShellCommand struct {
 	Out  io.Writer
 }
 
-func (c ShellCommand) String() string {
+func (c *ShellCommand) String() string {
 	return fmt.Sprintf("cwd=%s bin=%s args=%s", c.Cwd, c.Bin, strings.Join(c.Args, " "))
 }
 
-type ShellCmdExecutor struct {
-	cmd *ShellCommand
-}
+var _ Task = &ShellCommand{}
 
-var _ Task = &ShellCmdExecutor{}
+func (sc *ShellCommand) Run() error {
+	proc := exec.Command(sc.Bin, sc.Args...)
 
-func NewShellCmdExecutor(cmd *ShellCommand) *ShellCmdExecutor {
-	return &ShellCmdExecutor{cmd}
-}
+	log.WithField("cmd", sc).Info("execute command")
 
-func (ce *ShellCmdExecutor) Run() error {
-	cmd := ce.cmd
-	proc := exec.Command(cmd.Bin, cmd.Args...)
-
-	log.WithField("cmd", cmd).Info("execute command")
-
-	if cmd.Cwd != "" {
-		proc.Dir = cmd.Cwd
+	if sc.Cwd != "" {
+		proc.Dir = sc.Cwd
 	}
 
 	proc.Stdout = os.Stdout
-	if cmd.Out != nil {
-		proc.Stdout = cmd.Out
+	if sc.Out != nil {
+		proc.Stdout = sc.Out
 	}
 	proc.Stderr = os.Stderr
-	return errors.Wrapf(proc.Run(), "failed to execute command '%s'", cmd)
+	return errors.Wrapf(proc.Run(), "failed to execute command '%s'", sc)
 }

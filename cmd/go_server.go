@@ -14,7 +14,6 @@ import (
 )
 
 type GoWebConfig struct {
-	GenType     string `flag:"type" alias:"t" usage:"backend type" validate:"required,oneof=go"`
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
 	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,var"`
 	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"required,version"`
@@ -22,22 +21,13 @@ type GoWebConfig struct {
 
 var GoWebCmd = command.NewCliCommand("web", "generate golang web project",
 	&GoWebConfig{
-		GenType:   "go",
 		GoVersion: "1.16",
 	},
 	command.WithAlias([]string{"w"}),
 	command.WithArgUsage("project_name"),
-).AddFeature(new(GenWebProject)).ExportCommand()
+).AddFeature(GenWebProject).ExportCommand()
 
-type GenWebProject struct{}
-
-var _ command.CommandFeature = &GenWebProject{}
-
-func (gwp *GenWebProject) Cond(c *cli.Context) bool {
-	return c.String("type") == "go"
-}
-
-func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
+var GenWebProject = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoWebConfig)
 	projectName := config.ProjectName
 	authorName := config.AuthorName
@@ -49,39 +39,39 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileTask(
-				task.NewFileRequestTree(projectName).
-					AddNode( // root/
-						&task.FileRequest{
+			task.BatchFileTransformation(
+				task.NewFileGenerationTree(projectName).
+					AddNodes( // root/
+						&task.FileGenerator{
 							Name: "tools.go",
 							Data: bytes.NewBufferString(templates.GoServerTools()),
 						},
 					).
 					Branch("config").
-					AddNode( // root/config
-						&task.FileRequest{
+					AddNodes( // root/config
+						&task.FileGenerator{
 							Name: "config.go",
 							Data: bytes.NewBufferString(templates.GoServerConfig()),
 						},
 					).Up().
 					Branch("web").
-					AddNode( // root/web
-						&task.FileRequest{
+					AddNodes( // root/web
+						&task.FileGenerator{
 							Name: "wire.go",
 							Data: bytes.NewBufferString(templates.GoServerWebWire(projectName, authorName)),
 						},
-						&task.FileRequest{
+						&task.FileGenerator{
 							Name: "server.go",
 							Data: bytes.NewBufferString(templates.GoServerWebServer(projectName, authorName)),
 						},
-						&task.FileRequest{
+						&task.FileGenerator{
 							Name: "router.go",
 							Data: bytes.NewBufferString(templates.GoServerWebRouter()),
 						},
 					).Up().
 					Branch("cmd").Branch("web").
-					AddNode( // root/cmd/web
-						&task.FileRequest{
+					AddNodes( // root/cmd/web
+						&task.FileGenerator{
 							Name: "main.go",
 							Data: bytes.NewBufferString(templates.GoServerCmdWebMain(projectName, authorName)),
 						},
@@ -91,10 +81,10 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 			)...,
 		),
 		task.NewParallelExecutor(
-			task.BatchFileTask(
-				task.NewFileRequestTree(projectName).
-					AddNode(
-						[]*task.FileRequest{
+			task.BatchFileTransformation(
+				task.NewFileGenerationTree(projectName).
+					AddNodes(
+						[]*task.FileGenerator{
 							{
 								Name: "go.mod",
 								Data: bytes.NewBufferString(templates.GoMod(projectName, authorName, config.GoVersion)),
@@ -122,8 +112,8 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 						}...,
 					).
 					Branch(".vscode").
-					AddNode(
-						&task.FileRequest{
+					AddNodes(
+						&task.FileGenerator{
 							Name: "settings.json",
 							Data: bytes.NewBufferString(templates.GoServerVscodeSettings()),
 						},
@@ -131,19 +121,15 @@ func (gwp *GenWebProject) Handle(c *cli.Context, cfg interface{}) error {
 					Flatten(),
 			)...,
 		),
-		task.NewShellCmdExecutor(
-			&task.ShellCommand{
-				Bin:  "go",
-				Args: []string{"mod", "tidy"},
-				Cwd:  path.Join("./" + projectName),
-			},
-		),
-		task.NewShellCmdExecutor(
-			&task.ShellCommand{
-				Bin:  "wire",
-				Args: []string{"./web"},
-				Cwd:  path.Join("./" + projectName),
-			},
-		),
+		&task.ShellCommand{
+			Bin:  "go",
+			Args: []string{"mod", "tidy"},
+			Cwd:  path.Join("./" + projectName),
+		},
+		&task.ShellCommand{
+			Bin:  "wire",
+			Args: []string{"./web"},
+			Cwd:  path.Join("./" + projectName),
+		},
 	).Run()
-}
+})
