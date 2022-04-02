@@ -20,7 +20,9 @@ func NewParallelExecutor(tasks ...Task) *ParallelExecutor {
 
 func (pe ParallelExecutor) Run() error {
 	start := time.Now()
+	total := len(pe.tasks)
 	eg := new(errgroup.Group)
+	log.WithFields(log.Fields{"task_total": total}).Debug("ParallelExecutor start")
 	for _, t := range pe.tasks {
 		task := t // fix loopclosure
 		eg.Go(func() error {
@@ -31,6 +33,6 @@ func (pe ParallelExecutor) Run() error {
 	log.WithFields(log.Fields{
 		"duration": time.Since(start),
 		"total":    len(pe.tasks),
-	}).Info("ParallelExecutor finished")
+	}).Debug("ParallelExecutor finished")
 	return errors.Wrap(err, "failed to run task")
 }

@@ -48,7 +48,8 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 						&task.FileRequest{
 							Name: "config.go",
 							Data: bytes.NewBufferString(templates.GoMigrateConfig()),
-							}).Up().
+						},
+					).Up().
 					AddNode( // migrate/
 						&task.FileRequest{
 							Name: "migrate.go",
