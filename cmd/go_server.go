@@ -39,7 +39,7 @@ var GenWebProject = util.NoCondFeature(func(c *cli.Context, cfg interface{}) err
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileTransformation(
+			task.BatchFileGenerationTask(
 				task.NewFileGenerationTree(projectName).
 					AddNodes( // root/
 						&task.FileGenerator{
@@ -81,7 +81,7 @@ var GenWebProject = util.NoCondFeature(func(c *cli.Context, cfg interface{}) err
 			)...,
 		),
 		task.NewParallelExecutor(
-			task.BatchFileTransformation(
+			task.BatchFileGenerationTask(
 				task.NewFileGenerationTree(projectName).
 					AddNodes(
 						[]*task.FileGenerator{

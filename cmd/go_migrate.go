@@ -41,7 +41,7 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileTransformation(
+			task.BatchFileGenerationTask(
 				task.NewFileGenerationTree("").
 					Branch("migrate").Branch("config").
 					AddNodes( // migrate/config

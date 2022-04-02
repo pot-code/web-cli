@@ -71,7 +71,7 @@ func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) task.
 		files = append(files, arc.addStoryBook(cfg))
 	}
 
-	return task.NewParallelExecutor(task.BatchFileTransformation(files)...)
+	return task.NewParallelExecutor(task.BatchFileGenerationTask(files)...)
 }
 
 func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *task.FileGenerator {

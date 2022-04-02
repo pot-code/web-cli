@@ -23,7 +23,7 @@ var AddPriceUpdateConfigFile = util.NoCondFeature(func(c *cli.Context, cfg inter
 	config := cfg.(*AddPriceUpdateConfig)
 
 	return task.NewParallelExecutor(
-		task.BatchFileTransformation(
+		task.BatchFileGenerationTask(
 			task.NewFileGenerationTree(config.Name).AddNodes(
 				&task.FileGenerator{
 					Name: "provider.yml",

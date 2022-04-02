@@ -93,7 +93,7 @@ func (gga *GenerateGoSimpleService) generateFiles() task.Task {
 
 	return task.NewSequentialExecutor(
 		task.NewParallelExecutor(
-			task.BatchFileTransformation(
+			task.BatchFileGenerationTask(
 				task.NewFileGenerationTree(path.Join("internal", pkgName)).
 					AddNodes( // root
 						&task.FileGenerator{
