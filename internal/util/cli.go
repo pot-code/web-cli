@@ -8,7 +8,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/pkg/validate"
+	"github.com/pot-code/web-cli/internal/validate"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

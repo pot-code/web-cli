@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/pot-code/web-cli/pkg/commands"
-	"github.com/pot-code/web-cli/pkg/util"
+	"github.com/pot-code/web-cli/internal/commands"
+	"github.com/pot-code/web-cli/internal/util"
 	"github.com/urfave/cli/v2"
 )
 

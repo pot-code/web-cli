@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/fatih/structtag"
-	"github.com/pot-code/web-cli/pkg/validate"
+	"github.com/pot-code/web-cli/internal/validate"
 )
 
 type tagMeta struct {

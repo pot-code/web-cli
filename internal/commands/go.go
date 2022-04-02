@@ -1,6 +1,6 @@
 package commands
 
-import "github.com/pot-code/web-cli/pkg/task"
+import "github.com/pot-code/web-cli/internal/task"
 
 func GoModTidy() *task.ShellCommand {
 	return &task.ShellCommand{

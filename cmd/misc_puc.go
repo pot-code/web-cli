@@ -3,8 +3,8 @@ package cmd
 import (
 	"bytes"
 
-	"github.com/pot-code/web-cli/pkg/task"
-	"github.com/pot-code/web-cli/pkg/util"
+	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
 )

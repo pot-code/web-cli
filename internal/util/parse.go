@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/pkg/constants"
+	"github.com/pot-code/web-cli/internal/constants"
 	"golang.org/x/mod/modfile"
 )
 

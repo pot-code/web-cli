@@ -4,7 +4,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/task"
 	log "github.com/sirupsen/logrus"
 	tp "github.com/xlab/treeprint"
 )

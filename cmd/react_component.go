@@ -6,10 +6,10 @@ import (
 	"strings"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/pkg/commands"
-	"github.com/pot-code/web-cli/pkg/constants"
-	"github.com/pot-code/web-cli/pkg/task"
-	"github.com/pot-code/web-cli/pkg/util"
+	"github.com/pot-code/web-cli/internal/commands"
+	"github.com/pot-code/web-cli/internal/constants"
+	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
 )

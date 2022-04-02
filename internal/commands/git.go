@@ -3,7 +3,7 @@ package commands
 import (
 	"path"
 
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/task"
 )
 
 func GitClone(url, dst string) *task.ShellCommand {

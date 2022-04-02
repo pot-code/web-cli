@@ -5,9 +5,9 @@ import (
 	"os"
 	"path"
 
-	"github.com/pot-code/web-cli/pkg/task"
-	"github.com/pot-code/web-cli/pkg/transformation"
-	"github.com/pot-code/web-cli/pkg/util"
+	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/transformation"
+	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
