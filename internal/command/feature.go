@@ -1,8 +1,13 @@
-package util
+package command
 
 import (
 	"github.com/urfave/cli/v2"
 )
+
+type CommandFeature interface {
+	Cond(c *cli.Context) bool
+	Handle(c *cli.Context, cfg interface{}) error
+}
 
 type NoCondFeature func(c *cli.Context, cfg interface{}) error
 

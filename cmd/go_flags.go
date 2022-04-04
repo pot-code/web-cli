@@ -11,7 +11,6 @@ import (
 	"github.com/pot-code/web-cli/internal/shell"
 	"github.com/pot-code/web-cli/internal/task"
 	"github.com/pot-code/web-cli/internal/transformer"
-	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
 )
@@ -29,7 +28,7 @@ var GoFlagsCmd = command.NewCliCommand("flags", "generate pflags registration ba
 	command.WithArgUsage("CONFIG_PATH"),
 ).AddFeature(GenViperFlags).ExportCommand()
 
-var GenViperFlags = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var GenViperFlags = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {
@@ -50,12 +49,14 @@ var GenViperFlags = util.NoCondFeature(func(c *cli.Context, cfg interface{}) err
 	pkg := visitor.pkg
 	out := fmt.Sprintf("%s.%s", config.OutFileName, constant.GoSuffix)
 	return task.NewSequentialExecutor(
-		(&task.FileGenerator{
-			Name:      out,
-			Overwrite: true,
-			Data:      bytes.NewBufferString(templates.GoGenPflags(pkg, fm)),
-		}).UseTransformers(transformer.GoFormatSource()),
-		shell.GoImports(path.Join(pkg, out)),
-		shell.GoModTidy(),
+		[]task.Task{
+			(&task.FileGenerator{
+				Name:      out,
+				Overwrite: true,
+				Data:      bytes.NewBufferString(templates.GoGenPflags(pkg, fm)),
+			}).UseTransformers(transformer.GoFormatSource()),
+			shell.GoImports(path.Join(pkg, out)),
+			shell.GoModTidy(),
+		},
 	).Run()
 })

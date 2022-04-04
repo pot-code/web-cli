@@ -21,7 +21,7 @@ var GoMigrateCmd = command.NewCliCommand("migrate", "add migration",
 	command.WithAlias([]string{"M"}),
 ).AddFeature(AddGoMigration).ExportCommand()
 
-var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddGoMigration = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	meta, err := util.ParseGoMod(constant.GoModFile)
 	if err != nil {
 		return errors.WithStack(err)
@@ -40,45 +40,48 @@ var AddGoMigration = util.NoCondFeature(func(c *cli.Context, cfg interface{}) er
 	}
 
 	return task.NewSequentialExecutor(
-		task.NewParallelExecutor(
-			task.BatchFileGenerationTask(
-				task.NewFileGenerationTree("").
-					Branch("migrate").Branch("config").
-					AddNodes( // migrate/config
-						&task.FileGenerator{
-							Name: "config.go",
-							Data: bytes.NewBufferString(templates.GoMigrateConfig()),
-						},
-					).Up().
-					AddNodes( // migrate/
-						&task.FileGenerator{
-							Name: "migrate.go",
-							Data: bytes.NewBufferString(templates.GoMigrateMigration(meta.ProjectName, meta.Author)),
-						},
-						&task.FileGenerator{
-							Name: "wire.go",
-							Data: bytes.NewBufferString(templates.GoMigrateWire(meta.ProjectName, meta.Author)),
-						},
-					).Up().
-					Branch("cmd").
-					AddNodes( // cmd
-						&task.FileGenerator{
-							Name: "main.go",
-							Data: bytes.NewBufferString(templates.GoMigrateCmdMain(meta.ProjectName, meta.Author)),
-						},
-					).Up().
-					Branch("pkg").Branch("db").
-					AddNodes( // pkg/db
-						&task.FileGenerator{
-							Name: "ent.go",
-							Data: bytes.NewBufferString(templates.GoMigratePkgEnt(meta.ProjectName, meta.Author)),
-						},
-					).
-					Flatten(),
-				transformer.GoFormatSource(),
-			)...,
-		),
-		shell.GoModTidy(),
-		shell.GoWire("./migrate"),
+		[]task.Task{
+			task.NewParallelExecutor(
+				task.BatchFileGenerationTask(
+					task.NewFileGenerationTree("").
+						Branch("migrate").
+						AddNodes( // migrate
+							&task.FileGenerator{
+								Name: "migrate.go",
+								Data: bytes.NewBufferString(templates.GoMigrateMigration(meta.ProjectName, meta.Author)),
+							},
+							&task.FileGenerator{
+								Name: "wire.go",
+								Data: bytes.NewBufferString(templates.GoMigrateWire(meta.ProjectName, meta.Author)),
+							},
+						).
+						Branch("config").
+						AddNodes( // migrate/config
+							&task.FileGenerator{
+								Name: "config.go",
+								Data: bytes.NewBufferString(templates.GoMigrateConfig()),
+							},
+						).Up().Up().
+						Branch("cmd").
+						AddNodes( // cmd
+							&task.FileGenerator{
+								Name: "main.go",
+								Data: bytes.NewBufferString(templates.GoMigrateCmdMain(meta.ProjectName, meta.Author)),
+							},
+						).Up().
+						Branch("pkg").Branch("db").
+						AddNodes( // pkg/db
+							&task.FileGenerator{
+								Name: "ent.go",
+								Data: bytes.NewBufferString(templates.GoMigratePkgEnt(meta.ProjectName, meta.Author)),
+							},
+						).
+						Flatten(),
+					transformer.GoFormatSource(),
+				),
+			),
+			shell.GoModTidy(),
+			shell.GoWire("./migrate"),
+		},
 	).Run()
 })

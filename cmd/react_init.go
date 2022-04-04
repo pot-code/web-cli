@@ -34,8 +34,10 @@ func (grf *VanillaTemplate) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactInitConfig)
 
 	return task.NewSequentialExecutor(
-		shell.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
-		shell.GitDeleteHistory(config.ProjectName),
+		[]task.Task{
+			shell.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
+			shell.GitDeleteHistory(config.ProjectName),
+		},
 	).Run()
 }
 

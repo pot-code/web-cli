@@ -71,7 +71,7 @@ func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) task.
 		files = append(files, arc.addStoryBook(cfg))
 	}
 
-	return task.NewParallelExecutor(task.BatchFileGenerationTask(files)...)
+	return task.NewParallelExecutor(task.BatchFileGenerationTask(files))
 }
 
 func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *task.FileGenerator {
@@ -114,11 +114,13 @@ func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
 
 func (arc *AddReactEmotionFeat) Handle(c *cli.Context, cfg interface{}) error {
 	return task.NewParallelExecutor(
-		&task.FileGenerator{
-			Name: ".babelrc",
-			Data: bytes.NewBufferString(templates.ReactEmotion()),
+		[]task.Task{
+			&task.FileGenerator{
+				Name: ".babelrc",
+				Data: bytes.NewBufferString(templates.ReactEmotion()),
+			},
+			shell.YarnAdd("@emotion/react"),
+			shell.YarnAddDev("@emotion/babel-preset-css-prop"),
 		},
-		shell.YarnAdd("@emotion/react"),
-		shell.YarnAddDev("@emotion/babel-preset-css-prop"),
 	).Run()
 }

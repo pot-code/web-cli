@@ -27,109 +27,111 @@ var GoWebCmd = command.NewCliCommand("web", "generate golang web project",
 	command.WithArgUsage("project_name"),
 ).AddFeature(GenWebProject).ExportCommand()
 
-var GenWebProject = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var GenWebProject = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoWebConfig)
 	projectName := config.ProjectName
 	authorName := config.AuthorName
 
-	if util.IsFileExist(projectName) {
+	if util.FileExists(projectName) {
 		log.Infof("folder '%s' already exists", projectName)
 		return nil
 	}
 
 	return task.NewSequentialExecutor(
-		task.NewParallelExecutor(
-			task.BatchFileGenerationTask(
-				task.NewFileGenerationTree(projectName).
-					AddNodes( // root/
-						&task.FileGenerator{
-							Name: "tools.go",
-							Data: bytes.NewBufferString(templates.GoServerTools()),
-						},
-					).
-					Branch("config").
-					AddNodes( // root/config
-						&task.FileGenerator{
-							Name: "config.go",
-							Data: bytes.NewBufferString(templates.GoServerConfig()),
-						},
-					).Up().
-					Branch("web").
-					AddNodes( // root/web
-						&task.FileGenerator{
-							Name: "wire.go",
-							Data: bytes.NewBufferString(templates.GoServerWebWire(projectName, authorName)),
-						},
-						&task.FileGenerator{
-							Name: "server.go",
-							Data: bytes.NewBufferString(templates.GoServerWebServer(projectName, authorName)),
-						},
-						&task.FileGenerator{
-							Name: "router.go",
-							Data: bytes.NewBufferString(templates.GoServerWebRouter()),
-						},
-					).Up().
-					Branch("cmd").Branch("web").
-					AddNodes( // root/cmd/web
-						&task.FileGenerator{
-							Name: "main.go",
-							Data: bytes.NewBufferString(templates.GoServerCmdWebMain(projectName, authorName)),
-						},
-					).
-					Flatten(),
-				transformer.GoFormatSource(),
-			)...,
-		),
-		task.NewParallelExecutor(
-			task.BatchFileGenerationTask(
-				task.NewFileGenerationTree(projectName).
-					AddNodes(
-						[]*task.FileGenerator{
-							{
-								Name: "go.mod",
-								Data: bytes.NewBufferString(templates.GoMod(projectName, authorName, config.GoVersion)),
+		[]task.Task{
+			task.NewParallelExecutor(
+				task.BatchFileGenerationTask(
+					task.NewFileGenerationTree(projectName).
+						AddNodes( // root/
+							&task.FileGenerator{
+								Name: "tools.go",
+								Data: bytes.NewBufferString(templates.GoServerTools()),
 							},
-							{
-								Name: "Dockerfile",
-								Data: bytes.NewBufferString(templates.GoServerDockerfile()),
+						).
+						Branch("config").
+						AddNodes( // root/config
+							&task.FileGenerator{
+								Name: "config.go",
+								Data: bytes.NewBufferString(templates.GoServerConfig()),
 							},
-							{
-								Name: "Makefile",
-								Data: bytes.NewBufferString(templates.GoServerMakefile()),
+						).Up().
+						Branch("web").
+						AddNodes( // root/web
+							&task.FileGenerator{
+								Name: "wire.go",
+								Data: bytes.NewBufferString(templates.GoServerWebWire(projectName, authorName)),
 							},
-							{
-								Name: "air.toml",
-								Data: bytes.NewBufferString(templates.GoAirConfig()),
+							&task.FileGenerator{
+								Name: "server.go",
+								Data: bytes.NewBufferString(templates.GoServerWebServer(projectName, authorName)),
 							},
-							{
-								Name: "config.yml",
-								Data: bytes.NewBufferString(templates.GoServerConfigYml(projectName)),
+							&task.FileGenerator{
+								Name: "router.go",
+								Data: bytes.NewBufferString(templates.GoServerWebRouter()),
 							},
-							{
-								Name: ".dockerignore",
-								Data: bytes.NewBufferString(templates.GoDockerignore()),
+						).Up().
+						Branch("cmd").Branch("web").
+						AddNodes( // root/cmd/web
+							&task.FileGenerator{
+								Name: "main.go",
+								Data: bytes.NewBufferString(templates.GoServerCmdWebMain(projectName, authorName)),
 							},
-						}...,
-					).
-					Branch(".vscode").
-					AddNodes(
-						&task.FileGenerator{
-							Name: "settings.json",
-							Data: bytes.NewBufferString(templates.GoServerVscodeSettings()),
-						},
-					).
-					Flatten(),
-			)...,
-		),
-		&task.ShellCommand{
-			Bin:  "go",
-			Args: []string{"mod", "tidy"},
-			Cwd:  path.Join("./" + projectName),
-		},
-		&task.ShellCommand{
-			Bin:  "wire",
-			Args: []string{"./web"},
-			Cwd:  path.Join("./" + projectName),
+						).
+						Flatten(),
+					transformer.GoFormatSource(),
+				),
+			),
+			task.NewParallelExecutor(
+				task.BatchFileGenerationTask(
+					task.NewFileGenerationTree(projectName).
+						AddNodes(
+							[]*task.FileGenerator{
+								{
+									Name: "go.mod",
+									Data: bytes.NewBufferString(templates.GoMod(projectName, authorName, config.GoVersion)),
+								},
+								{
+									Name: "Dockerfile",
+									Data: bytes.NewBufferString(templates.GoServerDockerfile()),
+								},
+								{
+									Name: "Makefile",
+									Data: bytes.NewBufferString(templates.GoServerMakefile()),
+								},
+								{
+									Name: "air.toml",
+									Data: bytes.NewBufferString(templates.GoAirConfig()),
+								},
+								{
+									Name: "config.yml",
+									Data: bytes.NewBufferString(templates.GoServerConfigYml(projectName)),
+								},
+								{
+									Name: ".dockerignore",
+									Data: bytes.NewBufferString(templates.GoDockerignore()),
+								},
+							}...,
+						).
+						Branch(".vscode").
+						AddNodes(
+							&task.FileGenerator{
+								Name: "settings.json",
+								Data: bytes.NewBufferString(templates.GoServerVscodeSettings()),
+							},
+						).
+						Flatten(),
+				),
+			),
+			&task.ShellCommand{
+				Bin:  "go",
+				Args: []string{"mod", "tidy"},
+				Cwd:  path.Join("./" + projectName),
+			},
+			&task.ShellCommand{
+				Bin:  "wire",
+				Args: []string{"./web"},
+				Cwd:  path.Join("./" + projectName),
+			},
 		},
 	).Run()
 })

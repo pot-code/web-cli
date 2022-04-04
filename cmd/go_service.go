@@ -92,51 +92,53 @@ func (gga *GenerateGoSimpleService) generateFiles() task.Task {
 	repoDeclName := fmt.Sprintf(constant.GoApiRepositoryPattern, modelName)
 
 	return task.NewSequentialExecutor(
-		task.NewParallelExecutor(
-			task.BatchFileGenerationTask(
-				task.NewFileGenerationTree(path.Join("internal", pkgName)).
-					AddNodes( // root
-						&task.FileGenerator{
-							Name: "wire_set.go",
-							Data: bytes.NewBufferString(templates.GoServiceWireSet(projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)),
-						},
-					).
-					Branch("domain").
-					AddNodes( // root/domain
-						&task.FileGenerator{
-							Name: fmt.Sprintf("%s.go", pkgName),
-							Data: bytes.NewBufferString(templates.GoServiceDomainModel(modelName)),
-						},
-						&task.FileGenerator{
-							Name: "type.go",
-							Data: bytes.NewBufferString(templates.GoServiceDomainType(svcDeclName, repoDeclName)),
-						},
-					).Up().
-					Branch("repository").
-					AddNodes( // root/repository
-						&task.FileGenerator{
-							Name: "pgsql.go",
-							Data: bytes.NewBufferString(templates.GoServiceRepo(projectName, authorName, pkgName, repoDeclName)),
-						},
-					).Up().
-					Branch("port").
-					AddNodes( // root/port
-						&task.FileGenerator{
-							Name: "http.go",
-							Data: bytes.NewBufferString(templates.GoServiceWebHandler(projectName, authorName, pkgName, svcDeclName, handlerDeclName)),
-						},
-					).Up().
-					Branch("service").
-					AddNodes( // root/service
-						&task.FileGenerator{
-							Name: "service.go",
-							Data: bytes.NewBufferString(templates.GoServiceService(projectName, authorName, pkgName, svcDeclName, repoDeclName)),
-						},
-					).Flatten(),
-			)...,
-		),
-		shell.GoWire("./web"),
-		shell.GoModTidy(),
+		[]task.Task{
+			task.NewParallelExecutor(
+				task.BatchFileGenerationTask(
+					task.NewFileGenerationTree(path.Join("internal", pkgName)).
+						AddNodes( // root
+							&task.FileGenerator{
+								Name: "wire_set.go",
+								Data: bytes.NewBufferString(templates.GoServiceWireSet(projectName, authorName, pkgName, handlerDeclName, svcDeclName, repoDeclName)),
+							},
+						).
+						Branch("domain").
+						AddNodes( // root/domain
+							&task.FileGenerator{
+								Name: fmt.Sprintf("%s.go", pkgName),
+								Data: bytes.NewBufferString(templates.GoServiceDomainModel(modelName)),
+							},
+							&task.FileGenerator{
+								Name: "type.go",
+								Data: bytes.NewBufferString(templates.GoServiceDomainType(svcDeclName, repoDeclName)),
+							},
+						).Up().
+						Branch("repository").
+						AddNodes( // root/repository
+							&task.FileGenerator{
+								Name: "pgsql.go",
+								Data: bytes.NewBufferString(templates.GoServiceRepo(projectName, authorName, pkgName, repoDeclName)),
+							},
+						).Up().
+						Branch("port").
+						AddNodes( // root/port
+							&task.FileGenerator{
+								Name: "http.go",
+								Data: bytes.NewBufferString(templates.GoServiceWebHandler(projectName, authorName, pkgName, svcDeclName, handlerDeclName)),
+							},
+						).Up().
+						Branch("service").
+						AddNodes( // root/service
+							&task.FileGenerator{
+								Name: "service.go",
+								Data: bytes.NewBufferString(templates.GoServiceService(projectName, authorName, pkgName, svcDeclName, repoDeclName)),
+							},
+						).Flatten(),
+				),
+			),
+			shell.GoWire("./web"),
+			shell.GoModTidy(),
+		},
 	)
 }
 

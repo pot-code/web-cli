@@ -14,7 +14,7 @@ type ParallelExecutor struct {
 
 var _ Task = &ParallelExecutor{}
 
-func NewParallelExecutor(tasks ...Task) *ParallelExecutor {
+func NewParallelExecutor(tasks []Task) *ParallelExecutor {
 	return &ParallelExecutor{tasks}
 }
 

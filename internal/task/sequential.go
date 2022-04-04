@@ -13,7 +13,7 @@ type SequentialExecutor struct {
 
 var _ Task = &SequentialExecutor{}
 
-func NewSequentialExecutor(tasks ...Task) *SequentialExecutor {
+func NewSequentialExecutor(tasks []Task) *SequentialExecutor {
 	return &SequentialExecutor{tasks}
 }
 

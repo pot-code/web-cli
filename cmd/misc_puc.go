@@ -5,7 +5,6 @@ import (
 
 	"github.com/pot-code/web-cli/internal/command"
 	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/internal/util"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
 )
@@ -19,7 +18,7 @@ var AddPriceUpdateConfigCmd = command.NewCliCommand("cp", "add a price update co
 	command.WithArgUsage("config_name"),
 ).AddFeature(AddPriceUpdateConfigFile).ExportCommand()
 
-var AddPriceUpdateConfigFile = util.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddPriceUpdateConfigFile = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*AddPriceUpdateConfig)
 
 	return task.NewParallelExecutor(
@@ -34,6 +33,6 @@ var AddPriceUpdateConfigFile = util.NoCondFeature(func(c *cli.Context, cfg inter
 					Data: bytes.NewBufferString(templates.GoConsumers()),
 				},
 			).Flatten(),
-		)...,
+		),
 	).Run()
 })
