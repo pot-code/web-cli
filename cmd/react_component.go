@@ -2,25 +2,23 @@ package cmd
 
 import (
 	"bytes"
-	"fmt"
+	"path"
 	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/constant"
-	"github.com/pot-code/web-cli/internal/shell"
 	"github.com/pot-code/web-cli/internal/task"
 	"github.com/pot-code/web-cli/templates"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
 type ReactComponentConfig struct {
-	Hook    bool   `flag:"hook" usage:"add react hook"`
-	Scss    bool   `flag:"scss" alias:"S" usage:"add scss module"`
-	Story   bool   `flag:"storybook" alias:"sb" usage:"add storybook"`
-	Emotion bool   `flag:"emotion" alias:"e" usage:"add @emotion/react"`
-	Dir     string `flag:"dir" alias:"d" usage:"output dir"`
-	Name    string `arg:"0" alias:"component_name" validate:"required,var"`
+	Test   bool   `flag:"test" alias:"t" usage:"add test file"`
+	Scss   bool   `flag:"scss" alias:"s" usage:"add scss module"`
+	Story  bool   `flag:"storybook" alias:"sb" usage:"add storybook"`
+	OutDir string `flag:"dir" alias:"o" usage:"output directory"`
+	Name   string `arg:"0" alias:"component_name" validate:"required,var"`
 }
 
 var ReactComponentCmd = command.NewCliCommand("component", "add react component",
@@ -29,98 +27,80 @@ var ReactComponentCmd = command.NewCliCommand("component", "add react component"
 	command.WithAlias([]string{"c"}),
 ).AddHandlers(
 	new(AddReactComponent),
-	new(AddReactEmotionFeat),
 ).BuildCommand()
 
 type AddReactComponent struct {
-	ComponentName string
-}
-
-var _ command.CommandHandler = &AddReactComponent{}
-
-func (arc *AddReactComponent) Cond(c *cli.Context) bool {
-	return true
+	componentName string
 }
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactComponentConfig)
-	name := config.Name
+	arc.componentName = strcase.ToCamel(config.Name)
 
-	arc.ComponentName = strings.ReplaceAll(name, "-", "_")
-	return arc.addReactComponent(config).Run()
+	dir := arc.getOutputPath(config.OutDir)
+	tree := task.NewFileGenerationTree(dir)
+
+	log.WithFields(log.Fields{"handler": "AddReactComponent", "path": dir}).Debug("output path")
+
+	var scss string
+	if config.Scss {
+		s := arc.scss()
+		scss = s.Name
+		tree.AddNodes(s)
+	}
+	tree.AddNodes(arc.component(scss))
+
+	if config.Story {
+		tree.AddNodes(arc.story())
+	}
+
+	return task.NewParallelExecutor(
+		task.BatchFileGenerationTask(
+			tree.Flatten(),
+		),
+	).Run()
 }
 
-func (arc *AddReactComponent) addReactComponent(cfg *ReactComponentConfig) task.Task {
-	// dir := cfg.Dir
-	name := arc.ComponentName
-
-	var styleFile string
-	var files = []*task.FileGenerator{
-		{
-			Name: arc.getComponentFileName(),
-			Data: bytes.NewBufferString(templates.ReactComponent(name, styleFile)),
-		},
+func (arc *AddReactComponent) component(scss string) *task.FileGenerator {
+	name := arc.componentName
+	return &task.FileGenerator{
+		Name: arc.getComponentFileName(),
+		Data: bytes.NewBufferString(templates.ReactComponent(name, scss)),
 	}
-
-	if cfg.Scss {
-		styleFile = arc.getScssFileName()
-		files = append(files, arc.addScss(cfg))
-	}
-
-	if cfg.Story {
-		files = append(files, arc.addStoryBook(cfg))
-	}
-
-	return task.NewParallelExecutor(task.BatchFileGenerationTask(files))
 }
 
-func (arc *AddReactComponent) addScss(cfg *ReactComponentConfig) *task.FileGenerator {
-	rootClass := strcase.ToKebab(arc.ComponentName)
-
+func (arc *AddReactComponent) scss() *task.FileGenerator {
+	rootClass := strcase.ToKebab(arc.componentName)
 	return &task.FileGenerator{
 		Name: arc.getScssFileName(),
 		Data: bytes.NewBufferString(templates.ReactSCSS(rootClass)),
 	}
 }
 
-func (arc *AddReactComponent) getScssFileName() string {
-	return fmt.Sprintf(constant.ReactScssPattern, arc.ComponentName)
-}
-
-func (arc *AddReactComponent) addStoryBook(cfg *ReactComponentConfig) *task.FileGenerator {
-	name := arc.ComponentName
-
+func (arc *AddReactComponent) story() *task.FileGenerator {
+	name := arc.componentName
 	return &task.FileGenerator{
 		Name: arc.getStoryFileName(),
 		Data: bytes.NewBufferString(templates.ReactStory(name)),
 	}
 }
 
+func (arc *AddReactComponent) getOutputPath(dir string) string {
+	name := arc.componentName
+	if strings.HasSuffix(dir, name) {
+		return dir
+	}
+	return path.Join(dir, name)
+}
+
 func (arc *AddReactComponent) getStoryFileName() string {
-	return fmt.Sprintf(constant.ReactStorybookPattern, arc.ComponentName, constant.TsxSuffix)
+	return arc.componentName + ".stories.tsx"
+}
+
+func (arc *AddReactComponent) getScssFileName() string {
+	return arc.componentName + ".module.scss"
 }
 
 func (arc *AddReactComponent) getComponentFileName() string {
-	return fmt.Sprintf(constant.ReactComponentPattern, arc.ComponentName, constant.TsxSuffix)
-}
-
-type AddReactEmotionFeat struct{}
-
-var _ command.CommandHandler = &AddReactEmotionFeat{}
-
-func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
-	return c.Bool("emotion")
-}
-
-func (arc *AddReactEmotionFeat) Handle(c *cli.Context, cfg interface{}) error {
-	return task.NewParallelExecutor(
-		[]task.Task{
-			&task.FileGenerator{
-				Name: ".babelrc",
-				Data: bytes.NewBufferString(templates.ReactEmotion()),
-			},
-			shell.YarnAdd("@emotion/react"),
-			shell.YarnAddDev("@emotion/babel-preset-css-prop"),
-		},
-	).Run()
+	return arc.componentName + ".tsx"
 }

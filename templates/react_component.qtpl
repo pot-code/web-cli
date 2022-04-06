@@ -1,42 +1,40 @@
-{% func ReactComponent(name string, style string) -%}
+{% func ReactComponent(component string, style string) -%}
 {% code
-	propName := name + "Props"
+	propName := ReactPropName(component)
 -%}
-{% if style != "" -%}
 import React from 'react';
 
+{% if style != "" -%}
 import './{%v style %}'
-{% else -%}
-import React from 'react';
 {% endif -%}
 
 export interface {%v propName %} {
 }
 
-function {%v name %}({}: {%v propName %}) {
+function {%v component %}({}: {%v propName %}) {
 }
 
-export default {%v name %};
+export default {%v component %};
 {% endfunc %}
 
-{% func ReactSCSS(name string) -%}
-.{%v name %}{}
+{% func ReactSCSS(rootClass string) -%}
+.{%v rootClass %}{}
 {% endfunc %}
 
-{% func ReactStory(name string) -%}
+{% func ReactStory(component string) -%}
 {% code
-	propName := name + "Props"
+	propName := ReactPropName(component)
 -%}
 import React from "react";
 import { Meta, Story } from "@storybook/react";
-import {%v name %}, { {%v propName %} } from "./{%v name %}";
+import {%v component %}, { {%v propName %} } from "./{%v component %}";
 
 export default {
-  title: "component/{%v name %}",
-  component: {%v name %},
+  title: "component/{%v component %}",
+  component: {%v component %},
 } as Meta;
 
-const Template: Story<{%v propName %}> = (args) => <{%v name %} {...args} />;
+const Template: Story<{%v propName %}> = (args) => <{%v component %} {...args} />;
 
 export const Primary = Template.bind({});
 {% endfunc %}
@@ -49,3 +47,9 @@ export const Primary = Template.bind({});
 	]
 }
 {% endfunc %}
+
+{% stripspace %}
+{% func ReactPropName(component string) %}
+{%s component %}Props
+{% endfunc %}
+{% endstripspace %}

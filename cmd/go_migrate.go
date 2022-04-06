@@ -16,7 +16,7 @@ import (
 
 type GoMigrateConfig struct{}
 
-var GoMigrateCmd = command.NewCliCommand("migrate", "add migration",
+var GoMigrateCmd = command.NewCliCommand("migrate", "add a Ent migration module",
 	&GoMigrateConfig{},
 	command.WithAlias([]string{"M"}),
 ).AddHandlers(AddGoMigration).BuildCommand()
