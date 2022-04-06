@@ -17,14 +17,14 @@ var ReactInitCmd = command.NewCliCommand("init", "create react project",
 		GenType: "vanilla",
 	},
 	command.WithArgUsage("project_name"),
-).AddFeature(
+).AddHandlers(
 	new(VanillaTemplate),
 	new(NextJsTemplate),
-).ExportCommand()
+).BuildCommand()
 
 type VanillaTemplate struct{}
 
-var _ command.CommandFeature = &VanillaTemplate{}
+var _ command.CommandHandler = &VanillaTemplate{}
 
 func (grf *VanillaTemplate) Cond(c *cli.Context) bool {
 	return c.String("type") == "vanilla"
@@ -43,7 +43,7 @@ func (grf *VanillaTemplate) Handle(c *cli.Context, cfg interface{}) error {
 
 type NextJsTemplate struct{}
 
-var _ command.CommandFeature = &NextJsTemplate{}
+var _ command.CommandHandler = &NextJsTemplate{}
 
 func (gnf *NextJsTemplate) Cond(c *cli.Context) bool {
 	return c.String("type") == "next"

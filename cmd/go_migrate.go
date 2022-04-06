@@ -19,9 +19,9 @@ type GoMigrateConfig struct{}
 var GoMigrateCmd = command.NewCliCommand("migrate", "add migration",
 	&GoMigrateConfig{},
 	command.WithAlias([]string{"M"}),
-).AddFeature(AddGoMigration).ExportCommand()
+).AddHandlers(AddGoMigration).BuildCommand()
 
-var AddGoMigration = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddGoMigration = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	meta, err := util.ParseGoMod(constant.GoModFile)
 	if err != nil {
 		return errors.WithStack(err)

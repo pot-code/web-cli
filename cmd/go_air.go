@@ -10,9 +10,9 @@ import (
 )
 
 var GoAirCmd = command.NewCliCommand("air", "add air live reload config", nil).
-	AddFeature(AddAirConfig).ExportCommand()
+	AddHandlers(AddAirConfig).BuildCommand()
 
-var AddAirConfig = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddAirConfig = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	return (&task.FileGenerator{
 		Name: "air.toml",
 		Data: bytes.NewBufferString(templates.GoAirConfig()),

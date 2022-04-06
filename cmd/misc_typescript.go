@@ -17,14 +17,14 @@ type AddTypescriptConfig struct {
 var AddTypescriptCmd = command.NewCliCommand("typescript", "add typescript support",
 	new(AddTypescriptConfig),
 	command.WithAlias([]string{"ts"}),
-).AddFeature(
+).AddHandlers(
 	new(AddTypescriptToNode),
 	new(AddTypescriptToReact),
-).ExportCommand()
+).BuildCommand()
 
 type AddTypescriptToNode struct{}
 
-var _ command.CommandFeature = &AddTypescriptToNode{}
+var _ command.CommandHandler = &AddTypescriptToNode{}
 
 func (arc *AddTypescriptToNode) Cond(c *cli.Context) bool {
 	return c.String("target") == "node"
@@ -58,7 +58,7 @@ func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
 
 type AddTypescriptToReact struct{}
 
-var _ command.CommandFeature = &AddTypescriptToReact{}
+var _ command.CommandHandler = &AddTypescriptToReact{}
 
 func (arc *AddTypescriptToReact) Cond(c *cli.Context) bool {
 	return c.String("target") == "react"

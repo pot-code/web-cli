@@ -26,9 +26,9 @@ var GoFlagsCmd = command.NewCliCommand("flags", "generate pflags registration ba
 	},
 	command.WithAlias([]string{"f"}),
 	command.WithArgUsage("CONFIG_PATH"),
-).AddFeature(GenViperFlags).ExportCommand()
+).AddHandlers(GenViperFlags).BuildCommand()
 
-var GenViperFlags = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var GenViperFlags = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoFlagsConfig)
 	visitor, err := parseConfigFile(config)
 	if err != nil {

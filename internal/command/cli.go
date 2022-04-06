@@ -14,16 +14,10 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type ConfigStructVisitor interface {
-	VisitStringType(reflect.StructField, reflect.Value, *cli.Context) error
-	VisitBooleanType(reflect.StructField, reflect.Value, *cli.Context) error
-	VisitIntType(reflect.StructField, reflect.Value, *cli.Context) error
-}
-
 type CliCommand struct {
 	cmd      *cli.Command
 	cfg      interface{}
-	services []CommandFeature
+	services []CommandHandler
 }
 
 type CommandOption interface {
@@ -67,15 +61,15 @@ func NewCliCommand(name, usage string, defaultConfig interface{}, options ...Com
 	for _, option := range options {
 		option.apply(cmd)
 	}
-	return &CliCommand{cmd, defaultConfig, []CommandFeature{}}
+	return &CliCommand{cmd, defaultConfig, []CommandHandler{}}
 }
 
-func (cc *CliCommand) AddFeature(feats ...CommandFeature) *CliCommand {
-	cc.services = append(cc.services, feats...)
+func (cc *CliCommand) AddHandlers(h ...CommandHandler) *CliCommand {
+	cc.services = append(cc.services, h...)
 	return cc
 }
 
-func (cc *CliCommand) ExportCommand() *cli.Command {
+func (cc *CliCommand) BuildCommand() *cli.Command {
 	cc.cmd.Action = func(c *cli.Context) error {
 		cfg := cc.cfg
 
@@ -92,10 +86,8 @@ func (cc *CliCommand) ExportCommand() *cli.Command {
 		}
 
 		for _, s := range cc.services {
-			if s.Cond(c) {
-				if err := s.Handle(c, cfg); err != nil {
-					return err
-				}
+			if err := s.Handle(c, cfg); err != nil {
+				return err
 			}
 		}
 
@@ -104,37 +96,42 @@ func (cc *CliCommand) ExportCommand() *cli.Command {
 	return cc.cmd
 }
 
-func IterateCliConfig(config interface{}, visitor ConfigStructVisitor, runtime *cli.Context) {
+type ConfigStructVisitor interface {
+	VisitStringType(reflect.StructField, reflect.Value, *cli.Context) error
+	VisitBooleanType(reflect.StructField, reflect.Value, *cli.Context) error
+	VisitIntType(reflect.StructField, reflect.Value, *cli.Context) error
+}
+
+func IterateCliConfig(config interface{}, visitor ConfigStructVisitor, ctx *cli.Context) {
 	if config == nil {
 		return
 	}
 
-	t := reflect.TypeOf(config)
-	if t.Kind() != reflect.Ptr {
+	directType := reflect.TypeOf(config)
+	if directType.Kind() != reflect.Ptr {
 		panic("config must be of pointer type")
 	}
+	structType := directType.Elem()
 
-	t = t.Elem()
-	v := reflect.ValueOf(config)
-	v = reflect.Indirect(v)
-	for i := v.NumField() - 1; i >= 0; i-- {
-		tf := t.Field(i)
-		vf := v.Field(i)
+	configStruct := reflect.Indirect(reflect.ValueOf(config)) // reflection wrapper for the config struct
+	for i := structType.NumField() - 1; i >= 0; i-- {
+		fieldType := structType.Field(i)
+		fieldValue := configStruct.Field(i)
 
-		if !vf.CanSet() {
+		if !fieldValue.CanSet() {
 			log.WithFields(log.Fields{
 				"caller": "ParseCliConfig",
-			}).Warnf("config field [ %s ] can't be set, maybe it's not exported", tf.Name)
+			}).Warnf("config field [ %s ] can't be set, maybe it's not exported", fieldType.Name)
 			continue
 		}
 
-		switch tf.Type.Kind() {
+		switch fieldType.Type.Kind() {
 		case reflect.String:
-			visitor.VisitStringType(tf, vf, runtime)
+			visitor.VisitStringType(fieldType, fieldValue, ctx)
 		case reflect.Bool:
-			visitor.VisitBooleanType(tf, vf, runtime)
+			visitor.VisitBooleanType(fieldType, fieldValue, ctx)
 		case reflect.Int:
-			visitor.VisitIntType(tf, vf, runtime)
+			visitor.VisitIntType(fieldType, fieldValue, ctx)
 		default:
 			panic("not implemented")
 		}

@@ -11,9 +11,9 @@ import (
 
 var GoMakefileCmd = command.NewCliCommand("makefile", "add Makefile", nil,
 	command.WithAlias([]string{"m"}),
-).AddFeature(AddMakefile).ExportCommand()
+).AddHandlers(AddMakefile).BuildCommand()
 
-var AddMakefile = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddMakefile = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	return (&task.FileGenerator{
 		Name: "Makefile",
 		Data: bytes.NewBufferString(templates.GoServerMakefile()),

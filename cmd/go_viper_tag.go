@@ -19,9 +19,9 @@ var GoViperTagCmd = command.NewCliCommand("viper", "transform config struct to p
 	},
 	command.WithAlias([]string{"v"}),
 	command.WithArgUsage("config_path"),
-).AddFeature(AddViperTag).ExportCommand()
+).AddHandlers(AddViperTag).BuildCommand()
 
-var AddViperTag = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddViperTag = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoViperTagConfig)
 
 	var buf bytes.Buffer

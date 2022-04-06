@@ -25,9 +25,9 @@ var GoWebCmd = command.NewCliCommand("web", "generate golang web project",
 	},
 	command.WithAlias([]string{"w"}),
 	command.WithArgUsage("project_name"),
-).AddFeature(GenWebProject).ExportCommand()
+).AddHandlers(GenWebProject).BuildCommand()
 
-var GenWebProject = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var GenWebProject = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoWebConfig)
 	projectName := config.ProjectName
 	authorName := config.AuthorName

@@ -16,9 +16,9 @@ type AddPriceUpdateConfig struct {
 var AddPriceUpdateConfigCmd = command.NewCliCommand("cp", "add a price update config folder",
 	new(AddPriceUpdateConfig),
 	command.WithArgUsage("config_name"),
-).AddFeature(AddPriceUpdateConfigFile).ExportCommand()
+).AddHandlers(AddPriceUpdateConfigFile).BuildCommand()
 
-var AddPriceUpdateConfigFile = command.NoCondFeature(func(c *cli.Context, cfg interface{}) error {
+var AddPriceUpdateConfigFile = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*AddPriceUpdateConfig)
 
 	return task.NewParallelExecutor(

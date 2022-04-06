@@ -27,16 +27,16 @@ var ReactComponentCmd = command.NewCliCommand("component", "add react component"
 	new(ReactComponentConfig),
 	command.WithArgUsage("component_name"),
 	command.WithAlias([]string{"c"}),
-).AddFeature(
+).AddHandlers(
 	new(AddReactComponent),
 	new(AddReactEmotionFeat),
-).ExportCommand()
+).BuildCommand()
 
 type AddReactComponent struct {
 	ComponentName string
 }
 
-var _ command.CommandFeature = &AddReactComponent{}
+var _ command.CommandHandler = &AddReactComponent{}
 
 func (arc *AddReactComponent) Cond(c *cli.Context) bool {
 	return true
@@ -106,7 +106,7 @@ func (arc *AddReactComponent) getComponentFileName() string {
 
 type AddReactEmotionFeat struct{}
 
-var _ command.CommandFeature = &AddReactEmotionFeat{}
+var _ command.CommandHandler = &AddReactEmotionFeat{}
 
 func (arc *AddReactEmotionFeat) Cond(c *cli.Context) bool {
 	return c.Bool("emotion")

@@ -31,11 +31,11 @@ var GoServiceCmd = command.NewCliCommand("service", "add a go service",
 	},
 	command.WithAlias([]string{"svc"}),
 	command.WithArgUsage("module_name"),
-).AddFeature(
+).AddHandlers(
 	&GenerateGoSimpleService{
 		RegistryFile: path.Join("web", "server.go"),
 	},
-).ExportCommand()
+).BuildCommand()
 
 type GenerateGoSimpleService struct {
 	RegistryFile    string
@@ -46,7 +46,7 @@ type GenerateGoSimpleService struct {
 	Config          *GoServiceConfig
 }
 
-var _ command.CommandFeature = &GenerateGoSimpleService{}
+var _ command.CommandHandler = &GenerateGoSimpleService{}
 
 func (gga *GenerateGoSimpleService) Cond(c *cli.Context) bool {
 	return true
