@@ -35,12 +35,12 @@ type AddReactComponent struct {
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactComponentConfig)
-	arc.componentName = strcase.ToCamel(config.Name)
+	componentName := strcase.ToCamel(config.Name)
+	outDir := arc.getOutputPath(config.OutDir, componentName)
+	tree := task.NewFileGenerationTree(outDir)
 
-	dir := arc.getOutputPath(config.OutDir)
-	tree := task.NewFileGenerationTree(dir)
-
-	log.WithFields(log.Fields{"handler": "AddReactComponent", "path": dir}).Debug("output path")
+	arc.componentName = componentName
+	log.WithFields(log.Fields{"handler": "AddReactComponent", "path": outDir}).Debug("output path")
 
 	var scss string
 	if config.Scss {
@@ -85,12 +85,11 @@ func (arc *AddReactComponent) story() *task.FileGenerator {
 	}
 }
 
-func (arc *AddReactComponent) getOutputPath(dir string) string {
-	name := arc.componentName
-	if strings.HasSuffix(dir, name) {
+func (arc *AddReactComponent) getOutputPath(dir, componentName string) string {
+	if strings.HasSuffix(dir, componentName) {
 		return dir
 	}
-	return path.Join(dir, name)
+	return path.Join(dir, componentName)
 }
 
 func (arc *AddReactComponent) getStoryFileName() string {
