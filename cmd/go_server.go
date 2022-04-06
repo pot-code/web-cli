@@ -21,7 +21,7 @@ type GoWebConfig struct {
 
 var GoWebCmd = command.NewCliCommand("web", "generate golang web project",
 	&GoWebConfig{
-		GoVersion: "1.16",
+		GoVersion: "1.17",
 	},
 	command.WithAlias([]string{"w"}),
 	command.WithArgUsage("project_name"),
