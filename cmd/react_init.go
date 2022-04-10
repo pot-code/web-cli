@@ -2,55 +2,66 @@ package cmd
 
 import (
 	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/pkm"
 	"github.com/pot-code/web-cli/internal/shell"
 	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/util"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
 type ReactInitConfig struct {
-	GenType     string `flag:"type" alias:"t" usage:"project type" validate:"oneof=vanilla next"`
-	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
+	GenType        string `flag:"type" alias:"t" usage:"project type" validate:"oneof=vanilla nextjs"`
+	PackageManager string `flag:"pm" usage:"choose package manager" validate:"oneof=pnpm npm yarn"`
+	ProjectName    string `arg:"0" alias:"project_name" validate:"required,var"`
 }
 
 var ReactInitCmd = command.NewCliCommand("init", "create react project",
 	&ReactInitConfig{
-		GenType: "vanilla",
+		GenType:        "vanilla",
+		PackageManager: "pnpm",
 	},
 	command.WithArgUsage("project_name"),
 ).AddHandlers(
-	new(VanillaTemplate),
-	new(NextJsTemplate),
+	new(InitReact),
 ).BuildCommand()
 
-type VanillaTemplate struct{}
-
-var _ command.CommandHandler = &VanillaTemplate{}
-
-func (grf *VanillaTemplate) Cond(c *cli.Context) bool {
-	return c.String("type") == "vanilla"
+type InitReact struct {
+	ProjectName    string
+	PackageManager string
 }
 
-func (grf *VanillaTemplate) Handle(c *cli.Context, cfg interface{}) error {
+func (ir *InitReact) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactInitConfig)
+	gt := config.GenType
 
+	ir.ProjectName = config.ProjectName
+	ir.PackageManager = config.PackageManager
+
+	if util.Exists(ir.ProjectName) {
+		log.Infof("folder '%s' already exists", ir.ProjectName)
+		return nil
+	}
+
+	if gt == "vanilla" {
+		return ir.vanilla().Run()
+	}
+	if gt == "nextjs" {
+		return ir.nextjs().Run()
+	}
+	return nil
+}
+
+func (ir *InitReact) nextjs() task.Task {
+	pm := pkm.NewPackageManager(ir.PackageManager)
+	return pm.Create("next-app", ir.ProjectName, []string{"--typescript"})
+}
+
+func (ir *InitReact) vanilla() task.Task {
 	return task.NewSequentialExecutor(
 		[]task.Task{
-			shell.GitClone("https://github.com/pot-code/react-boilerplate.git", config.ProjectName),
-			shell.GitDeleteHistory(config.ProjectName),
+			shell.GitClone("https://github.com/pot-code/react-boilerplate.git", ir.ProjectName),
+			shell.GitDeleteHistory(ir.ProjectName),
 		},
-	).Run()
-}
-
-type NextJsTemplate struct{}
-
-var _ command.CommandHandler = &NextJsTemplate{}
-
-func (gnf *NextJsTemplate) Cond(c *cli.Context) bool {
-	return c.String("type") == "next"
-}
-
-func (gnf *NextJsTemplate) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*ReactInitConfig)
-
-	return shell.YarnCreate("next-app", "--ts", config.ProjectName).Run()
+	)
 }

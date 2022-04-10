@@ -4,33 +4,49 @@ import (
 	"bytes"
 
 	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/shell"
+	"github.com/pot-code/web-cli/internal/pkm"
 	"github.com/pot-code/web-cli/internal/task"
 	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
 )
 
 type AddTypescriptConfig struct {
-	Target string `flag:"target" alias:"t" usage:"project target" validate:"required,oneof=node react"`
+	Target         string `flag:"target" alias:"t" usage:"project type" validate:"required,oneof=node react"`
+	PackageManager string `flag:"pm" usage:"choose package manager" validate:"oneof=pnpm npm yarn"`
 }
 
 var AddTypescriptCmd = command.NewCliCommand("typescript", "add typescript support",
-	new(AddTypescriptConfig),
+	&AddTypescriptConfig{
+		PackageManager: "pnpm",
+	},
 	command.WithAlias([]string{"ts"}),
 ).AddHandlers(
-	new(AddTypescriptToNode),
-	new(AddTypescriptToReact),
+	new(AddTypescript),
 ).BuildCommand()
 
-type AddTypescriptToNode struct{}
-
-var _ command.CommandHandler = &AddTypescriptToNode{}
-
-func (arc *AddTypescriptToNode) Cond(c *cli.Context) bool {
-	return c.String("target") == "node"
+type AddTypescript struct {
+	PackageManager string
 }
 
-func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
+var _ command.CommandHandler = &AddTypescript{}
+
+func (at *AddTypescript) Handle(c *cli.Context, cfg interface{}) error {
+	config := cfg.(*AddTypescriptConfig)
+
+	at.PackageManager = config.PackageManager
+
+	if config.Target == "node" {
+		return at.node().Run()
+	}
+	if config.Target == "react" {
+		return at.react().Run()
+	}
+	return nil
+}
+
+func (at *AddTypescript) node() task.Task {
+	pm := pkm.NewPackageManager(at.PackageManager)
+
 	return task.NewParallelExecutor(
 		[]task.Task{
 			&task.FileGenerator{
@@ -41,30 +57,26 @@ func (arc *AddTypescriptToNode) Handle(c *cli.Context, cfg interface{}) error {
 				Name: "tsconfig.json",
 				Data: bytes.NewBufferString(templates.NodeTsConfig()),
 			},
-			shell.YarnAddDev(
-				"typescript",
-				"eslint",
-				"@typescript-eslint/eslint-plugin",
-				"eslint-plugin-prettier",
-				"@typescript-eslint/parser",
-				"eslint-config-prettier",
-				"eslint-plugin-import",
-				"prettier",
-				"prettier-eslint",
+			pm.InstallDev(
+				[]string{
+					"typescript",
+					"eslint",
+					"@typescript-eslint/eslint-plugin",
+					"eslint-plugin-prettier",
+					"@typescript-eslint/parser",
+					"eslint-config-prettier",
+					"eslint-plugin-import",
+					"prettier",
+					"prettier-eslint",
+				},
 			),
 		},
-	).Run()
+	)
 }
 
-type AddTypescriptToReact struct{}
+func (at *AddTypescript) react() task.Task {
+	pm := pkm.NewPackageManager(at.PackageManager)
 
-var _ command.CommandHandler = &AddTypescriptToReact{}
-
-func (arc *AddTypescriptToReact) Cond(c *cli.Context) bool {
-	return c.String("target") == "react"
-}
-
-func (arc *AddTypescriptToReact) Handle(c *cli.Context, cfg interface{}) error {
 	return task.NewParallelExecutor(
 		[]task.Task{
 			&task.FileGenerator{
@@ -75,23 +87,25 @@ func (arc *AddTypescriptToReact) Handle(c *cli.Context, cfg interface{}) error {
 				Name: "tsconfig.json",
 				Data: bytes.NewBufferString(templates.ReactTsConfig()),
 			},
-			shell.YarnAddDev(
-				"@types/react",
-				"@typescript-eslint/eslint-plugin",
-				"@typescript-eslint/parser",
-				"eslint",
-				"eslint-config-airbnb",
-				"eslint-config-prettier",
-				"eslint-import-resolver-typescript",
-				"eslint-plugin-import",
-				"eslint-plugin-jsx-a11y",
-				"eslint-plugin-prettier",
-				"eslint-plugin-react",
-				"eslint-plugin-react-hooks",
-				"prettier",
-				"prettier-eslint",
-				"typescript",
+			pm.InstallDev(
+				[]string{
+					"@types/react",
+					"@typescript-eslint/eslint-plugin",
+					"@typescript-eslint/parser",
+					"eslint",
+					"eslint-config-airbnb",
+					"eslint-config-prettier",
+					"eslint-import-resolver-typescript",
+					"eslint-plugin-import",
+					"eslint-plugin-jsx-a11y",
+					"eslint-plugin-prettier",
+					"eslint-plugin-react",
+					"eslint-plugin-react-hooks",
+					"prettier",
+					"prettier-eslint",
+					"typescript",
+				},
 			),
 		},
-	).Run()
+	)
 }

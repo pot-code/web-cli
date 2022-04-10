@@ -19,7 +19,7 @@ type ShellCommand struct {
 }
 
 func (c *ShellCommand) String() string {
-	return fmt.Sprintf("cwd=%s bin=%s args=%s", c.Cwd, c.Bin, strings.Join(c.Args, " "))
+	return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
 }
 
 var _ Task = &ShellCommand{}
@@ -27,7 +27,7 @@ var _ Task = &ShellCommand{}
 func (sc *ShellCommand) Run() error {
 	proc := exec.Command(sc.Bin, sc.Args...)
 
-	log.WithField("cmd", sc).Info("execute command")
+	log.WithField("cwd", sc.Cwd).Info(sc)
 
 	if sc.Cwd != "" {
 		proc.Dir = sc.Cwd

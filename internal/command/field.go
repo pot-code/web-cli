@@ -43,7 +43,7 @@ func (f *configField) hasTag() bool {
 	return f.meta.Tag != ""
 }
 
-func (f *configField) hasDefault() bool {
+func (f *configField) hasDefaultValue() bool {
 	return !f.value.IsZero()
 }
 

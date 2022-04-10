@@ -18,15 +18,15 @@ var RootCmd = &cli.App{
 	Version: AppVersion,
 	Flags: []cli.Flag{
 		&cli.BoolFlag{
-			Name:        "debug",
-			Aliases:     []string{"D"},
-			Usage:       "enable debugging",
+			Name:        "verbose",
+			Aliases:     []string{"vv"},
+			Usage:       "verbose mode",
 			Value:       false,
 			DefaultText: "false",
 		},
 	},
 	Before: func(c *cli.Context) error {
-		if c.Bool("debug") {
+		if c.Bool("verbose") {
 			log.SetLevel(log.DebugLevel)
 		}
 		return nil

@@ -55,7 +55,7 @@ func (efv *extractFlagsVisitor) visitString(f *configField) {
 		Name: flag,
 	}
 
-	if f.hasDefault() {
+	if f.hasDefaultValue() {
 		cf.Value = f.value.String()
 	}
 
@@ -89,7 +89,7 @@ func (efv *extractFlagsVisitor) visitBoolean(f *configField) {
 		Name: flag,
 	}
 
-	if f.hasDefault() {
+	if f.hasDefaultValue() {
 		cf.Value = f.value.Bool()
 	}
 
@@ -123,7 +123,7 @@ func (efv *extractFlagsVisitor) visitInt(f *configField) {
 		Name: flag,
 	}
 
-	if f.hasDefault() {
+	if f.hasDefaultValue() {
 		cf.Value = int(f.value.Int())
 	}
 
