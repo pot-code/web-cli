@@ -15,9 +15,9 @@ var (
 )
 
 type GoModMeta struct {
-	Author      string
-	ProjectName string
-	Requires    []*modfile.Require
+	author  string
+	project string
+	mf      *modfile.File
 }
 
 func ParseGoMod(path string) (*GoModMeta, error) {
@@ -39,16 +39,31 @@ func ParseGoMod(path string) (*GoModMeta, error) {
 		return nil, errors.Wrap(err, "failed to parse mod file")
 	}
 
-	meta := new(GoModMeta)
-	meta.Requires = mp.Require
-
 	url := mp.Module.Mod.Path
 	parts := strings.Split(url, "/")
-	meta.Author = parts[len(parts)-2]
-	meta.ProjectName = parts[len(parts)-1]
+	author := parts[len(parts)-2]
+	project := parts[len(parts)-1]
 
-	if meta.Author == "" || meta.ProjectName == "" {
-		return nil, errors.New("failed to extrace meta data from go.mod")
+	return &GoModMeta{
+		mf:      mp,
+		author:  author,
+		project: project,
+	}, nil
+}
+
+func (gm *GoModMeta) GetAuthor() string {
+	return gm.author
+}
+
+func (gm *GoModMeta) GetProject() string {
+	return gm.project
+}
+
+func (gm *GoModMeta) Contains(module string) bool {
+	for _, r := range gm.mf.Require {
+		if r.Mod.Path == module {
+			return true
+		}
 	}
-	return meta, nil
+	return false
 }

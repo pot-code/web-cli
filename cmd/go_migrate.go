@@ -27,17 +27,12 @@ var AddGoMigration = command.InlineHandler(func(c *cli.Context, cfg interface{})
 		return errors.WithStack(err)
 	}
 
-	found := false
-	for _, r := range meta.Requires {
-		if r.Mod.Path == "entgo.io/ent" {
-			found = true
-			break
-		}
-	}
-
-	if !found {
+	if !meta.Contains("entgo.io/ent") {
 		return errors.New("ent is not used in the project")
 	}
+
+	author := meta.GetAuthor()
+	project := meta.GetProject()
 
 	return task.NewSequentialExecutor(
 		[]task.Task{
@@ -48,11 +43,11 @@ var AddGoMigration = command.InlineHandler(func(c *cli.Context, cfg interface{})
 						AddNodes( // migrate
 							&task.FileGenerator{
 								Name: "migrate.go",
-								Data: bytes.NewBufferString(templates.GoMigrateMigration(meta.ProjectName, meta.Author)),
+								Data: bytes.NewBufferString(templates.GoMigrateMigration(project, author)),
 							},
 							&task.FileGenerator{
 								Name: "wire.go",
-								Data: bytes.NewBufferString(templates.GoMigrateWire(meta.ProjectName, meta.Author)),
+								Data: bytes.NewBufferString(templates.GoMigrateWire(project, author)),
 							},
 						).
 						Branch("config").
@@ -66,14 +61,14 @@ var AddGoMigration = command.InlineHandler(func(c *cli.Context, cfg interface{})
 						AddNodes( // cmd
 							&task.FileGenerator{
 								Name: "main.go",
-								Data: bytes.NewBufferString(templates.GoMigrateCmdMain(meta.ProjectName, meta.Author)),
+								Data: bytes.NewBufferString(templates.GoMigrateCmdMain(project, author)),
 							},
 						).Up().
 						Branch("pkg").Branch("db").
 						AddNodes( // pkg/db
 							&task.FileGenerator{
 								Name: "ent.go",
-								Data: bytes.NewBufferString(templates.GoMigratePkgEnt(meta.ProjectName, meta.Author)),
+								Data: bytes.NewBufferString(templates.GoMigratePkgEnt(project, author)),
 							},
 						).
 						Flatten(),

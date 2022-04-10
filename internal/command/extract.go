@@ -54,12 +54,13 @@ func (efv *extractFlagsVisitor) visitString(f *configField) {
 	cf := &cli.StringFlag{
 		Name: flag,
 	}
-	if isRequired(f) {
-		cf.Required = true
-	}
 
 	if f.hasDefault() {
 		cf.Value = f.value.String()
+	}
+
+	if isRequired(f) {
+		cf.Required = true
 	}
 
 	if u, err := getUsage(f); err == nil {
@@ -87,12 +88,13 @@ func (efv *extractFlagsVisitor) visitBoolean(f *configField) {
 	cf := &cli.BoolFlag{
 		Name: flag,
 	}
-	if isRequired(f) {
-		cf.Required = true
-	}
 
 	if f.hasDefault() {
 		cf.Value = f.value.Bool()
+	}
+
+	if isRequired(f) {
+		cf.Required = true
 	}
 
 	if u, err := getUsage(f); err == nil {
@@ -120,12 +122,13 @@ func (efv *extractFlagsVisitor) visitInt(f *configField) {
 	cf := &cli.IntFlag{
 		Name: flag,
 	}
-	if isRequired(f) {
-		cf.Required = true
-	}
 
 	if f.hasDefault() {
 		cf.Value = int(f.value.Int())
+	}
+
+	if isRequired(f) {
+		cf.Required = true
 	}
 
 	if u, err := getUsage(f); err == nil {

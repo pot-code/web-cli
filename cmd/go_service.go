@@ -21,14 +21,11 @@ import (
 )
 
 type GoServiceConfig struct {
-	GenType string `flag:"type" alias:"t" usage:"api type" validate:"required,oneof=go"` // generation type
-	ArgName string `arg:"0" alias:"module_name" validate:"required,var"`                 // go pkg name
+	Module string `arg:"0" alias:"module_name" validate:"required,var"` // go pkg name
 }
 
 var GoServiceCmd = command.NewCliCommand("service", "add a go service",
-	&GoServiceConfig{
-		GenType: "go",
-	},
+	&GoServiceConfig{},
 	command.WithAlias([]string{"svc"}),
 	command.WithArgUsage("module_name"),
 ).AddHandlers(
@@ -38,23 +35,18 @@ var GoServiceCmd = command.NewCliCommand("service", "add a go service",
 ).BuildCommand()
 
 type GenerateGoSimpleService struct {
-	RegistryFile    string
-	PackageName     string
-	ProjectName     string
-	CamelModuleName string
-	AuthorName      string
-	Config          *GoServiceConfig
+	RegistryFile string
+	PackageName  string
+	ProjectName  string
+	DomainName   string
+	AuthorName   string
 }
 
 var _ command.CommandHandler = &GenerateGoSimpleService{}
 
-func (gga *GenerateGoSimpleService) Cond(c *cli.Context) bool {
-	return true
-}
-
 func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*GoServiceConfig)
-	pkgName := strings.ReplaceAll(config.ArgName, "-", "_")
+	pkgName := strings.ReplaceAll(config.Module, "-", "_")
 	pkgName = strcase.ToSnake(pkgName)
 	gga.PackageName = pkgName
 
@@ -63,13 +55,12 @@ func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) erro
 		return errors.WithStack(err)
 	}
 
-	gga.CamelModuleName = strcase.ToCamel(pkgName)
-	gga.AuthorName = meta.Author
-	gga.ProjectName = meta.ProjectName
+	gga.DomainName = strcase.ToCamel(pkgName)
+	gga.AuthorName = meta.GetAuthor()
+	gga.ProjectName = meta.GetProject()
 
 	dir := gga.PackageName
-	_, err = os.Stat(dir)
-	if err == nil {
+	if util.Exists(dir) {
 		log.WithField("module", dir).Infof("module already exists")
 		return nil
 	}
@@ -82,7 +73,7 @@ func (gga *GenerateGoSimpleService) Handle(c *cli.Context, cfg interface{}) erro
 }
 
 func (gga *GenerateGoSimpleService) generateFiles() task.Task {
-	modelName := gga.CamelModuleName
+	modelName := gga.DomainName
 	pkgName := gga.PackageName
 	projectName := gga.ProjectName
 	authorName := gga.AuthorName
