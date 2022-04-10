@@ -17,7 +17,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-var nameExp = `^[_\w][-_\w]*$`
+var nameExp = `^[-_\w]+$`
 
 var nameReg = regexp.MustCompile(nameExp)
 

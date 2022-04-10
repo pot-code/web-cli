@@ -8,7 +8,7 @@ import (
 )
 
 type ReactInitConfig struct {
-	GenType     string `flag:"type" alias:"t" usage:"project type" validate:"required,oneof=vanilla next"`
+	GenType     string `flag:"type" alias:"t" usage:"project type" validate:"oneof=vanilla next"`
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
 }
 

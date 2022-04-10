@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/fatih/structtag"
-	"github.com/pot-code/web-cli/internal/validate"
 )
 
 type tagMeta struct {
@@ -38,8 +37,21 @@ func parseTag(tag reflect.StructTag) (*tagMeta, error) {
 		tg.Default = d.Value()
 	}
 
-	tg.Required = validate.IsRequired(tag)
+	tg.Required = isRequired(tag)
 	return tg, nil
+}
+
+func isRequired(tag reflect.StructTag) bool {
+	if tag == "" {
+		return false
+	}
+
+	vt := tag.Get("validate")
+	if vt == "" {
+		return false
+	}
+
+	return strings.Contains(vt, "required")
 }
 
 func parseConfigFile(config *GoFlagsConfig) (*configStructVisitor, error) {

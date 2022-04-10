@@ -16,7 +16,7 @@ import (
 type GoWebConfig struct {
 	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
 	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,var"`
-	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"required,version"`
+	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"version"`
 }
 
 var GoWebCmd = command.NewCliCommand("web", "generate golang web project",
@@ -32,7 +32,7 @@ var GenWebProject = command.InlineHandler(func(c *cli.Context, cfg interface{}) 
 	projectName := config.ProjectName
 	authorName := config.AuthorName
 
-	if util.FileExists(projectName) {
+	if util.Exists(projectName) {
 		log.Infof("folder '%s' already exists", projectName)
 		return nil
 	}

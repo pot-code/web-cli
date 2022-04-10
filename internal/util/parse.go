@@ -10,6 +10,10 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+var (
+	ErrGoModNotFound = errors.New("can't locate go.mod")
+)
+
 type GoModMeta struct {
 	Author      string
 	ProjectName string
@@ -20,7 +24,7 @@ func ParseGoMod(path string) (*GoModMeta, error) {
 	fd, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.WithMessage(err, "can't locate go.mod")
+			return nil, errors.WithStack(ErrGoModNotFound)
 		}
 		return nil, errors.Wrap(err, "failed to open go.mod")
 	}

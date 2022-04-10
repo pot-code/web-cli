@@ -63,7 +63,7 @@ func (fg *FileGenerator) applyTransformers() error {
 }
 
 func (fg *FileGenerator) shouldSkip() bool {
-	return util.FileExists(fg.Name) && !fg.Overwrite
+	return util.Exists(fg.Name) && !fg.Overwrite
 }
 
 func (fg *FileGenerator) validateRequest() error {
@@ -101,7 +101,7 @@ func (fg *FileGenerator) mkdirIfNecessary() error {
 	if dir == "" {
 		return nil
 	}
-	if util.FileExists(dir) {
+	if util.Exists(dir) {
 		return nil
 	}
 	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
