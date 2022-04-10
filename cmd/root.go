@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -25,9 +26,9 @@ var RootCmd = &cli.App{
 		},
 	},
 	Before: func(c *cli.Context) error {
-		// if c.Bool("debug") {
-		// 	log.SetLevel(log.DebugLevel)
-		// }
+		if c.Bool("debug") {
+			log.SetLevel(log.DebugLevel)
+		}
 		return nil
 	},
 }
