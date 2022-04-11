@@ -21,7 +21,7 @@ func (y *yarn) Create(template, name string, flags []string) *task.ShellCommand 
 }
 
 func (y *yarn) Install(name []string) *task.ShellCommand {
-	args := []string{"install"}
+	args := []string{"add"}
 	args = append(args, name...)
 	return &task.ShellCommand{
 		Bin:  y.bin,
@@ -30,7 +30,7 @@ func (y *yarn) Install(name []string) *task.ShellCommand {
 }
 
 func (y *yarn) InstallDev(name []string) *task.ShellCommand {
-	args := []string{"install", "-D"}
+	args := []string{"add", "-D"}
 	args = append(args, name...)
 	return &task.ShellCommand{
 		Bin:  y.bin,

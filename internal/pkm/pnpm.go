@@ -21,7 +21,7 @@ func (p *pnpm) Create(template, name string, flags []string) *task.ShellCommand 
 }
 
 func (p *pnpm) Install(name []string) *task.ShellCommand {
-	args := []string{"install"}
+	args := []string{"add"}
 	args = append(args, name...)
 	return &task.ShellCommand{
 		Bin:  p.bin,
@@ -30,7 +30,7 @@ func (p *pnpm) Install(name []string) *task.ShellCommand {
 }
 
 func (p *pnpm) InstallDev(name []string) *task.ShellCommand {
-	args := []string{"install", "-D"}
+	args := []string{"add", "-D"}
 	args = append(args, name...)
 	return &task.ShellCommand{
 		Bin:  p.bin,

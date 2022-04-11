@@ -82,7 +82,7 @@ func (scv *setConfigVisitor) setInt(f *configField) error {
 		av := ctx.Args().Get(pos)
 		iv, err := strconv.Atoi(av)
 		if err != nil {
-			return errors.Wrapf(err, "unable to set field, expect: 'int' actual: '%s'", av)
+			return errors.Wrapf(err, "failed to set field, expected int type but got '%s'", av)
 		}
 		value = iv
 	}
