@@ -1,12 +1,8 @@
-{% func ReactComponent(component string, style string) -%}
+{% func ReactComponent(component string) -%}
 {% code
 	propName := ReactPropName(component)
 -%}
 import React from 'react';
-
-{% if style != "" -%}
-import './{%v style %}'
-{% endif -%}
 
 export interface {%v propName %} {
 }
@@ -53,3 +49,14 @@ export const Primary = Template.bind({});
 {%s component %}Props
 {% endfunc %}
 {% endstripspace %}
+
+{% func ReactTest(component string) -%}
+import "@testing-library/jest-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import React from "react";
+import {%v component %} from "./{%v component %}";
+
+test("render test", async () => {
+  render(<{%v component %} />);
+});
+{% endfunc %}

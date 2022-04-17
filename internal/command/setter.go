@@ -62,13 +62,16 @@ func (scv *setConfigVisitor) setString(f *configField) error {
 		pos, _ := getArgPosition(f)
 		value = ctx.Args().Get(pos)
 	}
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set string value")
 	f.value.SetString(value)
 	return nil
 }
 
 func (scv *setConfigVisitor) setBoolean(f *configField) error {
 	flag, _ := getFlag(f)
-	f.value.SetBool(scv.ctx.Bool(flag))
+	value := scv.ctx.Bool(flag)
+	f.value.SetBool(value)
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set boolean value")
 	return nil
 }
 
@@ -86,6 +89,7 @@ func (scv *setConfigVisitor) setInt(f *configField) error {
 		}
 		value = iv
 	}
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set int value")
 	f.value.SetInt(int64(value))
 	return nil
 }
