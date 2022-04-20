@@ -18,21 +18,18 @@ export default {%v component %};
 {% endfunc %}
 
 {% func ReactStory(component string) -%}
-{% code
-	propName := ReactPropName(component)
--%}
 import React from "react";
-import { Meta, Story } from "@storybook/react";
-import {%v component %}, { {%v propName %} } from "./{%v component %}";
+import { ComponentMeta, ComponentStory } from "@storybook/react";
+import {%v component %} from "./{%v component %}";
 
 export default {
   title: "component/{%v component %}",
   component: {%v component %},
-} as Meta;
+} as ComponentMeta<typeof {%v component %}>;
 
-const Template: Story<{%v propName %}> = (args) => <{%v component %} {...args} />;
+const Template: ComponentStory<typeof {%v component %}> = (args) => <{%v component %} {...args} />;
 
-export const Primary = Template.bind({});
+export const Basic = Template.bind({});
 {% endfunc %}
 
 {% func ReactEmotion() -%}

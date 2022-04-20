@@ -14,42 +14,40 @@ import (
 )
 
 type ReactComponentConfig struct {
-	Test   bool   `flag:"test" alias:"t" usage:"add test file"`
-	Story  bool   `flag:"storybook" alias:"sb" usage:"add storybook"`
-	OutDir string `flag:"output" alias:"o" usage:"output directory"`
-	Name   string `arg:"0" alias:"component_name" validate:"required,var"`
+	Test     bool   `flag:"test" alias:"t" usage:"add test file"`
+	Story    bool   `flag:"storybook" alias:"sb" usage:"add storybook"`
+	Isolated bool   `flag:"isolated" alias:"i" usage:"isolate component in its own folder"`
+	OutDir   string `flag:"output" alias:"o" usage:"output directory"`
+	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
 var ReactComponentCmd = command.NewCliCommand("component", "add react component",
 	new(ReactComponentConfig),
-	command.WithArgUsage("component_name"),
+	command.WithArgUsage("COMPONENT_NAME"),
 	command.WithAlias([]string{"c"}),
 ).AddHandlers(
 	new(AddReactComponent),
 ).BuildCommand()
 
-type AddReactComponent struct {
-	componentName string
-}
+type AddReactComponent struct{}
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactComponentConfig)
 	componentName := strcase.ToCamel(config.Name)
-	outDir := arc.getOutputPath(config.OutDir, componentName)
+	outDir := config.OutDir
+	if config.Isolated {
+		outDir = getIsolatedOutputPath(config.OutDir, componentName)
+	}
+
 	tree := task.NewFileGenerationTree(outDir)
-
-	arc.componentName = componentName
 	log.WithFields(log.Fields{"handler": "AddReactComponent", "path": outDir}).Debug("output path")
-	tree.AddNodes(arc.component())
-
+	tree.AddNodes(arc.component(componentName))
 	if config.Story {
-		tree.AddNodes(arc.story())
+		tree.AddNodes(arc.story(componentName))
 	}
-
 	if config.Test {
-		tree.AddNodes(arc.test())
+		tree.AddNodes(arc.test(componentName))
 	}
-
 	return task.NewParallelExecutor(
 		task.BatchFileGenerationTask(
 			tree.Flatten(),
@@ -57,31 +55,28 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	).Run()
 }
 
-func (arc *AddReactComponent) component() *task.FileGenerator {
-	name := arc.componentName
+func (arc *AddReactComponent) component(componentName string) *task.FileGenerator {
 	return &task.FileGenerator{
-		Name: getComponentFileName(name),
-		Data: bytes.NewBufferString(templates.ReactComponent(name)),
+		Name: getComponentFileName(componentName),
+		Data: bytes.NewBufferString(templates.ReactComponent(componentName)),
 	}
 }
 
-func (arc *AddReactComponent) story() *task.FileGenerator {
-	name := arc.componentName
+func (arc *AddReactComponent) story(componentName string) *task.FileGenerator {
 	return &task.FileGenerator{
-		Name: getStoryFileName(name),
-		Data: bytes.NewBufferString(templates.ReactStory(name)),
+		Name: getStoryFileName(componentName),
+		Data: bytes.NewBufferString(templates.ReactStory(componentName)),
 	}
 }
 
-func (arc *AddReactComponent) test() *task.FileGenerator {
-	name := arc.componentName
+func (arc *AddReactComponent) test(componentName string) *task.FileGenerator {
 	return &task.FileGenerator{
-		Name: getTestFileName(name),
-		Data: bytes.NewBufferString(templates.ReactTest(name)),
+		Name: getTestFileName(componentName),
+		Data: bytes.NewBufferString(templates.ReactTest(componentName)),
 	}
 }
 
-func (arc *AddReactComponent) getOutputPath(dir, componentName string) string {
+func getIsolatedOutputPath(dir, componentName string) string {
 	if strings.HasSuffix(dir, componentName) {
 		return dir
 	}
