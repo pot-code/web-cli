@@ -13,9 +13,10 @@ type AddPriceUpdateConfig struct {
 	Name string `arg:"0" alias:"config_name" validate:"required"`
 }
 
-var AddPriceUpdateConfigCmd = command.NewCliCommand("cp", "add a price update config folder",
+var AddPriceUpdateCmd = command.NewCliCommand("price", "add a price update config folder",
 	new(AddPriceUpdateConfig),
 	command.WithArgUsage("config_name"),
+	command.WithAlias([]string{"p"}),
 ).AddHandlers(AddPriceUpdateConfigFile).BuildCommand()
 
 var AddPriceUpdateConfigFile = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {

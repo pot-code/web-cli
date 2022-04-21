@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"reflect"
 
 	log "github.com/sirupsen/logrus"
@@ -40,13 +41,60 @@ func (efv *extractFlagsVisitor) accept(f *configField) {
 		efv.visitInt(f)
 	case reflect.Bool:
 		efv.visitBoolean(f)
+	case reflect.Slice:
+		efv.visitSlice(f)
 	default:
-		panic("unsupported field kind")
+		panic(fmt.Errorf("unsupported kind '%s'", f.kind()))
 	}
 }
 
 func (efv *extractFlagsVisitor) getFlags() []cli.Flag {
 	return efv.flags
+}
+
+func (efv *extractFlagsVisitor) visitSlice(f *configField) {
+	et := f.fieldType().Elem()
+	switch et.Kind() {
+	case reflect.String:
+		efv.visitStringSlice(f)
+	default:
+		panic(fmt.Errorf("unsupported slice kind '%s'", et.Kind()))
+	}
+}
+
+func (efv *extractFlagsVisitor) visitStringSlice(f *configField) {
+	flag, _ := getFlag(f)
+	cf := &cli.StringSliceFlag{
+		Name: flag,
+	}
+
+	if f.hasDefaultValue() {
+		cf.Value = cli.NewStringSlice(getReflectedStringSlice(f.value)...)
+	}
+
+	if isRequired(f) {
+		cf.Required = true
+	}
+
+	if u, err := getUsage(f); err == nil {
+		cf.Usage = u
+	}
+
+	if alias, err := getAlias(f); err == nil {
+		cf.Aliases = alias
+	}
+
+	log.WithFields(log.Fields{
+		"flag":      cf.Name,
+		"meta_name": f.name(),
+		"type":      f.typeString(),
+		"required":  cf.Required,
+		"alias":     cf.Aliases,
+		"usage":     cf.Usage,
+		"default":   cf.Value,
+	}).Debug("append flag")
+	efv.flags = append(efv.flags, cf)
+
 }
 
 func (efv *extractFlagsVisitor) visitString(f *configField) {

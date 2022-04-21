@@ -27,6 +27,10 @@ func (f *configField) name() string {
 	return fromParentPrefix(f, f.meta.Name)
 }
 
+func (f *configField) fieldType() reflect.Type {
+	return f.meta.Type
+}
+
 func (f *configField) kind() reflect.Kind {
 	return f.meta.Type.Kind()
 }

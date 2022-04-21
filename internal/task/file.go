@@ -86,6 +86,7 @@ func (fg *FileGenerator) writeToDisk() error {
 	if err != nil {
 		return errors.Wrap(err, "failed to create target file")
 	}
+	defer fd.Close()
 
 	w, err := fg.Data.WriteTo(fd)
 	if err != nil {

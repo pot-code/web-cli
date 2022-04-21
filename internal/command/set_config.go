@@ -1,6 +1,7 @@
 package command
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 
@@ -45,12 +46,37 @@ func (scv *setConfigVisitor) accept(f *configField) {
 		err = scv.setBoolean(f)
 	case reflect.Int:
 		err = scv.setInt(f)
+	case reflect.Slice:
+		err = scv.setSlice(f)
 	default:
 		panic("unsupported field kind")
 	}
 	if err != nil {
 		scv.errs = append(scv.errs, err)
 	}
+}
+
+func (scv *setConfigVisitor) setSlice(f *configField) error {
+	et := f.fieldType().Elem()
+	var err error
+	switch et.Kind() {
+	case reflect.String:
+		err = scv.setStringSlice(f)
+	default:
+		panic(fmt.Errorf("unsupported slice kind '%s'", et.Kind()))
+	}
+	return err
+}
+
+func (scv *setConfigVisitor) setStringSlice(f *configField) error {
+	var value []string
+	ctx := scv.ctx
+	if flag, err := getFlag(f); err == nil {
+		value = ctx.StringSlice(flag)
+	}
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set []string")
+	f.value.Set(reflect.ValueOf(value))
+	return nil
 }
 
 func (scv *setConfigVisitor) setString(f *configField) error {
@@ -62,7 +88,7 @@ func (scv *setConfigVisitor) setString(f *configField) error {
 		pos, _ := getArgPosition(f)
 		value = ctx.Args().Get(pos)
 	}
-	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set string value")
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set string")
 	f.value.SetString(value)
 	return nil
 }
@@ -71,7 +97,7 @@ func (scv *setConfigVisitor) setBoolean(f *configField) error {
 	flag, _ := getFlag(f)
 	value := scv.ctx.Bool(flag)
 	f.value.SetBool(value)
-	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set boolean value")
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set boolean")
 	return nil
 }
 
@@ -89,7 +115,7 @@ func (scv *setConfigVisitor) setInt(f *configField) error {
 		}
 		value = iv
 	}
-	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set int value")
+	log.WithFields(log.Fields{"field": f.name(), "value": value}).Debug("set int")
 	f.value.SetInt(int64(value))
 	return nil
 }
