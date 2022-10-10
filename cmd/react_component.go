@@ -14,11 +14,11 @@ import (
 )
 
 type ReactComponentConfig struct {
-	Test     bool   `flag:"test" alias:"t" usage:"add test file"`
-	Story    bool   `flag:"storybook" alias:"sb" usage:"add storybook"`
-	Isolated bool   `flag:"isolated" alias:"i" usage:"isolate component in its own folder"`
-	OutDir   string `flag:"output" alias:"o" usage:"output directory"`
-	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
+	Test   bool   `flag:"test" alias:"t" usage:"add test file"`
+	Story  bool   `flag:"storybook" alias:"s" usage:"add storybook"`
+	Folder bool   `flag:"folder" alias:"f" usage:"generate files in a folder with the name as the component"`
+	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
+	Name   string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
 var ReactComponentCmd = command.NewCliCommand("component", "add react component",
@@ -35,7 +35,7 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactComponentConfig)
 	componentName := strcase.ToCamel(config.Name)
 	outDir := config.OutDir
-	if config.Isolated {
+	if config.Folder {
 		outDir = getIsolatedOutputPath(config.OutDir, componentName)
 	}
 
