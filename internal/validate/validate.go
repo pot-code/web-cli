@@ -17,13 +17,12 @@ import (
 	"golang.org/x/text/language"
 )
 
-var nameExp = `^[-_\w]+$`
+var naturalNameExp = `^[-_\w][-_\w\d]+$`
+var natureNameReg = regexp.MustCompile(naturalNameExp)
 
-var nameReg = regexp.MustCompile(nameExp)
-
-func ValidateVarName(name string) error {
-	if !nameReg.MatchString(name) {
-		return fmt.Errorf("input must be adhere to %s", nameExp)
+func ValidateNatureName(name string) error {
+	if !natureNameReg.MatchString(name) {
+		return fmt.Errorf("input must be in form: %s", naturalNameExp)
 	}
 	return nil
 }
@@ -59,10 +58,10 @@ func registerZhTrans(trans ut.Translator) {
 		t, _ := ut.T("version", fe.Field())
 		return t
 	})
-	V.RegisterTranslation("var", trans, func(ut ut.Translator) error {
-		return ut.Add("var", "{0}必须符合格式'{1}'", false)
+	V.RegisterTranslation("nature", trans, func(ut ut.Translator) error {
+		return ut.Add("nature", "{0}必须符合格式: {1}", false)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("var", fe.Field(), nameExp)
+		t, _ := ut.T("nature", fe.Field(), naturalNameExp)
 		return t
 	})
 }
@@ -74,10 +73,10 @@ func registerEnTrans(trans ut.Translator) {
 		t, _ := ut.T("version", fe.Field())
 		return t
 	})
-	V.RegisterTranslation("var", trans, func(ut ut.Translator) error {
+	V.RegisterTranslation("nature", trans, func(ut ut.Translator) error {
 		return ut.Add("var", "{0} should be in form '{1}'", false)
 	}, func(ut ut.Translator, fe validator.FieldError) string {
-		t, _ := ut.T("var", fe.Field(), nameExp)
+		t, _ := ut.T("var", fe.Field(), naturalNameExp)
 		return t
 	})
 }
@@ -100,8 +99,9 @@ func init() {
 	V.RegisterValidation("version", func(fl validator.FieldLevel) bool {
 		return ValidateVersion(fl.Field().String()) == nil
 	})
-	V.RegisterValidation("var", func(fl validator.FieldLevel) bool {
-		return ValidateVarName(fl.Field().String()) == nil
+
+	V.RegisterValidation("nature", func(fl validator.FieldLevel) bool {
+		return ValidateNatureName(fl.Field().String()) == nil
 	})
 
 	V.RegisterTagNameFunc(func(field reflect.StructField) string {

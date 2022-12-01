@@ -17,7 +17,7 @@ import (
 
 type GoFlagsConfig struct {
 	ConfigPath  string `arg:"0" alias:"CONFIG_PATH" validate:"required"`
-	OutFileName string `flag:"name" alias:"n" usage:"generated file name" validate:"required,var"`
+	OutFileName string `flag:"name" alias:"n" usage:"generated file name" validate:"required,nature"`
 }
 
 var GoFlagsCmd = command.NewCliCommand("flags", "generate pflags registration based on struct",

@@ -17,5 +17,6 @@ app
 tmp
 .vscode
 .DS_Store
+.idea
 templates/*.go
 dist/

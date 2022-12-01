@@ -21,7 +21,7 @@ import (
 )
 
 type GoServiceConfig struct {
-	Module string `arg:"0" alias:"module_name" validate:"required,var"` // go pkg name
+	Module string `arg:"0" alias:"module_name" validate:"required,nature"` // go pkg name
 }
 
 var GoServiceCmd = command.NewCliCommand("service", "add a go service",

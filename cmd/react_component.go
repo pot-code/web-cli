@@ -18,7 +18,7 @@ type ReactComponentConfig struct {
 	Story  bool   `flag:"storybook" alias:"s" usage:"add storybook"`
 	Folder bool   `flag:"folder" alias:"f" usage:"generate files in a folder with the name as the component"`
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
-	Name   string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
+	Name   string `arg:"0" alias:"COMPONENT_NAME" validate:"required,nature"`
 }
 
 var ReactComponentCmd = command.NewCliCommand("component", "add react component",

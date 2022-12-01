@@ -12,8 +12,8 @@ import (
 
 type ReactInitConfig struct {
 	GenType        string `flag:"type" alias:"t" usage:"project type" validate:"oneof=vanilla nextjs"`
-	PackageManager string `flag:"pm" usage:"choose package manager" validate:"oneof=pnpm npm yarn"`
-	ProjectName    string `arg:"0" alias:"project_name" validate:"required,var"`
+	PackageManager string `flag:"package-manager" alias:"pm" usage:"choose package manager" validate:"oneof=pnpm npm yarn"`
+	ProjectName    string `arg:"0" alias:"project_name" validate:"required,nature"`
 }
 
 var ReactInitCmd = command.NewCliCommand("init", "create react project",

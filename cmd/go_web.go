@@ -14,8 +14,8 @@ import (
 )
 
 type GoWebConfig struct {
-	ProjectName string `arg:"0" alias:"project_name" validate:"required,var"`
-	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,var"`
+	ProjectName string `arg:"0" alias:"project_name" validate:"required,nature"`
+	AuthorName  string `flag:"author" alias:"a" usage:"author name for the app" validate:"required,nature"`
 	GoVersion   string `flag:"version" alias:"v" usage:"go compiler version" validate:"version"`
 }
 
