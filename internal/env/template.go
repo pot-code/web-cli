@@ -12,5 +12,5 @@ func GetAbsoluteTemplatePath(name string) string {
 	if ok {
 		return path.Join(e, name)
 	}
-	return ""
+	return name
 }
