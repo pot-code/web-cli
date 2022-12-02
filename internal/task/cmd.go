@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -38,5 +37,10 @@ func (sc *ShellCommandTask) Run() error {
 		proc.Stdout = sc.Out
 	}
 	proc.Stderr = os.Stderr
-	return errors.Wrapf(proc.Run(), "failed to execute command '%s'", sc)
+
+	err := proc.Run()
+	if err != nil {
+		return fmt.Errorf("run command [cmd: %s]: %w", sc, err)
+	}
+	return nil
 }

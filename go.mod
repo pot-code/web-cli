@@ -8,7 +8,6 @@ require (
 	github.com/go-playground/validator/v10 v10.11.1
 	github.com/hashicorp/go-version v1.6.0
 	github.com/iancoleman/strcase v0.2.0
-	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.7.1
 	github.com/urfave/cli/v2 v2.19.2

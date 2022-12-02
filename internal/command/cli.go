@@ -1,8 +1,9 @@
 package command
 
 import (
+	"errors"
+
 	"github.com/go-playground/validator/v10"
-	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/internal/validate"
 	"github.com/urfave/cli/v2"
 )

@@ -1,11 +1,12 @@
 package util
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 
-	"github.com/pkg/errors"
 	"golang.org/x/mod/modfile"
 )
 
@@ -25,19 +26,19 @@ func ParseGoMod(path string) (*GoModMeta, error) {
 	fd, err := os.Open(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, errors.WithStack(ErrGoModNotFound)
+			return nil, ErrGoModNotFound
 		}
-		return nil, errors.Wrap(err, "failed to open go.mod")
+		return nil, fmt.Errorf("open go.mod: %w", err)
 	}
 
 	content, err := ioutil.ReadAll(fd)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to read")
+		return nil, fmt.Errorf("read go.mod: %w", err)
 	}
 
 	mp, err := modfile.Parse(GoModFile, content, nil)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to parse mod file")
+		return nil, fmt.Errorf("parse mod file: %w", err)
 	}
 
 	url := mp.Module.Mod.Path

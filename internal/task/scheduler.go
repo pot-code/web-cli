@@ -31,16 +31,16 @@ func (se *SequentialScheduler) Run() error {
 	start := time.Now()
 	total := len(se.tasks)
 
-	log.WithFields(log.Fields{"task_total": total}).Debug("SequentialExecutor start")
+	log.WithFields(log.Fields{"task_total": total}).Debug("SequentialScheduler start")
 	for i, t := range se.tasks {
-		log.WithFields(log.Fields{"task_total": total}).Debugf("SequentialExecutor running task #%d", i+1)
+		log.WithFields(log.Fields{"task_total": total}).Debugf("SequentialScheduler running task #%d", i+1)
 
 		if err := t.Run(); err != nil {
 			return fmt.Errorf("run task: %w", err)
 		}
 	}
 
-	log.WithFields(log.Fields{"duration": time.Since(start)}).Debug("SequentialExecutor finished")
+	log.WithFields(log.Fields{"duration": time.Since(start)}).Debug("SequentialScheduler finished")
 	return nil
 }
 
@@ -64,7 +64,7 @@ func (pe *ParallelScheduler) Run() error {
 	total := len(pe.tasks)
 	eg := new(errgroup.Group)
 
-	log.WithFields(log.Fields{"task_total": total}).Debug("ParallelExecutor start")
+	log.WithFields(log.Fields{"task_total": total}).Debug("ParallelScheduler start")
 	for _, t := range pe.tasks {
 		task := t // fix loop closure
 		eg.Go(func() error {
@@ -79,6 +79,6 @@ func (pe *ParallelScheduler) Run() error {
 	log.WithFields(log.Fields{
 		"duration": time.Since(start),
 		"total":    len(pe.tasks),
-	}).Debug("ParallelExecutor finished")
+	}).Debug("ParallelScheduler finished")
 	return nil
 }

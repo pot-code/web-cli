@@ -27,8 +27,7 @@ func (p *Pipelines) Apply(src io.Reader, dest io.Writer) error {
 	}
 
 	s := src
-	lastPn := p.getLastPipelineFn()
-	p.pns = p.pns[:l-1] // remove last PipelineFn
+	lastPn := p.pop()
 	for _, fn := range p.pns {
 		d := new(bytes.Buffer)
 		fn(s, d)
@@ -38,10 +37,13 @@ func (p *Pipelines) Apply(src io.Reader, dest io.Writer) error {
 	return nil
 }
 
-func (p *Pipelines) getLastPipelineFn() PipelineFn {
+func (p *Pipelines) pop() PipelineFn {
 	if len(p.pns) == 0 {
 		return nil
 	}
 
-	return p.pns[len(p.pns)-1]
+	lastIdx := len(p.pns) - 1
+	last := p.pns[lastIdx]
+	p.pns = p.pns[:lastIdx]
+	return last
 }

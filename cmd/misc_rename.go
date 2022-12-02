@@ -3,6 +3,7 @@ package cmd
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -12,7 +13,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/internal/command"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
@@ -76,8 +76,11 @@ func (mr *MassRename) Handle(c *cli.Context, cfg interface{}) error {
 		log.WithFields(log.Fields{"oldpath": oldpath, "newpath": newpath}).Info("renaming file")
 		if !config.Dry {
 			err = os.Rename(oldpath, newpath)
+			if err != nil {
+				return fmt.Errorf("rename file %s: %w", oldpath, err)
+			}
 		}
-		return errors.Wrapf(err, "failed to rename file '%s'", oldpath)
+		return nil
 	})
 }
 

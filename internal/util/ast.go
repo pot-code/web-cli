@@ -5,7 +5,6 @@ import (
 	"go/parser"
 	"go/token"
 
-	"github.com/pkg/errors"
 	"golang.org/x/tools/go/ast/astutil"
 )
 
@@ -53,7 +52,7 @@ func (gas *GoAstModifier) ParseAndModify() (fset *token.FileSet, n ast.Node, err
 		for _, a := range actors {
 			if a.Selector(c) {
 				if e := a.Action(c); e != nil {
-					err = errors.WithStack(e)
+					err = e
 					halt = true
 				}
 			}

@@ -1,12 +1,12 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -306,7 +306,7 @@ func (scv *setConfigVisitor) setInt(f *configField) error {
 		av := ctx.Args().Get(pos)
 		iv, err := strconv.Atoi(av)
 		if err != nil {
-			return errors.Wrapf(err, "failed to set field, expected int type but got '%s'", av)
+			return fmt.Errorf("parse %s to int value", av)
 		}
 		value = iv
 	}

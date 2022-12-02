@@ -8,7 +8,6 @@ import (
 	"os"
 	"path"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -76,7 +75,7 @@ func (wft *WriteFileToDiskTask) write(data []byte) error {
 
 	n, err := fd.Write(data)
 	if err != nil {
-		return errors.Wrapf(err, "failed to write data to '%s'", filePath)
+		return fmt.Errorf("write data to %s: %w", filePath, err)
 	}
 	log.WithFields(log.Fields{"bytes": n, "file": filePath}).Debug("write file")
 	return nil
@@ -90,7 +89,11 @@ func (wft *WriteFileToDiskTask) mkdirIfNecessary() error {
 	if fileExists(dir) {
 		return nil
 	}
-	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
+	err := os.MkdirAll(dir, fs.ModePerm)
+	if err != nil {
+		return fmt.Errorf("make dir %s: %w", dir, err)
+	}
+	return nil
 }
 
 func fileExists(path string) bool {
