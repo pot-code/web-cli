@@ -11,8 +11,9 @@ import (
 const TypescriptSuffix = ".ts"
 
 type ReactHookConfig struct {
-	Name   string `arg:"0" alias:"HOOK_NAME" validate:"required,nature"`
-	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
+	Name    string `arg:"0" alias:"HOOK_NAME" validate:"required,nature"`
+	OutDir  string `flag:"output" alias:"o" usage:"destination directory"`
+	AddTest bool   `flag:"add-test" alias:"t" usage:"add associated hook test file"`
 }
 
 var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
@@ -24,10 +25,12 @@ var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
 ).BuildCommand()
 
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
+	var tasks []task.Task
+
 	config := cfg.(*ReactHookConfig)
 	name := strcase.ToLowerCamel(config.Name)
 
-	return task.NewGenerateFileFromTemplateTask(
+	tasks = append(tasks, task.NewGenerateFileFromTemplateTask(
 		name,
 		TypescriptSuffix,
 		config.OutDir,
@@ -37,5 +40,25 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 		map[string]string{
 			"name": name,
 		},
-	).Run()
+	))
+
+	if config.AddTest {
+		tasks = append(tasks, task.NewGenerateFileFromTemplateTask(
+			name,
+			ReactTestSuffix,
+			config.OutDir,
+			false,
+			name,
+			template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_hook_test.tmpl")),
+			map[string]string{
+				"name": name,
+			},
+		))
+	}
+
+	s := task.NewParallelScheduler()
+	for _, t := range tasks {
+		s.AddTask(t)
+	}
+	return s.Run()
 })

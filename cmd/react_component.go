@@ -18,8 +18,8 @@ const (
 )
 
 type ReactComponentConfig struct {
-	AddTest   bool   `flag:"test" alias:"t" usage:"add test file"`
-	AddStory  bool   `flag:"storybook" alias:"s" usage:"add storybook"`
+	AddTest   bool   `flag:"add-test" alias:"t" usage:"add test file"`
+	AddStory  bool   `flag:"add-storybook" alias:"s" usage:"add storybook"`
 	AddFolder bool   `flag:"add-folder" alias:"f" usage:"generate files in a folder with the name as the component"`
 	OutDir    string `flag:"output" alias:"o" usage:"destination directory"`
 	Name      string `arg:"0" alias:"COMPONENT_NAME" validate:"required,nature"`
