@@ -6,8 +6,8 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/env"
 	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/template"
 	"github.com/urfave/cli/v2"
 )
 
@@ -54,7 +54,7 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 		arc.addTest(cn, outDir)
 	}
 
-	e := task.NewParallelExecutor()
+	e := task.NewParallelScheduler()
 	for _, t := range arc.tasks {
 		e.AddTask(t)
 	}
@@ -65,12 +65,13 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 }
 
 func (arc *AddReactComponent) addComponent(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewTemplateRenderTask(
+	arc.tasks = append(arc.tasks, task.NewGenerateFileFromTemplateTask(
 		componentName,
 		ReactComponentSuffix,
 		outDir,
-		task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_component.tmpl")),
 		false,
+		componentName,
+		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_component.tmpl")),
 		map[string]string{
 			"name": componentName,
 		},
@@ -78,12 +79,13 @@ func (arc *AddReactComponent) addComponent(componentName string, outDir string) 
 }
 
 func (arc *AddReactComponent) addStory(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewTemplateRenderTask(
+	arc.tasks = append(arc.tasks, task.NewGenerateFileFromTemplateTask(
 		componentName,
 		StorybookSuffix,
 		outDir,
-		task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_storybook.tmpl")),
 		false,
+		componentName,
+		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_storybook.tmpl")),
 		map[string]string{
 			"name": componentName,
 		},
@@ -91,12 +93,13 @@ func (arc *AddReactComponent) addStory(componentName string, outDir string) {
 }
 
 func (arc *AddReactComponent) addTest(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewTemplateRenderTask(
+	arc.tasks = append(arc.tasks, task.NewGenerateFileFromTemplateTask(
 		componentName,
 		ReactTestSuffix,
 		outDir,
-		task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_test.tmpl")),
 		false,
+		componentName,
+		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_test.tmpl")),
 		map[string]string{
 			"name": componentName,
 		},

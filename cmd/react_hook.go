@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/env"
 	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/internal/template"
 	"github.com/urfave/cli/v2"
 )
 
@@ -27,16 +27,15 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 	config := cfg.(*ReactHookConfig)
 	name := strcase.ToLowerCamel(config.Name)
 
-	return task.NewSequentialExecutor().AddTask(
-		task.NewTemplateRenderTask(
-			name,
-			TypescriptSuffix,
-			config.OutDir,
-			task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_hook.tmpl")),
-			false,
-			map[string]string{
-				"name": name,
-			},
-		),
+	return task.NewGenerateFileFromTemplateTask(
+		name,
+		TypescriptSuffix,
+		config.OutDir,
+		false,
+		name,
+		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_hook.tmpl")),
+		map[string]string{
+			"name": name,
+		},
 	).Run()
 })

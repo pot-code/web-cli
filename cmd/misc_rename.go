@@ -14,7 +14,6 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/util"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
@@ -49,7 +48,7 @@ func NewMassName() *MassRename {
 func (mr *MassRename) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*MassRenameConfig)
 	root := config.Dir
-	if !util.Exists(root) {
+	if !fileExists(root) {
 		return errors.New("DIR not exists")
 	}
 
@@ -144,4 +143,9 @@ func (mr *MassRename) hashFile(fp string) (string, error) {
 	}
 	log.WithFields(log.Fields{"file": fp, "write": w}).Debug("copy file data to hash")
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
 }

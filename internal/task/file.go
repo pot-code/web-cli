@@ -1,0 +1,99 @@
+package task
+
+import (
+	"fmt"
+	"io"
+	"io/fs"
+	"io/ioutil"
+	"os"
+	"path"
+
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+)
+
+type WriteFileTask struct {
+	Name      string
+	Suffix    string
+	Folder    string
+	Overwrite bool
+	data      io.Reader
+}
+
+func NewWriteFileTask(name string, suffix string, folder string, overwrite bool, data io.Reader) *WriteFileTask {
+	return &WriteFileTask{
+		Name:      name,
+		Suffix:    suffix,
+		Folder:    folder,
+		Overwrite: overwrite,
+		data:      data,
+	}
+}
+
+func (wft *WriteFileTask) Run() error {
+	if wft.shouldSkip() {
+		log.WithFields(log.Fields{
+			"file":      wft.getFullPath(),
+			"overwrite": wft.Overwrite,
+		}).Info("emit file [skipped]")
+		return nil
+	}
+
+	data, err := ioutil.ReadAll(wft.data)
+	if err != nil {
+		return fmt.Errorf("WriteFileTask: read data from data source: %w", err)
+	}
+
+	if err := wft.writeToDisk(data); err != nil {
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"file": wft.getFullPath(),
+	}).Info("emit file")
+	return nil
+}
+
+func (wft *WriteFileTask) shouldSkip() bool {
+	return fileExists(wft.getFullPath()) && !wft.Overwrite
+}
+
+func (wft *WriteFileTask) getFullPath() string {
+	return path.Join(wft.Folder, wft.Name+wft.Suffix)
+}
+
+func (wft *WriteFileTask) writeToDisk(data []byte) error {
+	if err := wft.mkdirIfNecessary(); err != nil {
+		return err
+	}
+
+	filePath := wft.getFullPath()
+	fd, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
+	if err != nil {
+		return fmt.Errorf("open file [path: %s]: %w", filePath, err)
+	}
+	defer fd.Close()
+
+	n, err := fd.Write(data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to write data to '%s'", filePath)
+	}
+	log.WithFields(log.Fields{"bytes": n, "file": filePath}).Debug("write file")
+	return nil
+}
+
+func (wft *WriteFileTask) mkdirIfNecessary() error {
+	dir := wft.Folder
+	if dir == "" {
+		return nil
+	}
+	if fileExists(dir) {
+		return nil
+	}
+	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}

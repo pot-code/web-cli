@@ -1,4 +1,4 @@
-package task
+package template
 
 import (
 	"fmt"
@@ -13,13 +13,7 @@ type RenderRequest struct {
 	Data     interface{}
 }
 
-type DefaultTemplateRenderer struct{}
-
-func NewDefaultTemplateRenderer() *DefaultTemplateRenderer {
-	return &DefaultTemplateRenderer{}
-}
-
-func (r *DefaultTemplateRenderer) Render(req *RenderRequest, out io.Writer) error {
+func RenderTextTemplate(req *RenderRequest, out io.Writer) error {
 	t := template.New(req.Name)
 
 	pt, err := t.Parse(req.Template)
