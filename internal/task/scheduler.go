@@ -66,7 +66,7 @@ func (pe *ParallelScheduler) Run() error {
 
 	log.WithFields(log.Fields{"task_total": total}).Debug("ParallelExecutor start")
 	for _, t := range pe.tasks {
-		task := t // fix loopclosure
+		task := t // fix loop closure
 		eg.Go(func() error {
 			return task.Run()
 		})
