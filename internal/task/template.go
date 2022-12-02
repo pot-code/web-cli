@@ -82,7 +82,7 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 }
 
 type GenerateFileFromTemplateTask struct {
-	ft *WriteFileTask
+	ft *WriteFileToDiskTask
 	tr *TemplateRenderTask
 }
 
@@ -96,7 +96,7 @@ func NewGenerateFileFromTemplateTask(
 	templateData interface{}) *GenerateFileFromTemplateTask {
 	b := new(bytes.Buffer)
 	return &GenerateFileFromTemplateTask{
-		NewWriteFileTask(fileName, suffix, folder, overwrite, b),
+		NewWriteFileToDiskTask(fileName, suffix, folder, overwrite, b),
 		NewTemplateRenderTask(templateName, templateProvider, templateData, b),
 	}
 }

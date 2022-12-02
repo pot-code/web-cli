@@ -12,7 +12,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type WriteFileTask struct {
+type WriteFileToDiskTask struct {
 	Name      string
 	Suffix    string
 	Folder    string
@@ -20,8 +20,8 @@ type WriteFileTask struct {
 	data      io.Reader
 }
 
-func NewWriteFileTask(name string, suffix string, folder string, overwrite bool, data io.Reader) *WriteFileTask {
-	return &WriteFileTask{
+func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite bool, data io.Reader) *WriteFileToDiskTask {
+	return &WriteFileToDiskTask{
 		Name:      name,
 		Suffix:    suffix,
 		Folder:    folder,
@@ -30,7 +30,7 @@ func NewWriteFileTask(name string, suffix string, folder string, overwrite bool,
 	}
 }
 
-func (wft *WriteFileTask) Run() error {
+func (wft *WriteFileToDiskTask) Run() error {
 	if wft.shouldSkip() {
 		log.WithFields(log.Fields{
 			"file":      wft.getFullPath(),
@@ -44,7 +44,7 @@ func (wft *WriteFileTask) Run() error {
 		return fmt.Errorf("WriteFileTask: read data from data source: %w", err)
 	}
 
-	if err := wft.writeToDisk(data); err != nil {
+	if err := wft.write(data); err != nil {
 		return err
 	}
 
@@ -54,15 +54,15 @@ func (wft *WriteFileTask) Run() error {
 	return nil
 }
 
-func (wft *WriteFileTask) shouldSkip() bool {
+func (wft *WriteFileToDiskTask) shouldSkip() bool {
 	return fileExists(wft.getFullPath()) && !wft.Overwrite
 }
 
-func (wft *WriteFileTask) getFullPath() string {
+func (wft *WriteFileToDiskTask) getFullPath() string {
 	return path.Join(wft.Folder, wft.Name+wft.Suffix)
 }
 
-func (wft *WriteFileTask) writeToDisk(data []byte) error {
+func (wft *WriteFileToDiskTask) write(data []byte) error {
 	if err := wft.mkdirIfNecessary(); err != nil {
 		return err
 	}
@@ -82,7 +82,7 @@ func (wft *WriteFileTask) writeToDisk(data []byte) error {
 	return nil
 }
 
-func (wft *WriteFileTask) mkdirIfNecessary() error {
+func (wft *WriteFileToDiskTask) mkdirIfNecessary() error {
 	dir := wft.Folder
 	if dir == "" {
 		return nil
