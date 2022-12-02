@@ -18,9 +18,9 @@ type TemplateProvider interface {
 	Get() (io.ReadCloser, error)
 }
 
-var _ Task = &FileGenerationTask{}
+var _ Task = (*TemplateRenderTask)(nil)
 
-type FileGenerationTask struct {
+type TemplateRenderTask struct {
 	Name      string
 	Suffix    string
 	Folder    string
@@ -30,8 +30,8 @@ type FileGenerationTask struct {
 	Data      interface{}
 }
 
-func NewFileGenerationTask(name string, suffix string, folder string, provider TemplateProvider, overwrite bool, data interface{}) *FileGenerationTask {
-	return &FileGenerationTask{
+func NewTemplateRenderTask(name string, suffix string, folder string, provider TemplateProvider, overwrite bool, data interface{}) *TemplateRenderTask {
+	return &TemplateRenderTask{
 		Name:      name,
 		Suffix:    suffix,
 		Folder:    folder,
@@ -41,7 +41,7 @@ func NewFileGenerationTask(name string, suffix string, folder string, provider T
 	}
 }
 
-func (fg *FileGenerationTask) Run() error {
+func (fg *TemplateRenderTask) Run() error {
 	log.WithFields(log.Fields{
 		"name":           fg.Name,
 		"suffix":         fg.Suffix,
@@ -82,27 +82,27 @@ func (fg *FileGenerationTask) Run() error {
 }
 
 // UseTransformers the order matters
-func (fg *FileGenerationTask) AddPipelineFn(pn PipelineFn) *FileGenerationTask {
+func (fg *TemplateRenderTask) AddPipelineFn(pn PipelineFn) *TemplateRenderTask {
 	fg.Pipelines = append(fg.Pipelines, pn)
 	return fg
 }
 
-func (fg *FileGenerationTask) shouldSkip() bool {
+func (fg *TemplateRenderTask) shouldSkip() bool {
 	return util.Exists(fg.getFullPath()) && !fg.Overwrite
 }
 
-func (fg *FileGenerationTask) validateRequest() error {
+func (fg *TemplateRenderTask) validateRequest() error {
 	if fg.Name == "" {
 		return errors.New("empty name")
 	}
 	return nil
 }
 
-func (fg *FileGenerationTask) getFullPath() string {
+func (fg *TemplateRenderTask) getFullPath() string {
 	return path.Join(fg.Folder, fg.Name+fg.Suffix)
 }
 
-func (fg *FileGenerationTask) writeToDisk(b *bytes.Buffer) error {
+func (fg *TemplateRenderTask) writeToDisk(b *bytes.Buffer) error {
 	if err := fg.mkdirIfNecessary(); err != nil {
 		return err
 	}
@@ -127,7 +127,7 @@ func (fg *FileGenerationTask) writeToDisk(b *bytes.Buffer) error {
 	return nil
 }
 
-func (fg *FileGenerationTask) mkdirIfNecessary() error {
+func (fg *TemplateRenderTask) mkdirIfNecessary() error {
 	dir := fg.Folder
 	if dir == "" {
 		return nil
@@ -138,7 +138,7 @@ func (fg *FileGenerationTask) mkdirIfNecessary() error {
 	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
 }
 
-func (fg *FileGenerationTask) applyPipeline(src io.Reader, dest io.Writer) error {
+func (fg *TemplateRenderTask) applyPipeline(src io.Reader, dest io.Writer) error {
 	p := NewPipeline()
 
 	for _, pn := range fg.Pipelines {
@@ -163,7 +163,7 @@ func (fg *FileGenerationTask) applyPipeline(src io.Reader, dest io.Writer) error
 	return nil
 }
 
-func (fg *FileGenerationTask) renderTemplate(out io.Writer) error {
+func (fg *TemplateRenderTask) renderTemplate(out io.Writer) error {
 	p := fg.Provider
 
 	fd, err := p.Get()
@@ -194,7 +194,7 @@ type FileGenerationTree struct {
 	folder   string
 	parent   *FileGenerationTree
 	branches []*FileGenerationTree
-	gens     []*FileGenerationTask
+	gens     []*TemplateRenderTask
 }
 
 func NewFileGenerationTree(root string) *FileGenerationTree {
@@ -212,13 +212,13 @@ func (ftr *FileGenerationTree) Up() *FileGenerationTree {
 	return ftr.parent
 }
 
-func (ftr *FileGenerationTree) AddNodes(gens ...*FileGenerationTask) *FileGenerationTree {
+func (ftr *FileGenerationTree) AddNodes(gens ...*TemplateRenderTask) *FileGenerationTree {
 	ftr.gens = append(ftr.gens, gens...)
 	return ftr
 }
 
-func (ftr *FileGenerationTree) Flatten() []*FileGenerationTask {
-	var result []*FileGenerationTask
+func (ftr *FileGenerationTree) Flatten() []*TemplateRenderTask {
+	var result []*TemplateRenderTask
 
 	root := ftr.root()
 	ftr.flatten(&result, root, "")
@@ -233,7 +233,7 @@ func (ftr *FileGenerationTree) root() *FileGenerationTree {
 	return node
 }
 
-func (ftr *FileGenerationTree) flatten(result *[]*FileGenerationTask, branch *FileGenerationTree, prefix string) {
+func (ftr *FileGenerationTree) flatten(result *[]*TemplateRenderTask, branch *FileGenerationTree, prefix string) {
 	folder := branch.folder
 	prefix = path.Join(prefix, folder)
 	for _, r := range branch.gens {

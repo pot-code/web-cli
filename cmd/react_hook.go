@@ -28,7 +28,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 	name := strcase.ToLowerCamel(config.Name)
 
 	return task.NewSequentialExecutor().AddTask(
-		task.NewFileGenerationTask(
+		task.NewTemplateRenderTask(
 			name,
 			TypescriptSuffix,
 			config.OutDir,

@@ -65,7 +65,7 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 }
 
 func (arc *AddReactComponent) addComponent(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewFileGenerationTask(
+	arc.tasks = append(arc.tasks, task.NewTemplateRenderTask(
 		componentName,
 		ReactComponentSuffix,
 		outDir,
@@ -78,7 +78,7 @@ func (arc *AddReactComponent) addComponent(componentName string, outDir string) 
 }
 
 func (arc *AddReactComponent) addStory(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewFileGenerationTask(
+	arc.tasks = append(arc.tasks, task.NewTemplateRenderTask(
 		componentName,
 		StorybookSuffix,
 		outDir,
@@ -91,7 +91,7 @@ func (arc *AddReactComponent) addStory(componentName string, outDir string) {
 }
 
 func (arc *AddReactComponent) addTest(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewFileGenerationTask(
+	arc.tasks = append(arc.tasks, task.NewTemplateRenderTask(
 		componentName,
 		ReactTestSuffix,
 		outDir,
