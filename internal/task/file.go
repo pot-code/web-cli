@@ -2,103 +2,133 @@ package task
 
 import (
 	"bytes"
+	"fmt"
+	"io"
 	"io/fs"
+	"io/ioutil"
 	"os"
 	"path"
 
 	"github.com/pkg/errors"
-	"github.com/pot-code/web-cli/internal/transformer"
 	"github.com/pot-code/web-cli/internal/util"
 	log "github.com/sirupsen/logrus"
 )
 
-type FileGenerator struct {
-	Name         string
-	Data         *bytes.Buffer
-	Overwrite    bool
-	transformers []transformer.Transformer
+type TemplateProvider interface {
+	Get() (io.ReadCloser, error)
 }
 
-var _ Task = &FileGenerator{}
+var _ Task = &FileGenerationTask{}
 
-func (fg *FileGenerator) Run() error {
+type FileGenerationTask struct {
+	Name      string
+	Suffix    string
+	Folder    string
+	Provider  TemplateProvider
+	Overwrite bool
+	Pipelines []PipelineFn
+	Data      interface{}
+}
+
+func NewFileGenerationTask(name string, suffix string, folder string, provider TemplateProvider, overwrite bool, data interface{}) *FileGenerationTask {
+	return &FileGenerationTask{
+		Name:      name,
+		Suffix:    suffix,
+		Folder:    folder,
+		Overwrite: overwrite,
+		Provider:  provider,
+		Data:      data,
+	}
+}
+
+func (fg *FileGenerationTask) Run() error {
+	log.WithFields(log.Fields{
+		"name":           fg.Name,
+		"suffix":         fg.Suffix,
+		"folder":         fg.Folder,
+		"overwrite":      fg.Overwrite,
+		"pipeline_count": len(fg.Pipelines),
+	}).Debug("generating file")
 	if err := fg.validateRequest(); err != nil {
-		return errors.Wrapf(err, "validate error")
-	}
-
-	if fg.shouldSkip() {
-		log.WithFields(log.Fields{"file": fg.Name, "overwrite": fg.Overwrite}).Info("emit file [skipped]")
-		return nil
-	}
-
-	if err := fg.applyTransformers(); err != nil {
 		return err
 	}
 
-	if err := fg.writeToDisk(); err != nil {
+	if fg.shouldSkip() {
+		log.WithFields(log.Fields{
+			"file":      fg.getFullPath(),
+			"overwrite": fg.Overwrite,
+		}).Info("emit file [skipped]")
+		return nil
+	}
+
+	b := new(bytes.Buffer)
+	if err := fg.renderTemplate(b); err != nil {
+		return err
+	}
+
+	d := new(bytes.Buffer)
+	if err := fg.applyPipeline(b, d); err != nil {
+		return err
+	}
+
+	if err := fg.writeToDisk(d); err != nil {
 		return err
 	}
 
 	log.WithFields(log.Fields{
-		"overwrite": fg.Overwrite,
-		"file":      fg.Name,
-	}).Infof("emit file")
+		"file": fg.getFullPath(),
+	}).Info("emit file")
 	return nil
 }
 
 // UseTransformers the order matters
-func (fg *FileGenerator) UseTransformers(tc ...transformer.Transformer) *FileGenerator {
-	fg.transformers = append(fg.transformers, tc...)
+func (fg *FileGenerationTask) AddPipelineFn(pn PipelineFn) *FileGenerationTask {
+	fg.Pipelines = append(fg.Pipelines, pn)
 	return fg
 }
 
-func (fg *FileGenerator) applyTransformers() error {
-	trans := fg.transformers
-	var tf transformer.TransformerFunc = func(result *bytes.Buffer) error {
-		fg.Data = result
-		return nil
-	}
-	tf = transformer.ApplyTransformers(tf, trans...)
-	return errors.Wrap(tf(fg.Data), "failed to apply transformers")
+func (fg *FileGenerationTask) shouldSkip() bool {
+	return util.Exists(fg.getFullPath()) && !fg.Overwrite
 }
 
-func (fg *FileGenerator) shouldSkip() bool {
-	return util.Exists(fg.Name) && !fg.Overwrite
-}
-
-func (fg *FileGenerator) validateRequest() error {
+func (fg *FileGenerationTask) validateRequest() error {
 	if fg.Name == "" {
-		return errors.New("empty path")
-	}
-	if fg.Data.Len() == 0 {
-		return errors.New("empty data")
+		return errors.New("empty name")
 	}
 	return nil
 }
 
-func (fg *FileGenerator) writeToDisk() error {
+func (fg *FileGenerationTask) getFullPath() string {
+	return path.Join(fg.Folder, fg.Name+fg.Suffix)
+}
+
+func (fg *FileGenerationTask) writeToDisk(b *bytes.Buffer) error {
 	if err := fg.mkdirIfNecessary(); err != nil {
 		return err
 	}
 
-	fn := fg.Name
-	fd, err := os.OpenFile(fn, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
+	filePath := fg.getFullPath()
+	fd, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
 	if err != nil {
-		return errors.Wrap(err, "failed to create target file")
+		return fmt.Errorf("open file [path: %s]: %w", filePath, err)
 	}
 	defer fd.Close()
 
-	w, err := fg.Data.WriteTo(fd)
+	data, err := ioutil.ReadAll(b)
 	if err != nil {
-		return errors.Wrapf(err, "failed to write data to '%s'", fn)
+		return fmt.Errorf("read from buffer: %w", err)
 	}
 
-	log.WithFields(log.Fields{"length": w, "file": fn}).Debug("write info")
+	n, err := fd.Write(data)
+	if err != nil {
+		return errors.Wrapf(err, "failed to write data to '%s'", filePath)
+	}
+	log.WithFields(log.Fields{"bytes": n, "file": filePath}).Debug("write file")
 	return nil
 }
 
-func (fg *FileGenerator) mkdirIfNecessary() error {
-	dir := path.Dir(fg.Name)
+func (fg *FileGenerationTask) mkdirIfNecessary() error {
+	dir := fg.Folder
 	if dir == "" {
 		return nil
 	}
@@ -108,27 +138,71 @@ func (fg *FileGenerator) mkdirIfNecessary() error {
 	return errors.Wrapf(os.MkdirAll(dir, fs.ModePerm), "failed to make '%s'", dir)
 }
 
-func BatchFileGenerationTask(gens []*FileGenerator, trans ...transformer.Transformer) []Task {
-	tasks := make([]Task, len(gens))
-	for i, g := range gens {
-		tasks[i] = g.UseTransformers(trans...)
+func (fg *FileGenerationTask) applyPipeline(src io.Reader, dest io.Writer) error {
+	p := NewPipeline()
+
+	for _, pn := range fg.Pipelines {
+		p.AddPipelineFn(pn)
 	}
-	return tasks
+	p.AddPipelineFn(func(src io.Reader, dest io.Writer) error {
+		r, err := ioutil.ReadAll(src)
+		if err != nil {
+			return fmt.Errorf("read all from src: %w", err)
+		}
+
+		_, err = dest.Write(r)
+		if err != nil {
+			return fmt.Errorf("write to dest: %w", err)
+		}
+		return nil
+	})
+
+	if err := p.Apply(src, dest); err != nil {
+		return fmt.Errorf("apply pipeline: %w", err)
+	}
+	return nil
+}
+
+func (fg *FileGenerationTask) renderTemplate(out io.Writer) error {
+	p := fg.Provider
+
+	fd, err := p.Get()
+	if err != nil {
+		return fmt.Errorf("get template: %w", err)
+	}
+
+	b, err := ioutil.ReadAll(fd)
+	if err != nil {
+		return fmt.Errorf("read template data: %w", err)
+	}
+	defer fd.Close()
+
+	r := NewDefaultTemplateRenderer()
+	log.WithField("template", string(b)).Debug("render template")
+	err = r.Render(&RenderRequest{
+		Name:     fg.Name,
+		Template: string(b),
+		Data:     fg.Data,
+	}, out)
+	if err != nil {
+		return fmt.Errorf("render template: %w", err)
+	}
+	return nil
 }
 
 type FileGenerationTree struct {
-	name     string
+	folder   string
 	parent   *FileGenerationTree
 	branches []*FileGenerationTree
-	gens     []*FileGenerator
+	gens     []*FileGenerationTask
 }
 
 func NewFileGenerationTree(root string) *FileGenerationTree {
-	return &FileGenerationTree{name: root}
+	return &FileGenerationTree{folder: root}
 }
 
-func (ftr *FileGenerationTree) Branch(name string) *FileGenerationTree {
-	nb := NewFileGenerationTree(name)
+func (ftr *FileGenerationTree) Branch(folder string) *FileGenerationTree {
+	nb := NewFileGenerationTree(folder)
 	nb.parent = ftr
 	ftr.branches = append(ftr.branches, nb)
 	return nb
@@ -138,13 +212,13 @@ func (ftr *FileGenerationTree) Up() *FileGenerationTree {
 	return ftr.parent
 }
 
-func (ftr *FileGenerationTree) AddNodes(gens ...*FileGenerator) *FileGenerationTree {
+func (ftr *FileGenerationTree) AddNodes(gens ...*FileGenerationTask) *FileGenerationTree {
 	ftr.gens = append(ftr.gens, gens...)
 	return ftr
 }
 
-func (ftr *FileGenerationTree) Flatten() []*FileGenerator {
-	var result []*FileGenerator
+func (ftr *FileGenerationTree) Flatten() []*FileGenerationTask {
+	var result []*FileGenerationTask
 
 	root := ftr.root()
 	ftr.flatten(&result, root, "")
@@ -159,9 +233,9 @@ func (ftr *FileGenerationTree) root() *FileGenerationTree {
 	return node
 }
 
-func (ftr *FileGenerationTree) flatten(result *[]*FileGenerator, branch *FileGenerationTree, prefix string) {
-	name := branch.name
-	prefix = path.Join(prefix, name)
+func (ftr *FileGenerationTree) flatten(result *[]*FileGenerationTask, branch *FileGenerationTree, prefix string) {
+	folder := branch.folder
+	prefix = path.Join(prefix, folder)
 	for _, r := range branch.gens {
 		r.Name = path.Join(prefix, r.Name)
 		*result = append(*result, r)

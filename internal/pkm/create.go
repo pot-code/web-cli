@@ -7,10 +7,10 @@ import (
 )
 
 type PackageManager interface {
-	Create(template, name string, flags []string) *task.ShellCommand
-	Install(name []string) *task.ShellCommand
-	InstallDev(name []string) *task.ShellCommand
-	Uninstall(name []string) *task.ShellCommand
+	Create(template, name string, flags []string) *task.ShellCommandTask
+	Install(name []string) *task.ShellCommandTask
+	InstallDev(name []string) *task.ShellCommandTask
+	Uninstall(name []string) *task.ShellCommandTask
 }
 
 func NewPackageManager(bin string) PackageManager {

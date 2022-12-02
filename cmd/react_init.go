@@ -58,10 +58,7 @@ func (ir *InitReact) nextjs() task.Task {
 }
 
 func (ir *InitReact) vanilla() task.Task {
-	return task.NewSequentialExecutor(
-		[]task.Task{
-			shell.GitClone("https://github.com/pot-code/react-template.git", ir.ProjectName),
-			shell.GitDeleteHistory(ir.ProjectName),
-		},
-	)
+	return task.NewSequentialExecutor().
+		AddTask(shell.GitClone("https://github.com/pot-code/react-template.git", ir.ProjectName)).
+		AddTask(shell.GitDeleteHistory(ir.ProjectName))
 }

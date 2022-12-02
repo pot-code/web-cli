@@ -1,14 +1,14 @@
 package cmd
 
 import (
-	"bytes"
-
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/env"
 	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/templates"
 	"github.com/urfave/cli/v2"
 )
+
+const TypescriptSuffix = ".ts"
 
 type ReactHookConfig struct {
 	Name   string `arg:"0" alias:"HOOK_NAME" validate:"required,nature"`
@@ -25,16 +25,18 @@ var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
 
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactHookConfig)
-	tree := task.NewFileGenerationTree(config.OutDir)
 	name := strcase.ToLowerCamel(config.Name)
 
-	return task.NewParallelExecutor(
-		task.BatchFileGenerationTask(
-			tree.AddNodes(
-				&task.FileGenerator{
-					Name: name + ".ts",
-					Data: bytes.NewBufferString(templates.ReactHook(name)),
-				},
-			).Flatten()),
+	return task.NewSequentialExecutor().AddTask(
+		task.NewFileGenerationTask(
+			name,
+			TypescriptSuffix,
+			config.OutDir,
+			task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_hook.tmpl")),
+			false,
+			map[string]string{
+				"name": name,
+			},
+		),
 	).Run()
 })

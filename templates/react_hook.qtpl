@@ -1,4 +1,0 @@
-{% func ReactHook(name string) -%}
-export default function {%v name %}() {
-}
-{% endfunc %}

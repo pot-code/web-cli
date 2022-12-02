@@ -1,24 +1,28 @@
 package cmd
 
 import (
-	"bytes"
+	"fmt"
 	"path"
-	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/env"
 	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/templates"
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	StorybookSuffix      = ".stories.tsx"
+	ReactTestSuffix      = ".test.tsx"
+	ReactComponentSuffix = ".tsx"
+)
+
 type ReactComponentConfig struct {
-	Test   bool   `flag:"test" alias:"t" usage:"add test file"`
-	Story  bool   `flag:"storybook" alias:"s" usage:"add storybook"`
-	Folder bool   `flag:"folder" alias:"f" usage:"generate files in a folder with the name as the component"`
-	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
-	Name   string `arg:"0" alias:"COMPONENT_NAME" validate:"required,nature"`
+	AddTest   bool   `flag:"test" alias:"t" usage:"add test file"`
+	AddStory  bool   `flag:"storybook" alias:"s" usage:"add storybook"`
+	AddFolder bool   `flag:"add-folder" alias:"f" usage:"generate files in a folder with the name as the component"`
+	OutDir    string `flag:"output" alias:"o" usage:"destination directory"`
+	Name      string `arg:"0" alias:"COMPONENT_NAME" validate:"required,nature"`
 }
 
 var ReactComponentCmd = command.NewCliCommand("component", "add react component",
@@ -29,68 +33,72 @@ var ReactComponentCmd = command.NewCliCommand("component", "add react component"
 	new(AddReactComponent),
 ).BuildCommand()
 
-type AddReactComponent struct{}
+type AddReactComponent struct {
+	tasks []task.Task
+}
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactComponentConfig)
-	componentName := strcase.ToCamel(config.Name)
+	cn := strcase.ToCamel(config.Name)
+
 	outDir := config.OutDir
-	if config.Folder {
-		outDir = getIsolatedOutputPath(config.OutDir, componentName)
+	if config.AddFolder {
+		outDir = path.Join(outDir, cn)
 	}
 
-	tree := task.NewFileGenerationTree(outDir)
-	log.WithFields(log.Fields{"handler": "AddReactComponent", "path": outDir}).Debug("output path")
-	tree.AddNodes(arc.component(componentName))
-	if config.Story {
-		tree.AddNodes(arc.story(componentName))
+	arc.addComponent(cn, outDir)
+	if config.AddStory {
+		arc.addStory(cn, outDir)
 	}
-	if config.Test {
-		tree.AddNodes(arc.test(componentName))
+	if config.AddTest {
+		arc.addTest(cn, outDir)
 	}
-	return task.NewParallelExecutor(
-		task.BatchFileGenerationTask(
-			tree.Flatten(),
-		),
-	).Run()
-}
 
-func (arc *AddReactComponent) component(componentName string) *task.FileGenerator {
-	return &task.FileGenerator{
-		Name: getComponentFileName(componentName),
-		Data: bytes.NewBufferString(templates.ReactComponent(componentName)),
+	e := task.NewParallelExecutor()
+	for _, t := range arc.tasks {
+		e.AddTask(t)
 	}
-}
-
-func (arc *AddReactComponent) story(componentName string) *task.FileGenerator {
-	return &task.FileGenerator{
-		Name: getStoryFileName(componentName),
-		Data: bytes.NewBufferString(templates.ReactStory(componentName)),
+	if err := e.Run(); err != nil {
+		return fmt.Errorf("execute ParallelExecutor: %w", err)
 	}
+	return nil
 }
 
-func (arc *AddReactComponent) test(componentName string) *task.FileGenerator {
-	return &task.FileGenerator{
-		Name: getTestFileName(componentName),
-		Data: bytes.NewBufferString(templates.ReactTest(componentName)),
-	}
+func (arc *AddReactComponent) addComponent(componentName string, outDir string) {
+	arc.tasks = append(arc.tasks, task.NewFileGenerationTask(
+		componentName,
+		ReactComponentSuffix,
+		outDir,
+		task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_component.tmpl")),
+		false,
+		map[string]string{
+			"name": componentName,
+		},
+	))
 }
 
-func getIsolatedOutputPath(dir, componentName string) string {
-	if strings.HasSuffix(dir, componentName) {
-		return dir
-	}
-	return path.Join(dir, componentName)
+func (arc *AddReactComponent) addStory(componentName string, outDir string) {
+	arc.tasks = append(arc.tasks, task.NewFileGenerationTask(
+		componentName,
+		StorybookSuffix,
+		outDir,
+		task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_storybook.tmpl")),
+		false,
+		map[string]string{
+			"name": componentName,
+		},
+	))
 }
 
-func getStoryFileName(componentName string) string {
-	return componentName + ".stories.tsx"
-}
-
-func getTestFileName(componentName string) string {
-	return componentName + ".test.tsx"
-}
-
-func getComponentFileName(componentName string) string {
-	return componentName + ".tsx"
+func (arc *AddReactComponent) addTest(componentName string, outDir string) {
+	arc.tasks = append(arc.tasks, task.NewFileGenerationTask(
+		componentName,
+		ReactTestSuffix,
+		outDir,
+		task.NewLocalTemplateProvider(env.GetAbsoluteTemplatePath("react_test.tmpl")),
+		false,
+		map[string]string{
+			"name": componentName,
+		},
+	))
 }

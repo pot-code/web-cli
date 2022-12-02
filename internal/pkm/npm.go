@@ -10,39 +10,39 @@ func newNpm(bin string) *npm {
 	return &npm{bin: bin}
 }
 
-func (n *npm) Create(template, name string, flags []string) *task.ShellCommand {
+func (n *npm) Create(template, name string, flags []string) *task.ShellCommandTask {
 	bin := "npx"
 	args := []string{template}
 	args = append(args, flags...)
 	args = append(args, name)
-	return &task.ShellCommand{
+	return &task.ShellCommandTask{
 		Bin:  bin,
 		Args: args,
 	}
 }
 
-func (n *npm) Install(name []string) *task.ShellCommand {
+func (n *npm) Install(name []string) *task.ShellCommandTask {
 	args := []string{"install"}
 	args = append(args, name...)
-	return &task.ShellCommand{
+	return &task.ShellCommandTask{
 		Bin:  n.bin,
 		Args: args,
 	}
 }
 
-func (n *npm) InstallDev(name []string) *task.ShellCommand {
+func (n *npm) InstallDev(name []string) *task.ShellCommandTask {
 	args := []string{"install", "-D"}
 	args = append(args, name...)
-	return &task.ShellCommand{
+	return &task.ShellCommandTask{
 		Bin:  n.bin,
 		Args: args,
 	}
 }
 
-func (n *npm) Uninstall(name []string) *task.ShellCommand {
+func (n *npm) Uninstall(name []string) *task.ShellCommandTask {
 	args := []string{"rm"}
 	args = append(args, name...)
-	return &task.ShellCommand{
+	return &task.ShellCommandTask{
 		Bin:  n.bin,
 		Args: args,
 	}

@@ -11,7 +11,6 @@ var RootCmd = &cli.App{
 	Name:  "web-cli",
 	Usage: "A toolset to improve your development experience",
 	Commands: []*cli.Command{
-		GolangSet,
 		ReactSet,
 		MiscSet,
 	},

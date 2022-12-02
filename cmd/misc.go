@@ -7,8 +7,6 @@ var MiscSet = &cli.Command{
 	Aliases: []string{"m"},
 	Usage:   "un-categorized tools",
 	Subcommands: []*cli.Command{
-		AddTypescriptCmd,
-		AddPriceUpdateCmd,
 		MassRenameCmd,
 	},
 }

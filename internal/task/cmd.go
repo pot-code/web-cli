@@ -11,20 +11,20 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-type ShellCommand struct {
+type ShellCommandTask struct {
 	Bin  string
 	Cwd  string
 	Args []string
 	Out  io.Writer
 }
 
-func (c *ShellCommand) String() string {
+func (c *ShellCommandTask) String() string {
 	return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
 }
 
-var _ Task = &ShellCommand{}
+var _ Task = (*ShellCommandTask)(nil)
 
-func (sc *ShellCommand) Run() error {
+func (sc *ShellCommandTask) Run() error {
 	proc := exec.Command(sc.Bin, sc.Args...)
 
 	log.WithField("cwd", sc.Cwd).Info(sc)

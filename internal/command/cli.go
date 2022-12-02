@@ -62,8 +62,8 @@ func (cc *CliCommand) BuildCommand() *cli.Command {
 
 	efv := newExtractFlagsVisitor()
 	walkConfig(cfg, efv)
-
 	cc.cmd.Flags = append(cc.cmd.Flags, efv.getFlags()...)
+
 	cc.cmd.Before = func(c *cli.Context) error {
 		scv := newSetConfigVisitor(c)
 		walkConfig(cfg, scv)
@@ -82,6 +82,7 @@ func (cc *CliCommand) BuildCommand() *cli.Command {
 		}
 		return nil
 	}
+
 	cc.cmd.Action = func(c *cli.Context) error {
 		for _, s := range cc.handlers {
 			if err := s.Handle(c, cfg); err != nil {
