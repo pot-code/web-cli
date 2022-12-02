@@ -25,12 +25,9 @@ var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
 ).BuildCommand()
 
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
-	var tasks []task.Task
-
 	config := cfg.(*ReactHookConfig)
 	name := strcase.ToLowerCamel(config.Name)
-
-	tasks = append(tasks, task.NewGenerateFileFromTemplateTask(
+	tasks := []task.Task{task.NewGenerateFileFromTemplateTask(
 		name,
 		TypescriptSuffix,
 		config.OutDir,
@@ -40,7 +37,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 		map[string]string{
 			"name": name,
 		},
-	))
+	)}
 
 	if config.AddTest {
 		tasks = append(tasks, task.NewGenerateFileFromTemplateTask(
