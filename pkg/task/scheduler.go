@@ -1,7 +1,6 @@
 package task
 
 import (
-	"fmt"
 	"time"
 
 	log "github.com/sirupsen/logrus"
@@ -36,7 +35,7 @@ func (se *SequentialScheduler) Run() error {
 		log.WithFields(log.Fields{"task_total": total}).Debugf("SequentialScheduler running task #%d", i+1)
 
 		if err := t.Run(); err != nil {
-			return fmt.Errorf("run task: %w", err)
+			return err
 		}
 	}
 
@@ -73,7 +72,7 @@ func (pe *ParallelScheduler) Run() error {
 	}
 	err := eg.Wait()
 	if err != nil {
-		return fmt.Errorf("run task: %w", err)
+		return err
 	}
 
 	log.WithFields(log.Fields{

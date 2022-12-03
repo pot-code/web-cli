@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"path"
 
 	"github.com/iancoleman/strcase"
@@ -59,7 +58,7 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 		e.AddTask(t)
 	}
 	if err := e.Run(); err != nil {
-		return fmt.Errorf("execute ParallelExecutor: %w", err)
+		return err
 	}
 	return nil
 }

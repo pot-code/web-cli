@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -27,17 +26,14 @@ var _ configVisitor = (*extractFlagsVisitor)(nil)
 
 func (efv *extractFlagsVisitor) visit(f *configField) {
 	if !f.isExported() {
-		log.Debugf("config field '%s' is not exported", f.qualifiedName())
 		return
 	}
 
 	if !f.hasTag() {
-		log.Debugf("config field '%s' has no tag", f.qualifiedName())
 		return
 	}
 
 	if _, err := getFieldFlag(f); err != nil {
-		log.Debugf("config field '%s' has no flag", f.qualifiedName())
 		return
 	}
 
@@ -91,15 +87,6 @@ func (efv *extractFlagsVisitor) visitStringSlice(f *configField) {
 		cf.Aliases = alias
 	}
 
-	log.WithFields(log.Fields{
-		"flag":      cf.Name,
-		"meta_name": f.qualifiedName(),
-		"type":      f.typeString(),
-		"required":  cf.Required,
-		"alias":     cf.Aliases,
-		"usage":     cf.Usage,
-		"default":   cf.Value,
-	}).Debug("append flag")
 	efv.flags = append(efv.flags, cf)
 }
 
@@ -125,15 +112,6 @@ func (efv *extractFlagsVisitor) visitString(f *configField) {
 		cf.Aliases = alias
 	}
 
-	log.WithFields(log.Fields{
-		"flag":      cf.Name,
-		"meta_name": f.qualifiedName(),
-		"type":      f.typeString(),
-		"required":  cf.Required,
-		"alias":     cf.Aliases,
-		"usage":     cf.Usage,
-		"default":   cf.Value,
-	}).Debug("append flag")
 	efv.flags = append(efv.flags, cf)
 }
 
@@ -159,15 +137,6 @@ func (efv *extractFlagsVisitor) visitBoolean(f *configField) {
 		cf.Aliases = alias
 	}
 
-	log.WithFields(log.Fields{
-		"flag":      cf.Name,
-		"meta_name": f.qualifiedName(),
-		"type":      f.typeString(),
-		"required":  cf.Required,
-		"alias":     cf.Aliases,
-		"usage":     cf.Usage,
-		"default":   cf.Value,
-	}).Debug("append flag")
 	efv.flags = append(efv.flags, cf)
 }
 
@@ -193,15 +162,6 @@ func (efv *extractFlagsVisitor) visitInt(f *configField) {
 		cf.Aliases = alias
 	}
 
-	log.WithFields(log.Fields{
-		"flag":      cf.Name,
-		"meta_name": f.qualifiedName(),
-		"type":      f.typeString(),
-		"required":  cf.Required,
-		"alias":     cf.Aliases,
-		"usage":     cf.Usage,
-		"default":   cf.Value,
-	}).Debug("append flag")
 	efv.flags = append(efv.flags, cf)
 }
 
@@ -218,18 +178,16 @@ var _ configVisitor = (*setConfigVisitor)(nil)
 
 func (scv *setConfigVisitor) visit(f *configField) {
 	if !f.isExported() {
-		log.Debugf("config field '%s' is not exported", f.qualifiedName())
 		return
 	}
 
 	if !f.hasTag() {
-		log.Debugf("config field '%s' has no tag", f.qualifiedName())
 		return
 	}
 
 	if _, err := getFieldFlag(f); err != nil {
 		if _, err := getFieldArgPosition(f); err != nil {
-			log.WithField("error", err).Debugf("config field '%s' has no flag or positional argument", f.qualifiedName())
+			panic(fmt.Errorf("config field '%s' has no flag or positional argument", f.qualifiedName()))
 		}
 	}
 
@@ -269,7 +227,6 @@ func (scv *setConfigVisitor) setStringSlice(f *configField) error {
 	if flag, err := getFieldFlag(f); err == nil {
 		value = ctx.StringSlice(flag)
 	}
-	log.WithFields(log.Fields{"field": f.qualifiedName(), "value": value}).Debug("set []string")
 	f.value.Set(reflect.ValueOf(value))
 	return nil
 }
@@ -283,7 +240,6 @@ func (scv *setConfigVisitor) setString(f *configField) error {
 		pos, _ := getFieldArgPosition(f)
 		value = ctx.Args().Get(pos)
 	}
-	log.WithFields(log.Fields{"field": f.qualifiedName(), "value": value}).Debug("set string")
 	f.value.SetString(value)
 	return nil
 }
@@ -292,7 +248,6 @@ func (scv *setConfigVisitor) setBoolean(f *configField) error {
 	flag, _ := getFieldFlag(f)
 	value := scv.ctx.Bool(flag)
 	f.value.SetBool(value)
-	log.WithFields(log.Fields{"field": f.qualifiedName(), "value": value}).Debug("set boolean")
 	return nil
 }
 
@@ -310,7 +265,6 @@ func (scv *setConfigVisitor) setInt(f *configField) error {
 		}
 		value = iv
 	}
-	log.WithFields(log.Fields{"field": f.qualifiedName(), "value": value}).Debug("set int")
 	f.value.SetInt(int64(value))
 	return nil
 }
