@@ -67,10 +67,9 @@ func (cc *CliCommand) BuildCommand() *cli.Command {
 
 	cc.cmd.Before = func(c *cli.Context) error {
 		scv := newSetConfigVisitor(c)
-		walkConfig(cfg, scv)
 
-		if errs := scv.getErrors(); errs != nil {
-			return errs[0]
+		if err := walkConfig(cfg, scv); err != nil {
+			return err
 		}
 
 		if err := validate.V.Struct(cfg); err != nil {

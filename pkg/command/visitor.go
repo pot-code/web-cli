@@ -10,8 +10,18 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+var (
+	errEmptyTag = errors.New("empty tag")
+)
+
+var _ configVisitor = (*extractFlagsVisitor)(nil)
+var _ configVisitor = (*setConfigVisitor)(nil)
+
 type configVisitor interface {
-	visit(f *configField)
+	visitSlice(f *configField) error
+	visitString(f *configField) error
+	visitBoolean(f *configField) error
+	visitInt(f *configField) error
 }
 
 type extractFlagsVisitor struct {
@@ -22,40 +32,7 @@ func newExtractFlagsVisitor() *extractFlagsVisitor {
 	return &extractFlagsVisitor{flags: make([]cli.Flag, 0)}
 }
 
-var _ configVisitor = (*extractFlagsVisitor)(nil)
-
-func (efv *extractFlagsVisitor) visit(f *configField) {
-	if !f.isExported() {
-		return
-	}
-
-	if !f.hasTag() {
-		return
-	}
-
-	if _, err := getFieldFlag(f); err != nil {
-		return
-	}
-
-	switch f.fieldKind() {
-	case reflect.String:
-		efv.visitString(f)
-	case reflect.Int:
-		efv.visitInt(f)
-	case reflect.Bool:
-		efv.visitBoolean(f)
-	case reflect.Slice:
-		efv.visitSlice(f)
-	default:
-		panic(fmt.Errorf("unsupported kind '%s'", f.fieldKind()))
-	}
-}
-
-func (efv *extractFlagsVisitor) getFlags() []cli.Flag {
-	return efv.flags
-}
-
-func (efv *extractFlagsVisitor) visitSlice(f *configField) {
+func (efv *extractFlagsVisitor) visitSlice(f *configField) error {
 	et := f.fieldType().Elem()
 	switch et.Kind() {
 	case reflect.String:
@@ -63,10 +40,15 @@ func (efv *extractFlagsVisitor) visitSlice(f *configField) {
 	default:
 		panic(fmt.Errorf("unsupported slice kind '%s'", et.Kind()))
 	}
+	return nil
 }
 
-func (efv *extractFlagsVisitor) visitStringSlice(f *configField) {
-	flag, _ := getFieldFlag(f)
+func (efv *extractFlagsVisitor) visitStringSlice(f *configField) error {
+	flag, err := getFieldFlag(f)
+	if err != nil {
+		return nil
+	}
+
 	cf := &cli.StringSliceFlag{
 		Name: flag,
 	}
@@ -88,10 +70,15 @@ func (efv *extractFlagsVisitor) visitStringSlice(f *configField) {
 	}
 
 	efv.flags = append(efv.flags, cf)
+	return nil
 }
 
-func (efv *extractFlagsVisitor) visitString(f *configField) {
-	flag, _ := getFieldFlag(f)
+func (efv *extractFlagsVisitor) visitString(f *configField) error {
+	flag, err := getFieldFlag(f)
+	if err != nil {
+		return nil
+	}
+
 	cf := &cli.StringFlag{
 		Name: flag,
 	}
@@ -113,10 +100,15 @@ func (efv *extractFlagsVisitor) visitString(f *configField) {
 	}
 
 	efv.flags = append(efv.flags, cf)
+	return nil
 }
 
-func (efv *extractFlagsVisitor) visitBoolean(f *configField) {
-	flag, _ := getFieldFlag(f)
+func (efv *extractFlagsVisitor) visitBoolean(f *configField) error {
+	flag, err := getFieldFlag(f)
+	if err != nil {
+		return nil
+	}
+
 	cf := &cli.BoolFlag{
 		Name: flag,
 	}
@@ -138,10 +130,15 @@ func (efv *extractFlagsVisitor) visitBoolean(f *configField) {
 	}
 
 	efv.flags = append(efv.flags, cf)
+	return nil
 }
 
-func (efv *extractFlagsVisitor) visitInt(f *configField) {
-	flag, _ := getFieldFlag(f)
+func (efv *extractFlagsVisitor) visitInt(f *configField) error {
+	flag, err := getFieldFlag(f)
+	if err != nil {
+		return nil
+	}
+
 	cf := &cli.IntFlag{
 		Name: flag,
 	}
@@ -163,6 +160,11 @@ func (efv *extractFlagsVisitor) visitInt(f *configField) {
 	}
 
 	efv.flags = append(efv.flags, cf)
+	return nil
+}
+
+func (efv *extractFlagsVisitor) getFlags() []cli.Flag {
+	return efv.flags
 }
 
 type setConfigVisitor struct {
@@ -174,54 +176,19 @@ func newSetConfigVisitor(ctx *cli.Context) *setConfigVisitor {
 	return &setConfigVisitor{ctx, nil}
 }
 
-var _ configVisitor = (*setConfigVisitor)(nil)
-
-func (scv *setConfigVisitor) visit(f *configField) {
-	if !f.isExported() {
-		return
-	}
-
-	if !f.hasTag() {
-		return
-	}
-
-	if _, err := getFieldFlag(f); err != nil {
-		if _, err := getFieldArgPosition(f); err != nil {
-			panic(fmt.Errorf("config field '%s' has no flag or positional argument", f.qualifiedName()))
-		}
-	}
-
-	var err error
-	switch f.fieldKind() {
-	case reflect.String:
-		err = scv.setString(f)
-	case reflect.Bool:
-		err = scv.setBoolean(f)
-	case reflect.Int:
-		err = scv.setInt(f)
-	case reflect.Slice:
-		err = scv.setSlice(f)
-	default:
-		panic("unsupported field kind")
-	}
-	if err != nil {
-		scv.errs = append(scv.errs, err)
-	}
-}
-
-func (scv *setConfigVisitor) setSlice(f *configField) error {
+func (scv *setConfigVisitor) visitSlice(f *configField) error {
 	et := f.fieldType().Elem()
 	var err error
 	switch et.Kind() {
 	case reflect.String:
-		err = scv.setStringSlice(f)
+		err = scv.visitStringSlice(f)
 	default:
 		panic(fmt.Errorf("unsupported slice kind '%s'", et.Kind()))
 	}
 	return err
 }
 
-func (scv *setConfigVisitor) setStringSlice(f *configField) error {
+func (scv *setConfigVisitor) visitStringSlice(f *configField) error {
 	var value []string
 	ctx := scv.ctx
 	if flag, err := getFieldFlag(f); err == nil {
@@ -231,7 +198,7 @@ func (scv *setConfigVisitor) setStringSlice(f *configField) error {
 	return nil
 }
 
-func (scv *setConfigVisitor) setString(f *configField) error {
+func (scv *setConfigVisitor) visitString(f *configField) error {
 	var value string
 	ctx := scv.ctx
 	if flag, err := getFieldFlag(f); err == nil {
@@ -244,14 +211,14 @@ func (scv *setConfigVisitor) setString(f *configField) error {
 	return nil
 }
 
-func (scv *setConfigVisitor) setBoolean(f *configField) error {
+func (scv *setConfigVisitor) visitBoolean(f *configField) error {
 	flag, _ := getFieldFlag(f)
 	value := scv.ctx.Bool(flag)
 	f.value.SetBool(value)
 	return nil
 }
 
-func (scv *setConfigVisitor) setInt(f *configField) error {
+func (scv *setConfigVisitor) visitInt(f *configField) error {
 	var value int
 	ctx := scv.ctx
 	if flag, err := getFieldFlag(f); err == nil {
@@ -269,23 +236,13 @@ func (scv *setConfigVisitor) setInt(f *configField) error {
 	return nil
 }
 
-func (scv *setConfigVisitor) getErrors() []error {
-	return scv.errs
-}
-
 // isFieldRequired check if field is required
 func isFieldRequired(f *configField) bool {
-	tag := f.structField.Tag
-	if tag == "" {
+	t, err := getFieldTag(f, "validate")
+	if err != nil {
 		return false
 	}
-
-	vt := tag.Get("validate")
-	if vt == "" {
-		return false
-	}
-
-	return strings.Contains(vt, "required")
+	return strings.Contains(t, "required")
 }
 
 // getFieldChoices parse and get oneof items from field tag
@@ -310,34 +267,30 @@ func getFieldChoices(f *configField) []string {
 }
 
 func getFieldFlag(f *configField) (string, error) {
-	tag := f.structField.Tag
-	if flag := tag.Get("flag"); flag != "" {
-		return flag, nil
-	}
-	return "", errors.New("empty flag")
+	return getFieldTag(f, "flag")
 }
 
 func getFieldAlias(f *configField) ([]string, error) {
-	tag := f.structField.Tag
-	if alias := tag.Get("alias"); alias != "" {
-		return strings.Split(alias, ","), nil
+	t, err := getFieldTag(f, "alias")
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("empty alias")
+	return strings.Split(t, ","), nil
 }
 
 func getFieldArgPosition(f *configField) (int, error) {
-	tag := f.structField.Tag
-	if arg := tag.Get("arg"); arg != "" {
-		return strconv.Atoi(arg)
+	i, err := getFieldTag(f, "arg")
+	if err != nil {
+		return -1, err
 	}
-	return 0, errors.New("empty arg")
+
+	return strconv.Atoi(i)
 }
 
 func getFieldUsage(f *configField) (string, error) {
-	tag := f.structField.Tag
-	usage := tag.Get("usage")
-	if usage == "" {
-		return "", errors.New("empty help")
+	usage, err := getFieldTag(f, "usage")
+	if err == nil {
+		return usage, err
 	}
 
 	choices := getFieldChoices(f)
@@ -345,6 +298,15 @@ func getFieldUsage(f *configField) (string, error) {
 		return usage, nil
 	}
 	return fmt.Sprintf("%s (options: %s)", usage, strings.Join(choices, ", ")), nil
+}
+
+func getFieldTag(f *configField, t string) (string, error) {
+	tag := f.structField.Tag.Get(t)
+	if tag == "" {
+		return "", errEmptyTag
+	}
+
+	return tag, nil
 }
 
 func reflectValueToStringSlice(f reflect.Value) []string {
