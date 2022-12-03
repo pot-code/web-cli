@@ -13,7 +13,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/pkg/command"
 	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )

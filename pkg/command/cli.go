@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pot-code/web-cli/internal/validate"
+	"github.com/pot-code/web-cli/pkg/validate"
 	"github.com/urfave/cli/v2"
 )
 

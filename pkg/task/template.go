@@ -7,7 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/pot-code/web-cli/internal/template"
+	"github.com/pot-code/web-cli/pkg/template"
 	log "github.com/sirupsen/logrus"
 )
 

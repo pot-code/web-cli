@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/task"
-	"github.com/pot-code/web-cli/internal/template"
+	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/pkg/template"
 	"github.com/urfave/cli/v2"
 )
 
