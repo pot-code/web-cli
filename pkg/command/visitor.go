@@ -17,37 +17,6 @@ var (
 var _ configVisitor = (*extractFlagsVisitor)(nil)
 var _ configVisitor = (*setConfigVisitor)(nil)
 
-type configField struct {
-	structField reflect.StructField
-	value       reflect.Value
-}
-
-func newConfigField(structField reflect.StructField, value reflect.Value) *configField {
-	return &configField{
-		structField: structField,
-		value:       value,
-	}
-}
-
-func (f *configField) fieldType() reflect.Type {
-	return f.structField.Type
-}
-
-func (f *configField) fieldKind() reflect.Kind {
-	return f.structField.Type.Kind()
-}
-
-func (f *configField) hasDefaultValue() bool {
-	return !f.value.IsZero()
-}
-
-type configVisitor interface {
-	visitSlice(f *configField) error
-	visitString(f *configField) error
-	visitBoolean(f *configField) error
-	visitInt(f *configField) error
-}
-
 type extractFlagsVisitor struct {
 	flags []cli.Flag
 }
