@@ -2,10 +2,12 @@ package command
 
 import (
 	"errors"
+	"fmt"
 	"reflect"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pot-code/web-cli/pkg/validate"
+	log "github.com/sirupsen/logrus"
 	"github.com/urfave/cli/v2"
 )
 
@@ -85,6 +87,7 @@ func (cc *CliCommand) BuildCommand() *cli.Command {
 	}
 
 	cc.cmd.Action = func(c *cli.Context) error {
+		log.WithFields(log.Fields{"options": fmt.Sprintf("%+v", dc)}).Debugf("execute '%s'", c.Command.FullName())
 		for _, s := range cc.handlers {
 			if err := s.Handle(c, dc); err != nil {
 				return err
