@@ -4,10 +4,13 @@ import (
 	"os"
 
 	"github.com/pot-code/web-cli/cmd"
+	"github.com/pot-code/web-cli/pkg/validate"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	validate.SetupValidator()
+
 	log.SetFormatter(&log.TextFormatter{
 		DisableTimestamp: true,
 		QuoteEmptyFields: true,

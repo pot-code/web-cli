@@ -4,6 +4,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"sync"
 
 	"github.com/go-playground/locales/en"
 	"github.com/go-playground/locales/zh"
@@ -15,7 +16,7 @@ import (
 )
 
 var (
-	V = validator.New()
+	V *validator.Validate
 	T ut.Translator
 )
 
@@ -31,7 +32,16 @@ func getLang() string {
 	return b.String()
 }
 
-func init() {
+func initialize() {
+	var once sync.Once
+	once.Do(func() {
+		V = validator.New()
+	})
+}
+
+func SetupValidator() {
+	initialize()
+
 	en := en.New()
 	zh := zh.New()
 	uni := ut.New(en, en, zh)
