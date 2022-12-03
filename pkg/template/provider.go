@@ -16,7 +16,7 @@ func NewLocalTemplateProvider(p string) *LocalTemplateProvider {
 	return &LocalTemplateProvider{Path: p}
 }
 
-func (p *LocalTemplateProvider) Get() (io.ReadCloser, error) {
+func (p *LocalTemplateProvider) Get() (io.Reader, error) {
 	fd, err := os.Open(p.Path)
 	if err != nil {
 		return nil, fmt.Errorf("open file: %w", err)
@@ -34,7 +34,7 @@ func NewRemoteTemplateProvider(url string) *RemoteTemplateProvider {
 	return &RemoteTemplateProvider{URL: url}
 }
 
-func (p *RemoteTemplateProvider) Get() (io.ReadCloser, error) {
+func (p *RemoteTemplateProvider) Get() (io.Reader, error) {
 	conn := http.Client{
 		Timeout: ConnectionTimeout,
 	}

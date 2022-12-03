@@ -12,7 +12,7 @@ import (
 )
 
 type TemplateProvider interface {
-	Get() (io.ReadCloser, error)
+	Get() (io.Reader, error)
 }
 
 var _ Task = (*TemplateRenderTask)(nil)
@@ -67,7 +67,6 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 	if err != nil {
 		return fmt.Errorf("read template data: %w", err)
 	}
-	defer fd.Close()
 
 	log.WithField("template", string(b)).Debug("render template")
 	err = template.RenderTextTemplate(&template.RenderRequest{
