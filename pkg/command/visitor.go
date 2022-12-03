@@ -17,6 +17,30 @@ var (
 var _ configVisitor = (*extractFlagsVisitor)(nil)
 var _ configVisitor = (*setConfigVisitor)(nil)
 
+type configField struct {
+	structField reflect.StructField
+	value       reflect.Value
+}
+
+func newConfigField(structField reflect.StructField, value reflect.Value) *configField {
+	return &configField{
+		structField: structField,
+		value:       value,
+	}
+}
+
+func (f *configField) fieldType() reflect.Type {
+	return f.structField.Type
+}
+
+func (f *configField) fieldKind() reflect.Kind {
+	return f.structField.Type.Kind()
+}
+
+func (f *configField) hasDefaultValue() bool {
+	return !f.value.IsZero()
+}
+
 type configVisitor interface {
 	visitSlice(f *configField) error
 	visitString(f *configField) error
@@ -168,12 +192,11 @@ func (efv *extractFlagsVisitor) getFlags() []cli.Flag {
 }
 
 type setConfigVisitor struct {
-	ctx  *cli.Context
-	errs []error
+	ctx *cli.Context
 }
 
 func newSetConfigVisitor(ctx *cli.Context) *setConfigVisitor {
-	return &setConfigVisitor{ctx, nil}
+	return &setConfigVisitor{ctx}
 }
 
 func (scv *setConfigVisitor) visitSlice(f *configField) error {
@@ -228,7 +251,7 @@ func (scv *setConfigVisitor) visitInt(f *configField) error {
 		av := ctx.Args().Get(pos)
 		iv, err := strconv.Atoi(av)
 		if err != nil {
-			return fmt.Errorf("parse %s to int value", av)
+			return fmt.Errorf("parse %s to int", av)
 		}
 		value = iv
 	}
@@ -305,7 +328,6 @@ func getFieldTag(f *configField, t string) (string, error) {
 	if tag == "" {
 		return "", errEmptyTag
 	}
-
 	return tag, nil
 }
 
