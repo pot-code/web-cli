@@ -2,6 +2,7 @@ package command
 
 import (
 	"errors"
+	"reflect"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pot-code/web-cli/pkg/validate"
@@ -9,9 +10,9 @@ import (
 )
 
 type CliCommand struct {
-	cmd      *cli.Command
-	cfg      interface{}
-	handlers []CommandHandler
+	cmd           *cli.Command
+	defaultConfig interface{}
+	handlers      []CommandHandler
 }
 
 type CommandOption interface {
@@ -42,7 +43,7 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewCliCommand(name, usage string, defaultConfig interface{}, options ...CommandOption) *CliCommand {
+func NewCliCommand(name, usage string, configSchema interface{}, options ...CommandOption) *CliCommand {
 	cmd := &cli.Command{
 		Name:  name,
 		Usage: usage,
@@ -50,7 +51,7 @@ func NewCliCommand(name, usage string, defaultConfig interface{}, options ...Com
 	for _, option := range options {
 		option.apply(cmd)
 	}
-	return &CliCommand{cmd, defaultConfig, []CommandHandler{}}
+	return &CliCommand{cmd, configSchema, []CommandHandler{}}
 }
 
 func (cc *CliCommand) AddHandlers(h ...CommandHandler) *CliCommand {
@@ -59,20 +60,20 @@ func (cc *CliCommand) AddHandlers(h ...CommandHandler) *CliCommand {
 }
 
 func (cc *CliCommand) BuildCommand() *cli.Command {
-	cfg := cc.cfg
+	dc := cc.defaultConfig
+	validateConfig(dc)
 
 	efv := newExtractFlagsVisitor()
-	walkConfig(cfg, efv)
+	walkConfig(dc, efv)
 	cc.cmd.Flags = append(cc.cmd.Flags, efv.getFlags()...)
 
 	cc.cmd.Before = func(c *cli.Context) error {
 		scv := newSetConfigVisitor(c)
-
-		if err := walkConfig(cfg, scv); err != nil {
+		if err := walkConfig(dc, scv); err != nil {
 			return err
 		}
 
-		if err := validate.V.Struct(cfg); err != nil {
+		if err := validate.V.Struct(dc); err != nil {
 			if v, ok := err.(validator.ValidationErrors); ok {
 				msg := v[0].Translate(validate.T)
 				cli.ShowCommandHelp(c, c.Command.Name)
@@ -85,11 +86,26 @@ func (cc *CliCommand) BuildCommand() *cli.Command {
 
 	cc.cmd.Action = func(c *cli.Context) error {
 		for _, s := range cc.handlers {
-			if err := s.Handle(c, cfg); err != nil {
+			if err := s.Handle(c, dc); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
 	return cc.cmd
+}
+
+func validateConfig(config interface{}) {
+	if config == nil {
+		panic("config is nil")
+	}
+
+	if !isPointerType(config) {
+		panic("config value must be of pointer type")
+	}
+
+	configType := reflect.TypeOf(config).Elem()
+	if configType.Kind() != reflect.Struct {
+		panic("config must be of struct type")
+	}
 }

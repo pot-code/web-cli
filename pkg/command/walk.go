@@ -6,20 +6,8 @@ import (
 )
 
 func walkConfig(config interface{}, v configVisitor) error {
-	if config == nil {
-		return nil
-	}
-
-	if !isPointerType(config) {
-		panic("config value must be of pointer type")
-	}
-
-	configType := reflect.TypeOf(config).Elem()
-	if configType.Kind() != reflect.Struct {
-		panic("config must be of struct type")
-	}
-
 	var err error
+	configType := reflect.TypeOf(config).Elem()
 	configValue := reflect.ValueOf(config).Elem()
 	for i := configValue.NumField() - 1; i >= 0; i-- {
 		ft := configType.Field(i)
