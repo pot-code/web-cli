@@ -5,30 +5,6 @@ import (
 	"reflect"
 )
 
-type configField struct {
-	structField reflect.StructField
-	value       reflect.Value
-}
-
-func newConfigField(structField reflect.StructField, value reflect.Value) *configField {
-	return &configField{
-		structField: structField,
-		value:       value,
-	}
-}
-
-func (f *configField) fieldType() reflect.Type {
-	return f.structField.Type
-}
-
-func (f *configField) fieldKind() reflect.Kind {
-	return f.structField.Type.Kind()
-}
-
-func (f *configField) hasDefaultValue() bool {
-	return !f.value.IsZero()
-}
-
 type configVisitor interface {
 	visitSlice(f *configField) error
 	visitString(f *configField) error
@@ -48,7 +24,7 @@ func walkConfig(config interface{}, v configVisitor) error {
 		}
 
 		cf := newConfigField(ft, fv)
-		switch cf.fieldKind() {
+		switch cf.getFieldKind() {
 		case reflect.String:
 			err = v.visitString(cf)
 		case reflect.Int:
@@ -58,7 +34,7 @@ func walkConfig(config interface{}, v configVisitor) error {
 		case reflect.Slice:
 			err = v.visitSlice(cf)
 		default:
-			panic(fmt.Errorf("unsupported config field kind: %s", cf.fieldType()))
+			panic(fmt.Errorf("unsupported config field kind: %s", cf.getFieldType()))
 		}
 
 		if err != nil {
