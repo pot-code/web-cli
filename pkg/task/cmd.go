@@ -25,8 +25,7 @@ var _ Task = (*ShellCommandTask)(nil)
 
 func (sc *ShellCommandTask) Run() error {
 	proc := exec.Command(sc.Bin, sc.Args...)
-
-	log.WithField("cwd", sc.Cwd).Info(sc)
+	log.WithField("cwd", sc.Cwd).Infof("run shell command '%s'", sc)
 
 	if sc.Cwd != "" {
 		proc.Dir = sc.Cwd

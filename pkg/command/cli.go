@@ -87,7 +87,7 @@ func (cc *CliCommand) BuildCommand() *cli.Command {
 	}
 
 	cc.cmd.Action = func(c *cli.Context) error {
-		log.WithFields(log.Fields{"options": fmt.Sprintf("%+v", dc)}).Debugf("execute '%s'", c.Command.FullName())
+		log.WithFields(log.Fields{"config": fmt.Sprintf("%+v", dc)}).Debugf("run command '%s'", c.Command.FullName())
 		for _, s := range cc.handlers {
 			if err := s.Handle(c, dc); err != nil {
 				return err
