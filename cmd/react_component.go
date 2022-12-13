@@ -5,8 +5,8 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
-	"github.com/pot-code/web-cli/pkg/template"
 	"github.com/urfave/cli/v2"
 )
 
@@ -69,8 +69,8 @@ func (arc *AddReactComponent) addComponent(componentName string, outDir string) 
 		ReactComponentSuffix,
 		outDir,
 		false,
-		componentName,
-		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_component.tmpl")),
+		"react_component",
+		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_component.tmpl")),
 		map[string]string{
 			"name": componentName,
 		},
@@ -83,8 +83,8 @@ func (arc *AddReactComponent) addStory(componentName string, outDir string) {
 		StorybookSuffix,
 		outDir,
 		false,
-		componentName,
-		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_storybook.tmpl")),
+		"react_storybook",
+		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_storybook.tmpl")),
 		map[string]string{
 			"name": componentName,
 		},
@@ -97,8 +97,8 @@ func (arc *AddReactComponent) addTest(componentName string, outDir string) {
 		ReactTestSuffix,
 		outDir,
 		false,
-		componentName,
-		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_test.tmpl")),
+		"react_test",
+		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_test.tmpl")),
 		map[string]string{
 			"name": componentName,
 		},

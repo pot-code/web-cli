@@ -1,4 +1,4 @@
-package template
+package provider
 
 import (
 	"io/ioutil"
@@ -8,7 +8,7 @@ import (
 )
 
 func TestLocalProvider_Get(t *testing.T) {
-	p := NewLocalTemplateProvider("./__fixture__/test.tmpl")
+	p := NewLocalFileProvider("./__fixture__/test.tmpl")
 
 	rc, err := p.Get()
 	assert.Nil(t, err)
@@ -20,7 +20,7 @@ func TestLocalProvider_Get(t *testing.T) {
 }
 
 func TestRemoteProvider_Get(t *testing.T) {
-	p := NewRemoteTemplateProvider("https://raw.githubusercontent.com/pot-code/react-template/master/.nvmrc")
+	p := NewRemoteFileProvider("https://raw.githubusercontent.com/pot-code/react-template/master/.nvmrc")
 
 	rc, err := p.Get()
 	assert.Nil(t, err)

@@ -3,8 +3,8 @@ package cmd
 import (
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
-	"github.com/pot-code/web-cli/pkg/template"
 	"github.com/urfave/cli/v2"
 )
 
@@ -32,8 +32,8 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 		TypescriptSuffix,
 		config.OutDir,
 		false,
-		name,
-		template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_hook.tmpl")),
+		"react_hook",
+		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_hook.tmpl")),
 		map[string]string{
 			"name": name,
 		},
@@ -45,8 +45,8 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 			ReactTestSuffix,
 			config.OutDir,
 			false,
-			name,
-			template.NewLocalTemplateProvider(GetAbsoluteTemplatePath("react_hook_test.tmpl")),
+			"react_hook_test",
+			provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_hook_test.tmpl")),
 			map[string]string{
 				"name": name,
 			},

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"path"
 
@@ -38,12 +37,7 @@ func (wft *WriteFileToDiskTask) Run() error {
 		return nil
 	}
 
-	data, err := ioutil.ReadAll(wft.data)
-	if err != nil {
-		return fmt.Errorf("WriteFileTask: read data from data source: %w", err)
-	}
-
-	if err := wft.write(data); err != nil {
+	if err := wft.write(); err != nil {
 		return err
 	}
 
@@ -61,7 +55,7 @@ func (wft *WriteFileToDiskTask) getFullPath() string {
 	return path.Join(wft.Folder, wft.Name+wft.Suffix)
 }
 
-func (wft *WriteFileToDiskTask) write(data []byte) error {
+func (wft *WriteFileToDiskTask) write() error {
 	if err := wft.mkdirIfNecessary(); err != nil {
 		return err
 	}
@@ -73,7 +67,7 @@ func (wft *WriteFileToDiskTask) write(data []byte) error {
 	}
 	defer fd.Close()
 
-	n, err := fd.Write(data)
+	n, err := io.Copy(fd, wft.data)
 	if err != nil {
 		return fmt.Errorf("write data to %s: %w", filePath, err)
 	}

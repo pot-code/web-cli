@@ -1,7 +1,6 @@
 package task
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -35,9 +34,6 @@ func NewTemplateRenderTask(name string, provider TemplateProvider, data interfac
 }
 
 func (trt *TemplateRenderTask) Run() error {
-	log.WithFields(log.Fields{
-		"template_name": trt.Name,
-	}).Debug("render template")
 	if err := trt.validateTask(); err != nil {
 		return err
 	}
@@ -68,7 +64,7 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 		return fmt.Errorf("read template data: %w", err)
 	}
 
-	log.WithField("template", string(b)).Debug("render template")
+	log.WithFields(log.Fields{"template_name": trt.Name, "data": trt.Data}).Debug("render template")
 	err = template.RenderTextTemplate(&template.RenderRequest{
 		Name:     trt.Name,
 		Template: string(b),
@@ -76,37 +72,6 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 	}, trt.out)
 	if err != nil {
 		return fmt.Errorf("render template: %w", err)
-	}
-	return nil
-}
-
-type GenerateFileFromTemplateTask struct {
-	ft *WriteFileToDiskTask
-	tr *TemplateRenderTask
-}
-
-func NewGenerateFileFromTemplateTask(
-	fileName string,
-	suffix string,
-	folder string,
-	overwrite bool,
-	templateName string,
-	templateProvider TemplateProvider,
-	templateData interface{}) *GenerateFileFromTemplateTask {
-	b := new(bytes.Buffer)
-	return &GenerateFileFromTemplateTask{
-		NewWriteFileToDiskTask(fileName, suffix, folder, overwrite, b),
-		NewTemplateRenderTask(templateName, templateProvider, templateData, b),
-	}
-}
-
-func (t *GenerateFileFromTemplateTask) Run() error {
-	err := NewSequentialScheduler().
-		AddTask(t.tr).
-		AddTask(t.ft).
-		Run()
-	if err != nil {
-		return fmt.Errorf("run GenerateFileFromTemplateTask: %w", err)
 	}
 	return nil
 }
