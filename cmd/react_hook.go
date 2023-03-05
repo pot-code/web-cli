@@ -13,7 +13,7 @@ import (
 const TypescriptSuffix = ".ts"
 
 type ReactHookConfig struct {
-	Name    string `arg:"0" alias:"HOOK_NAME" validate:"required,nature"`
+	Name    string `arg:"0" alias:"HOOK_NAME" validate:"required,var"`
 	OutDir  string `flag:"output" alias:"o" usage:"destination directory"`
 	AddTest bool   `flag:"add-test" alias:"t" usage:"add associated hook test file"`
 }

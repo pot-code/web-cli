@@ -7,12 +7,12 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-var naturalNameExp = `^[-_\w][-_\w\d]+$`
-var natureNameReg = regexp.MustCompile(naturalNameExp)
+var variableNameExp = `^[-_\w][-_\w\d]+$`
+var variableNameReg = regexp.MustCompile(variableNameExp)
 
-func ValidateNatureName(name string) error {
-	if !natureNameReg.MatchString(name) {
-		return fmt.Errorf("input must be in form: %s", naturalNameExp)
+func ValidateVariableName(name string) error {
+	if !variableNameReg.MatchString(name) {
+		return fmt.Errorf("input must be in form: %s", variableNameExp)
 	}
 	return nil
 }

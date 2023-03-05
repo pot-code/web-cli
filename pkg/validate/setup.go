@@ -60,8 +60,8 @@ func InitValidator() {
 		return ValidateVersion(fl.Field().String()) == nil
 	})
 
-	V.RegisterValidation("nature", func(fl validator.FieldLevel) bool {
-		return ValidateNatureName(fl.Field().String()) == nil
+	V.RegisterValidation("var", func(fl validator.FieldLevel) bool {
+		return ValidateVariableName(fl.Field().String()) == nil
 	})
 
 	V.RegisterTagNameFunc(func(field reflect.StructField) string {
