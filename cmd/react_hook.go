@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"bytes"
+
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
 	"github.com/pot-code/web-cli/pkg/provider"
@@ -27,30 +29,22 @@ var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*ReactHookConfig)
 	name := strcase.ToLowerCamel(config.Name)
-	tasks := []task.Task{task.NewGenerateFileFromTemplateTask(
-		name,
-		TypescriptSuffix,
-		config.OutDir,
-		false,
-		"react_hook",
-		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_hook.tmpl")),
-		map[string]string{
-			"name": name,
-		},
-	)}
+
+	b1 := new(bytes.Buffer)
+	tasks := []task.Task{
+		task.NewSequentialScheduler().
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react_hook.tmpl"), b1)).
+			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": name}, b1, b1)).
+			AddTask(task.NewWriteFileToDiskTask(name, TypescriptSuffix, config.OutDir, false, b1)),
+	}
 
 	if config.AddTest {
-		tasks = append(tasks, task.NewGenerateFileFromTemplateTask(
-			name,
-			ReactTestSuffix,
-			config.OutDir,
-			false,
-			"react_hook_test",
-			provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_hook_test.tmpl")),
-			map[string]string{
-				"name": name,
-			},
-		))
+		b2 := new(bytes.Buffer)
+		tasks = append(tasks,
+			task.NewSequentialScheduler().
+				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react_hook_test.tmpl"), b2)).
+				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": name}, b2, b2)).
+				AddTask(task.NewWriteFileToDiskTask(name, ReactTestSuffix, config.OutDir, false, b2)))
 	}
 
 	s := task.NewParallelScheduler()

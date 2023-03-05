@@ -1,0 +1,6 @@
+import { renderHook } from "@testing-library/react";
+import {{.name}} from "./{{.name}}";
+
+test("empty data", () => {
+  const { result } = renderHook(() => {{.name}}());
+});

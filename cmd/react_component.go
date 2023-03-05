@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bytes"
 	"path"
 
 	"github.com/iancoleman/strcase"
@@ -64,43 +65,28 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 }
 
 func (arc *AddReactComponent) addComponent(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewGenerateFileFromTemplateTask(
-		componentName,
-		ReactComponentSuffix,
-		outDir,
-		false,
-		"react_component",
-		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_component.tmpl")),
-		map[string]string{
-			"name": componentName,
-		},
-	))
+	b := new(bytes.Buffer)
+	arc.tasks = append(arc.tasks,
+		task.NewSequentialScheduler().
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react_component.tmpl"), b)).
+			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": componentName}, b, b)).
+			AddTask(task.NewWriteFileToDiskTask(componentName, ReactComponentSuffix, outDir, false, b)))
 }
 
 func (arc *AddReactComponent) addStory(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewGenerateFileFromTemplateTask(
-		componentName,
-		StorybookSuffix,
-		outDir,
-		false,
-		"react_storybook",
-		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_storybook.tmpl")),
-		map[string]string{
-			"name": componentName,
-		},
-	))
+	b := new(bytes.Buffer)
+	arc.tasks = append(arc.tasks,
+		task.NewSequentialScheduler().
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react_storybook.tmpl"), b)).
+			AddTask(task.NewTemplateRenderTask("react_storybook", map[string]string{"name": componentName}, b, b)).
+			AddTask(task.NewWriteFileToDiskTask(componentName, StorybookSuffix, outDir, false, b)))
 }
 
 func (arc *AddReactComponent) addTest(componentName string, outDir string) {
-	arc.tasks = append(arc.tasks, task.NewGenerateFileFromTemplateTask(
-		componentName,
-		ReactTestSuffix,
-		outDir,
-		false,
-		"react_test",
-		provider.NewLocalFileProvider(GetAbsoluteTemplatePath("react_test.tmpl")),
-		map[string]string{
-			"name": componentName,
-		},
-	))
+	b := new(bytes.Buffer)
+	arc.tasks = append(arc.tasks,
+		task.NewSequentialScheduler().
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react_test.tmpl"), b)).
+			AddTask(task.NewTemplateRenderTask("react_test", map[string]string{"name": componentName}, b, b)).
+			AddTask(task.NewWriteFileToDiskTask(componentName, ReactTestSuffix, outDir, false, b)))
 }

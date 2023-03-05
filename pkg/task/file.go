@@ -18,13 +18,13 @@ type WriteFileToDiskTask struct {
 	data      io.Reader
 }
 
-func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite bool, data io.Reader) *WriteFileToDiskTask {
+func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite bool, in io.Reader) *WriteFileToDiskTask {
 	return &WriteFileToDiskTask{
 		Name:      name,
 		Suffix:    suffix,
 		Folder:    folder,
 		Overwrite: overwrite,
-		data:      data,
+		data:      in,
 	}
 }
 
@@ -99,33 +99,23 @@ type FileProvider interface {
 	Get() (io.Reader, error)
 }
 
-type GenerateFileFromProviderTask struct {
-	fileName  string
-	suffix    string
-	folder    string
-	overwrite bool
-	provider  FileProvider
+type ReadFromProviderTask struct {
+	provider FileProvider
+	out      io.Writer
 }
 
-func NewGenerateFileFromProvider(
-	fileName string,
-	suffix string,
-	folder string,
-	overwrite bool,
-	provider FileProvider,
-) *GenerateFileFromProviderTask {
-	return &GenerateFileFromProviderTask{fileName: fileName, suffix: suffix, folder: folder, overwrite: overwrite, provider: provider}
+func NewReadFromProviderTask(provider FileProvider, out io.Writer) *ReadFromProviderTask {
+	return &ReadFromProviderTask{provider: provider, out: out}
 }
 
-func (t *GenerateFileFromProviderTask) Run() error {
+func (t *ReadFromProviderTask) Run() error {
 	fd, err := t.provider.Get()
 	if err != nil {
-		return fmt.Errorf("get template from provider: %w", err)
+		return fmt.Errorf("get file from provider: %w", err)
 	}
 
-	fdt := NewWriteFileToDiskTask(t.fileName, t.suffix, t.folder, t.overwrite, fd)
-	if err := fdt.Run(); err != nil {
-		return fmt.Errorf("write file to disk [file_name: %s folder: %s]: %w", t.fileName, t.folder, err)
+	if _, err := io.Copy(t.out, fd); err != nil {
+		return fmt.Errorf("copy file from provider: %w", err)
 	}
 	return nil
 }
