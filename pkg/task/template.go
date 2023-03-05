@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"text/template"
 
 	log "github.com/sirupsen/logrus"
@@ -47,7 +46,7 @@ func (trt *TemplateRenderTask) validateTask() error {
 }
 
 func (trt *TemplateRenderTask) renderTemplate() error {
-	b, err := ioutil.ReadAll(trt.in)
+	b, err := io.ReadAll(trt.in)
 	if err != nil {
 		return fmt.Errorf("read template data: %w", err)
 	}
@@ -73,12 +72,10 @@ type RenderRequest struct {
 
 func RenderTextTemplate(req *RenderRequest, out io.Writer) error {
 	t := template.New(req.name)
-
 	pt, err := t.Parse(req.template)
 	if err != nil {
 		return fmt.Errorf("parse template [name: %s]: %w", req.name, err)
 	}
-
 	if err := pt.Execute(out, req.data); err != nil {
 		return fmt.Errorf("execute template [name: %s]: %w", req.name, err)
 	}

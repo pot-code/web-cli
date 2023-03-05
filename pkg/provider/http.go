@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"time"
@@ -18,6 +19,12 @@ func NewRemoteFileProvider(url string) *RemoteFileProvider {
 }
 
 func (p *RemoteFileProvider) Get() (io.Reader, error) {
+	log.WithFields(log.Fields{
+		"path":     p.url,
+		"provider": "NewRemoteFileProvider",
+		"timeout":  ConnectionTimeout.String(),
+	}).Debug("fetch file")
+
 	conn := http.Client{
 		Timeout: ConnectionTimeout,
 	}
