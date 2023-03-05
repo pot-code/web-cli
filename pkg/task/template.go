@@ -10,44 +10,10 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// type GenerateFromTemplateTask struct {
-// 	ft *WriteFileToDiskTask
-// 	tr *TemplateRenderTask
-// }
-
-// func NewGenerateFromTemplateTask(
-// 	fileName string,
-// 	suffix string,
-// 	folder string,
-// 	overwrite bool,
-// 	templateName string,
-// 	templateProvider TemplateProvider,
-// 	templateData interface{}) *GenerateFromTemplateTask {
-// 	b := new(bytes.Buffer)
-// 	return &GenerateFromTemplateTask{
-// 		NewWriteFileToDiskTask(fileName, suffix, folder, overwrite, b),
-// 		NewTemplateRenderTask(templateName, templateProvider, templateData, b),
-// 	}
-// }
-
-// func (t *GenerateFromTemplateTask) Run() error {
-// 	err := NewSequentialScheduler().
-// 		AddTask(t.tr).
-// 		AddTask(t.ft).
-// 		Run()
-// 	if err != nil {
-// 		return fmt.Errorf("run GenerateFileFromTemplateTask: %w", err)
-// 	}
-// 	return nil
-// }
-
-// type TemplateProvider interface {
-// 	Get() (io.Reader, error)
-// }
-
 type TemplateRenderTask struct {
-	// template name
+	// name template name
 	name string
+	// data template data
 	data interface{}
 	in   io.Reader
 	out  io.Writer
@@ -88,9 +54,9 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 
 	log.WithFields(log.Fields{"template_name": trt.name, "data": trt.data}).Debug("render template")
 	err = RenderTextTemplate(&RenderRequest{
-		Name:     trt.name,
-		Template: string(b),
-		Data:     trt.data,
+		name:     trt.name,
+		template: string(b),
+		data:     trt.data,
 	}, trt.out)
 	if err != nil {
 		return fmt.Errorf("render template: %w", err)
@@ -99,22 +65,22 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 }
 
 type RenderRequest struct {
-	// template name
-	Name     string
-	Template string
-	Data     interface{}
+	// name template name
+	name     string
+	template string
+	data     interface{}
 }
 
 func RenderTextTemplate(req *RenderRequest, out io.Writer) error {
-	t := template.New(req.Name)
+	t := template.New(req.name)
 
-	pt, err := t.Parse(req.Template)
+	pt, err := t.Parse(req.template)
 	if err != nil {
-		return fmt.Errorf("parse template [name: %s]: %w", req.Name, err)
+		return fmt.Errorf("parse template [name: %s]: %w", req.name, err)
 	}
 
-	if err := pt.Execute(out, req.Data); err != nil {
-		return fmt.Errorf("execute template [name: %s]: %w", req.Name, err)
+	if err := pt.Execute(out, req.data); err != nil {
+		return fmt.Errorf("execute template [name: %s]: %w", req.name, err)
 	}
 	return nil
 }

@@ -11,35 +11,35 @@ import (
 )
 
 type ShellCommandTask struct {
-	Bin  string
-	Cwd  string
-	Args []string
-	Out  io.Writer
+	bin  string
+	cwd  string
+	args []string
+	out  io.Writer
 }
 
-func (c *ShellCommandTask) String() string {
-	return fmt.Sprintf("%s %s", c.Bin, strings.Join(c.Args, " "))
+func (t *ShellCommandTask) String() string {
+	return fmt.Sprintf("%s %s", t.bin, strings.Join(t.args, " "))
 }
 
 var _ Task = (*ShellCommandTask)(nil)
 
-func (sc *ShellCommandTask) Run() error {
-	proc := exec.Command(sc.Bin, sc.Args...)
-	log.WithField("cwd", sc.Cwd).Infof("run shell command '%s'", sc)
+func (t *ShellCommandTask) Run() error {
+	proc := exec.Command(t.bin, t.args...)
+	log.WithField("cwd", t.cwd).Infof("run shell command '%s'", t)
 
-	if sc.Cwd != "" {
-		proc.Dir = sc.Cwd
+	if t.cwd != "" {
+		proc.Dir = t.cwd
 	}
 
 	proc.Stdout = os.Stdout
-	if sc.Out != nil {
-		proc.Stdout = sc.Out
+	if t.out != nil {
+		proc.Stdout = t.out
 	}
 	proc.Stderr = os.Stderr
 
 	err := proc.Run()
 	if err != nil {
-		return fmt.Errorf("run command [cmd: %s]: %w", sc, err)
+		return fmt.Errorf("run command [cmd: %s]: %w", t, err)
 	}
 	return nil
 }

@@ -11,19 +11,22 @@ import (
 )
 
 type WriteFileToDiskTask struct {
-	Name      string
-	Suffix    string
-	Folder    string
-	Overwrite bool
+	// name filename
+	name string
+	// suffix file suffix
+	suffix string
+	folder string
+	// overwrite if exists
+	overwrite bool
 	data      io.Reader
 }
 
 func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite bool, in io.Reader) *WriteFileToDiskTask {
 	return &WriteFileToDiskTask{
-		Name:      name,
-		Suffix:    suffix,
-		Folder:    folder,
-		Overwrite: overwrite,
+		name:      name,
+		suffix:    suffix,
+		folder:    folder,
+		overwrite: overwrite,
 		data:      in,
 	}
 }
@@ -32,7 +35,7 @@ func (wft *WriteFileToDiskTask) Run() error {
 	if wft.shouldSkip() {
 		log.WithFields(log.Fields{
 			"file":      wft.getFullPath(),
-			"overwrite": wft.Overwrite,
+			"overwrite": wft.overwrite,
 		}).Info("emit file [skipped]")
 		return nil
 	}
@@ -48,11 +51,11 @@ func (wft *WriteFileToDiskTask) Run() error {
 }
 
 func (wft *WriteFileToDiskTask) shouldSkip() bool {
-	return fileExists(wft.getFullPath()) && !wft.Overwrite
+	return fileExists(wft.getFullPath()) && !wft.overwrite
 }
 
 func (wft *WriteFileToDiskTask) getFullPath() string {
-	return path.Join(wft.Folder, wft.Name+wft.Suffix)
+	return path.Join(wft.folder, wft.name+wft.suffix)
 }
 
 func (wft *WriteFileToDiskTask) write() error {
@@ -76,7 +79,7 @@ func (wft *WriteFileToDiskTask) write() error {
 }
 
 func (wft *WriteFileToDiskTask) mkdirIfNecessary() error {
-	dir := wft.Folder
+	dir := wft.folder
 	if dir == "" {
 		return nil
 	}
