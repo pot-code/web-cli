@@ -1,11 +1,11 @@
-import { ComponentMeta, ComponentStory } from "@storybook/react";
+import { Meta, StoryFn } from "@storybook/react";
 import {{.name}} from "./{{.name}}";
 
 export default {
   title: "component/{{.name}}",
   component: {{.name}},
-} as ComponentMeta<typeof {{.name}}>;
+} as Meta<typeof {{.name}}>;
 
-const Template: ComponentStory<typeof {{.name}}> = (args) => <{{.name}} {...args} />;
+const Template: StoryFn<typeof {{.name}}> = (args) => <{{.name}} {...args} />;
 
 export const Basic = Template.bind({});
