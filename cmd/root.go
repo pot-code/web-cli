@@ -9,7 +9,7 @@ var AppVersion string
 
 var RootCmd = &cli.App{
 	Name:  "web-cli",
-	Usage: "A toolset to improve your development experience",
+	Usage: "A toolkit to for web development",
 	Commands: []*cli.Command{
 		ReactSet,
 		MiscSet,

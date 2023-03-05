@@ -9,12 +9,13 @@ import (
 )
 
 func main() {
-	validate.SetupValidator()
+	validate.InitValidator()
 
 	log.SetFormatter(&log.TextFormatter{
 		DisableTimestamp: true,
 		QuoteEmptyFields: true,
 	})
+
 	if err := cmd.RootCmd.Run(os.Args); err != nil {
 		log.Error(err.Error())
 	}

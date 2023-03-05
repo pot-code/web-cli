@@ -94,3 +94,38 @@ func fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
+
+type FileProvider interface {
+	Get() (io.Reader, error)
+}
+
+type GenerateFileFromProviderTask struct {
+	fileName  string
+	suffix    string
+	folder    string
+	overwrite bool
+	provider  FileProvider
+}
+
+func NewGenerateFileFromProvider(
+	fileName string,
+	suffix string,
+	folder string,
+	overwrite bool,
+	provider FileProvider,
+) *GenerateFileFromProviderTask {
+	return &GenerateFileFromProviderTask{fileName: fileName, suffix: suffix, folder: folder, overwrite: overwrite, provider: provider}
+}
+
+func (t *GenerateFileFromProviderTask) Run() error {
+	fd, err := t.provider.Get()
+	if err != nil {
+		return fmt.Errorf("get template from provider: %w", err)
+	}
+
+	fdt := NewWriteFileToDiskTask(t.fileName, t.suffix, t.folder, t.overwrite, fd)
+	if err := fdt.Run(); err != nil {
+		return fmt.Errorf("write file to disk [file_name: %s folder: %s]: %w", t.fileName, t.folder, err)
+	}
+	return nil
+}

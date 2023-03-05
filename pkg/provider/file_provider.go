@@ -19,7 +19,7 @@ func NewLocalFileProvider(p string) *LocalFileProvider {
 func (p *LocalFileProvider) Get() (io.Reader, error) {
 	fd, err := os.Open(p.Path)
 	if err != nil {
-		return nil, fmt.Errorf("open file: %w", err)
+		return nil, fmt.Errorf("open file at %s: %w", p.Path, err)
 	}
 	return fd, nil
 }
@@ -40,8 +40,7 @@ func (p *RemoteFileProvider) Get() (io.Reader, error) {
 	}
 	res, err := conn.Get(p.URL)
 	if err != nil {
-		return nil, fmt.Errorf("http get: %w", err)
+		return nil, fmt.Errorf("get file from %s: %w", p.URL, err)
 	}
-
 	return res.Body, nil
 }

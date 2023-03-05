@@ -39,7 +39,7 @@ func initialize() {
 	})
 }
 
-func SetupValidator() {
+func InitValidator() {
 	initialize()
 
 	en := en.New()
