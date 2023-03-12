@@ -12,6 +12,7 @@ var RootCmd = &cli.App{
 	Usage: "A toolkit to for web development",
 	Commands: []*cli.Command{
 		ReactSet,
+		VueSet,
 		MiscSet,
 	},
 	Version: AppVersion,
