@@ -41,7 +41,7 @@ var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}
 
 	b := new(bytes.Buffer)
 	if err := task.NewSequentialScheduler().
-		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue_component.gohtml"), b)).
+		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue_component.gotmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_component", nil, b, b)).
 		AddTask(task.NewWriteFileToDiskTask(fileName, VueComponentSuffix, outDir, false, b)).
 		Run(); err != nil {

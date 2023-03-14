@@ -1,0 +1,13 @@
+import type { DirectiveBinding } from 'vue'
+
+const v{{.name}} = {
+  created(el: HTMLElement, binding: DirectiveBinding<string>) { },
+  beforeMount(el: HTMLElement, binding: DirectiveBinding<string>) {},
+  mounted(el: HTMLElement, binding: DirectiveBinding<string>) {},
+  beforeUpdate(el: HTMLElement, binding: DirectiveBinding<string>) {},
+  updated(el: HTMLElement, binding: DirectiveBinding<string>) {},
+  beforeUnmount(el: HTMLElement, binding: DirectiveBinding<string>) {},
+  unmounted(el: HTMLElement, binding: DirectiveBinding<string>) {}
+}
+
+export default v{{.name}}

@@ -36,7 +36,7 @@ var UseVueStore command.InlineHandler = func(c *cli.Context, cfg interface{}) er
 
 	b := new(bytes.Buffer)
 	if err := task.NewSequentialScheduler().
-		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue_use_store.gohtml"), b)).
+		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue_use_store.gotmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_use_store", map[string]string{"moduleName": moduleName, "storeName": storeName}, b, b)).
 		AddTask(task.NewWriteFileToDiskTask(fileName, VueStoreSuffix, config.OutDir, false, b)).
 		Run(); err != nil {

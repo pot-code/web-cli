@@ -9,5 +9,6 @@ var VueSet = &cli.Command{
 	Subcommands: []*cli.Command{
 		VueUseStoreCmd,
 		VueComponentCmd,
+		VueDirectiveCmd,
 	},
 }
