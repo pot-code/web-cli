@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-export const use{{.moduleName}}Store = defineStore('{{.storeName}}', {
-  state: () => ({}),
-  actions: () => {},
+const use{{.moduleName}}Store = defineStore('{{.storeName}}', () => {
 })
+
+export default use{{.moduleName}}Store
