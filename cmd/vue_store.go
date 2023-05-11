@@ -3,16 +3,13 @@ package cmd
 import (
 	"bytes"
 	"fmt"
+
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
-)
-
-const (
-	VueStoreSuffix              = ".ts"
-	VueUseStoreFileNameTemplate = "use%sStore"
 )
 
 type VueUseStoreConfig struct {
@@ -30,15 +27,15 @@ var VueUseStoreCmd = command.NewCliCommand("store", "add vue pinia store",
 
 var UseVueStore command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*VueUseStoreConfig)
-	moduleName := strcase.ToCamel(config.Name)
-	storeName := strcase.ToKebab(config.Name)
-	fileName := fmt.Sprintf(VueUseStoreFileNameTemplate, moduleName)
+	name := strcase.ToCamel(config.Name)
+	storeKey := strcase.ToKebab(config.Name)
+	filename := fmt.Sprintf("user%sStore", name)
 
 	b := new(bytes.Buffer)
 	if err := task.NewSequentialScheduler().
 		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_use_store.gotmpl"), b)).
-		AddTask(task.NewTemplateRenderTask("vue_use_store", map[string]string{"moduleName": moduleName, "storeName": storeName}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(fileName, VueStoreSuffix, config.OutDir, false, b)).
+		AddTask(task.NewTemplateRenderTask("vue_use_store", map[string]string{"storeKey": storeKey, "name": name}, b, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, file.TypescriptSuffix, config.OutDir, false, b)).
 		Run(); err != nil {
 		return err
 	}

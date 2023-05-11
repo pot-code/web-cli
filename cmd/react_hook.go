@@ -5,12 +5,11 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
 )
-
-const TypescriptSuffix = ".ts"
 
 type ReactHookConfig struct {
 	Name    string `arg:"0" alias:"HOOK_NAME" validate:"required,var"`
@@ -35,7 +34,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.gotmpl"), b1)).
 			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": name}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(name, TypescriptSuffix, config.OutDir, false, b1)),
+			AddTask(task.NewWriteFileToDiskTask(name, file.TypescriptSuffix, config.OutDir, false, b1)),
 	}
 
 	if config.AddTest {
@@ -44,7 +43,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.gotmpl"), b2)).
 				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": name}, b2, b2)).
-				AddTask(task.NewWriteFileToDiskTask(name, ReactTestSuffix, config.OutDir, false, b2)))
+				AddTask(task.NewWriteFileToDiskTask(name, file.TypescriptTestSuffix, config.OutDir, false, b2)))
 	}
 
 	s := task.NewParallelScheduler()

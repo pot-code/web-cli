@@ -6,19 +6,13 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
 )
 
-const (
-	StorybookSuffix      = ".stories.tsx"
-	ReactTestSuffix      = ".test.tsx"
-	ReactComponentSuffix = ".tsx"
-)
-
 type ReactComponentConfig struct {
-	AddTest   bool   `flag:"add-test" alias:"t" usage:"add test file"`
 	AddStory  bool   `flag:"add-storybook" alias:"s" usage:"add storybook"`
 	AddFolder bool   `flag:"add-folder" alias:"f" usage:"generate files in a folder with the name as the component"`
 	OutDir    string `flag:"output" alias:"o" usage:"destination directory"`
@@ -67,7 +61,7 @@ func (arc *AddReactComponent) addComponent(componentName string, outDir string) 
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": componentName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(componentName, ReactComponentSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(componentName, file.ReactComponentSuffix, outDir, false, b)))
 }
 
 func (arc *AddReactComponent) addStory(componentName string, outDir string) {
@@ -76,5 +70,5 @@ func (arc *AddReactComponent) addStory(componentName string, outDir string) {
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_storybook.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_storybook", map[string]string{"name": componentName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(componentName, StorybookSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(componentName, file.StorybookSuffix, outDir, false, b)))
 }

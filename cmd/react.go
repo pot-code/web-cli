@@ -9,5 +9,6 @@ var ReactSet = &cli.Command{
 	Subcommands: []*cli.Command{
 		ReactComponentCmd,
 		ReactHookCmd,
+		ReactZustandCmd,
 	},
 }

@@ -2,15 +2,13 @@ package cmd
 
 import (
 	"bytes"
+
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
-)
-
-const (
-	VueDirectiveSuffix = ".ts"
 )
 
 type VueDirectiveConfig struct {
@@ -39,7 +37,7 @@ var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}
 		AddTask(task.NewTemplateRenderTask("vue_directive", map[string]string{
 			"name": camelName,
 		}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(fileName, VueDirectiveSuffix, outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(fileName, file.TypescriptSuffix, outDir, false, b)).
 		Run(); err != nil {
 		return err
 	}
