@@ -32,17 +32,18 @@ type AddReactComponent struct {
 }
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*ReactComponentConfig)
-	cn := strcase.ToCamel(config.Name)
+	rcc := cfg.(*ReactComponentConfig)
+	fileName := strcase.ToKebab(rcc.Name)
+	varName := strcase.ToCamel(rcc.Name)
 
-	outDir := config.OutDir
-	if config.AddFolder {
-		outDir = path.Join(outDir, cn)
+	outDir := rcc.OutDir
+	if rcc.AddFolder {
+		outDir = path.Join(outDir, fileName)
 	}
 
-	arc.addComponent(cn, outDir)
-	if config.AddStory {
-		arc.addStory(cn, outDir)
+	arc.addComponent(varName, fileName, outDir)
+	if rcc.AddStory {
+		arc.addStory(varName, fileName, outDir)
 	}
 
 	e := task.NewParallelScheduler()
@@ -55,20 +56,20 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	return nil
 }
 
-func (arc *AddReactComponent) addComponent(componentName string, outDir string) {
+func (arc *AddReactComponent) addComponent(varName string, fileName string, outDir string) {
 	b := new(bytes.Buffer)
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.gotmpl"), b)).
-			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": componentName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(componentName, file.ReactComponentSuffix, outDir, false, b)))
+			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": varName}, b, b)).
+			AddTask(task.NewWriteFileToDiskTask(fileName, file.ReactComponentSuffix, outDir, false, b)))
 }
 
-func (arc *AddReactComponent) addStory(componentName string, outDir string) {
+func (arc *AddReactComponent) addStory(componentName string, fileName string, outDir string) {
 	b := new(bytes.Buffer)
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_storybook.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_storybook", map[string]string{"name": componentName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(componentName, file.StorybookSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(fileName, file.StorybookSuffix, outDir, false, b)))
 }

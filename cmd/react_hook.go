@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"fmt"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
@@ -26,24 +27,25 @@ var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
 ).BuildCommand()
 
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*ReactHookConfig)
-	name := strcase.ToLowerCamel(config.Name)
+	rhc := cfg.(*ReactHookConfig)
+	varName := strcase.ToCamel(rhc.Name)
+	fileName := strcase.ToKebab(fmt.Sprintf("use%s", varName))
 
 	b1 := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.gotmpl"), b1)).
-			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": name}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(name, file.TypescriptSuffix, config.OutDir, false, b1)),
+			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, b1, b1)).
+			AddTask(task.NewWriteFileToDiskTask(fileName, file.TypescriptSuffix, rhc.OutDir, false, b1)),
 	}
 
-	if config.AddTest {
+	if rhc.AddTest {
 		b2 := new(bytes.Buffer)
 		tasks = append(tasks,
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.gotmpl"), b2)).
-				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": name}, b2, b2)).
-				AddTask(task.NewWriteFileToDiskTask(name, file.TypescriptTestSuffix, config.OutDir, false, b2)))
+				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, b2, b2)).
+				AddTask(task.NewWriteFileToDiskTask(fileName, file.TypescriptTestSuffix, rhc.OutDir, false, b2)))
 	}
 
 	s := task.NewParallelScheduler()
