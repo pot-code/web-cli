@@ -1,7 +1,7 @@
 package provider
 
 import (
-	"io/ioutil"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -13,7 +13,7 @@ func TestLocalProvider_Get(t *testing.T) {
 	rc, err := p.Get()
 	assert.Nil(t, err)
 
-	c, err := ioutil.ReadAll(rc)
+	c, err := io.ReadAll(rc)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "hello {{.Name}}", string(c))
@@ -25,7 +25,7 @@ func TestRemoteProvider_Get(t *testing.T) {
 	rc, err := p.Get()
 	assert.Nil(t, err)
 
-	c, err := ioutil.ReadAll(rc)
+	c, err := io.ReadAll(rc)
 	assert.Nil(t, err)
 
 	assert.Equal(t, "v18.12.1\n", string(c))

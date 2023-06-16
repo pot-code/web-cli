@@ -3,7 +3,7 @@ package util
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strings"
 
@@ -31,7 +31,7 @@ func ParseGoMod(path string) (*GoModMeta, error) {
 		return nil, fmt.Errorf("open go.mod: %w", err)
 	}
 
-	content, err := ioutil.ReadAll(fd)
+	content, err := io.ReadAll(fd)
 	if err != nil {
 		return nil, fmt.Errorf("read go.mod: %w", err)
 	}

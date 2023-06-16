@@ -2,15 +2,13 @@ package pipeline
 
 import (
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"go/format"
 	"io"
-	"io/ioutil"
-
-	log "github.com/sirupsen/logrus"
 )
 
 func GoFormatSource(src io.Reader, dest io.Writer) error {
-	d, err := ioutil.ReadAll(src)
+	d, err := io.ReadAll(src)
 	if err != nil {
 		return fmt.Errorf("format go source: read from src: %w", err)
 	}
