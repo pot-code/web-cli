@@ -10,5 +10,6 @@ var ReactSet = &cli.Command{
 		ReactComponentCmd,
 		ReactHookCmd,
 		ReactZustandCmd,
+		ReactContextCmd,
 	},
 }
