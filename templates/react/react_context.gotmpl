@@ -4,9 +4,11 @@ interface {{.name}}ProviderContextState {}
 
 const Context = createContext<{{.name}}ProviderContextState | null>(null)
 
-interface {{.name}}ProviderProps {}
+interface {{.name}}ProviderProps {
+  children: React.ReactNode
+}
 
-export function {{.name}}Provider({}: {{.name}}ProviderProps) {
+export function {{.name}}Provider({ children }: {{.name}}ProviderProps) {
   const value = useMemo(() => ({}), [])
   return <Context.Provider value={value}>{children}</Context.Provider>
 }

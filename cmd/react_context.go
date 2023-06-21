@@ -33,7 +33,7 @@ var AddContextStore = command.InlineHandler(func(c *cli.Context, cfg interface{}
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": varName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, file.TypescriptSuffix, rzc.OutDir, false, b)),
+			AddTask(task.NewWriteFileToDiskTask(filename, file.ReactComponentSuffix, rzc.OutDir, false, b)),
 	}
 
 	s := task.NewParallelScheduler()
