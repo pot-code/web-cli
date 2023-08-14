@@ -1,9 +1,11 @@
 # Install
 
+You have to install [Taskfile](https://taskfile.dev/) first
+
 ```bash
 git clone https://github.com/pot-code/web-cli.git
 cd web-cli
-make install
+task install
 ```
 
 or
