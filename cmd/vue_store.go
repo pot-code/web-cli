@@ -29,7 +29,7 @@ var UseVueStore command.InlineHandler = func(c *cli.Context, cfg interface{}) er
 	config := cfg.(*VueUseStoreConfig)
 	name := strcase.ToCamel(config.Name)
 	storeKey := strcase.ToKebab(config.Name)
-	filename := fmt.Sprintf("user%sStore", name)
+	filename := fmt.Sprintf("use%sStore", name)
 
 	b := new(bytes.Buffer)
 	if err := task.NewSequentialScheduler().
