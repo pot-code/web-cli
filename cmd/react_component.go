@@ -35,13 +35,14 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	rcc := cfg.(*ReactComponentConfig)
 	fileName := strcase.ToKebab(rcc.Name)
 	varName := strcase.ToCamel(rcc.Name)
-
 	outDir := rcc.OutDir
+
 	if rcc.AddFolder {
 		outDir = path.Join(outDir, fileName)
+		fileName = "index"
 	}
-
 	arc.addComponent(varName, fileName, outDir)
+
 	if rcc.AddStory {
 		arc.addStory(varName, fileName, outDir)
 	}
@@ -70,6 +71,9 @@ func (arc *AddReactComponent) addStory(componentName string, fileName string, ou
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_storybook.gotmpl"), b)).
-			AddTask(task.NewTemplateRenderTask("react_storybook", map[string]string{"name": componentName}, b, b)).
+			AddTask(task.NewTemplateRenderTask(
+				"react_storybook",
+				map[string]string{"name": componentName, "file": fileName},
+				b, b)).
 			AddTask(task.NewWriteFileToDiskTask(fileName, file.StorybookSuffix, outDir, false, b)))
 }
