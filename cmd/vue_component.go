@@ -6,7 +6,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
@@ -41,7 +40,7 @@ var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}
 	if err := task.NewSequentialScheduler().
 		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_component.gotmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_component", nil, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(fileName, file.VueComponentSuffix, outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(fileName, VueComponentSuffix, outDir, false, b)).
 		Run(); err != nil {
 		return err
 	}

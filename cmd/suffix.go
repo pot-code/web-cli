@@ -1,4 +1,4 @@
-package file
+package cmd
 
 const (
 	TypescriptSuffix     = ".ts"

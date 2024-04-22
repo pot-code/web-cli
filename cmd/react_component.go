@@ -6,7 +6,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
@@ -63,7 +62,7 @@ func (arc *AddReactComponent) addComponent(varName string, fileName string, outD
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": varName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(fileName, file.ReactComponentSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(fileName, ReactComponentSuffix, outDir, false, b)))
 }
 
 func (arc *AddReactComponent) addStory(componentName string, fileName string, outDir string) {
@@ -75,5 +74,5 @@ func (arc *AddReactComponent) addStory(componentName string, fileName string, ou
 				"react_storybook",
 				map[string]string{"name": componentName, "file": fileName},
 				b, b)).
-			AddTask(task.NewWriteFileToDiskTask(fileName, file.StorybookSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(fileName, StorybookSuffix, outDir, false, b)))
 }

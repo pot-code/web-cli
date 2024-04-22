@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"bytes"
+
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
@@ -33,7 +33,7 @@ var AddContextStore = command.InlineHandler(func(c *cli.Context, cfg interface{}
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": varName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, file.ReactComponentSuffix, rzc.OutDir, false, b)),
+			AddTask(task.NewWriteFileToDiskTask(filename, ReactComponentSuffix, rzc.OutDir, false, b)),
 	}
 
 	s := task.NewParallelScheduler()

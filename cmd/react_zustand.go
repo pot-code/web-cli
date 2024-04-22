@@ -6,7 +6,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
@@ -28,14 +27,14 @@ var ReactZustandCmd = command.NewCliCommand("zustand", "add zustand store",
 var AddZustandStore = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	rzc := cfg.(*ReactZustandConfig)
 	varName := strcase.ToCamel(rzc.Name)
-	filename := strcase.ToKebab(fmt.Sprintf("use%sStore", varName))
+	filename := strcase.ToLowerCamel(fmt.Sprintf("use%sStore", varName))
 
 	b := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_zustand.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_zustand", map[string]string{"name": varName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, file.TypescriptSuffix, rzc.OutDir, false, b)),
+			AddTask(task.NewWriteFileToDiskTask(filename, TypescriptSuffix, rzc.OutDir, false, b)),
 	}
 
 	s := task.NewParallelScheduler()

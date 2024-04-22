@@ -6,7 +6,6 @@ import (
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/file"
 	"github.com/pot-code/web-cli/pkg/provider"
 	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
@@ -29,14 +28,14 @@ var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	rhc := cfg.(*ReactHookConfig)
 	varName := strcase.ToCamel(rhc.Name)
-	fileName := strcase.ToKebab(fmt.Sprintf("use%s", varName))
+	fileName := strcase.ToLowerCamel(fmt.Sprintf("use%s", varName))
 
 	b1 := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.gotmpl"), b1)).
 			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(fileName, file.TypescriptSuffix, rhc.OutDir, false, b1)),
+			AddTask(task.NewWriteFileToDiskTask(fileName, TypescriptSuffix, rhc.OutDir, false, b1)),
 	}
 
 	if rhc.AddTest {
@@ -45,7 +44,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.gotmpl"), b2)).
 				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, b2, b2)).
-				AddTask(task.NewWriteFileToDiskTask(fileName, file.TypescriptTestSuffix, rhc.OutDir, false, b2)))
+				AddTask(task.NewWriteFileToDiskTask(fileName, TypescriptTestSuffix, rhc.OutDir, false, b2)))
 	}
 
 	s := task.NewParallelScheduler()
