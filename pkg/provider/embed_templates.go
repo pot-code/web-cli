@@ -3,8 +3,9 @@ package provider
 import (
 	"embed"
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
+
+	"github.com/rs/zerolog/log"
 )
 
 var templateFs embed.FS
@@ -22,10 +23,10 @@ func NewEmbedFileProvider(p string) *EmbedFileProvider {
 }
 
 func (e *EmbedFileProvider) Get() (io.Reader, error) {
-	log.WithFields(log.Fields{
-		"path":     e.p,
-		"provider": "EmbedFileProvider",
-	}).Debug("open file")
+	log.Debug().
+		Str("path", e.p).
+		Str("provider", "EmbedFileProvider").
+		Msg("open file")
 
 	fd, err := templateFs.Open(e.p)
 	if err != nil {

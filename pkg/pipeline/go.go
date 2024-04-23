@@ -2,9 +2,10 @@ package pipeline
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"go/format"
 	"io"
+
+	"github.com/rs/zerolog/log"
 )
 
 func GoFormatSource(src io.Reader, dest io.Writer) error {
@@ -21,6 +22,6 @@ func GoFormatSource(src io.Reader, dest io.Writer) error {
 	if err != nil {
 		return fmt.Errorf("format go source: write formatted code: %w", err)
 	}
-	log.WithField("bytes", n).Debugf("write formatted code")
+	log.Debug().Int("bytes", n).Msg("write formatted code")
 	return nil
 }

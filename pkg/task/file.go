@@ -7,7 +7,7 @@ import (
 	"os"
 	"path"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type WriteFileToDiskTask struct {
@@ -33,10 +33,7 @@ func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite
 
 func (wft *WriteFileToDiskTask) Run() error {
 	if wft.shouldSkip() {
-		log.WithFields(log.Fields{
-			"file":      wft.getFullPath(),
-			"overwrite": wft.overwrite,
-		}).Info("emit file [skipped]")
+		log.Info().Str("file", wft.getFullPath()).Bool("overwrite", wft.overwrite).Msg("emit file [skipped]")
 		return nil
 	}
 
@@ -44,9 +41,7 @@ func (wft *WriteFileToDiskTask) Run() error {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"file": wft.getFullPath(),
-	}).Info("emit file")
+	log.Info().Str("file", wft.getFullPath()).Msg("emit file")
 	return nil
 }
 
@@ -74,7 +69,7 @@ func (wft *WriteFileToDiskTask) write() error {
 	if err != nil {
 		return fmt.Errorf("write data to %s: %w", filePath, err)
 	}
-	log.WithFields(log.Fields{"bytes": n, "file": filePath}).Debug("write file")
+	log.Debug().Str("file", filePath).Int64("bytes", n).Msg("write file")
 	return nil
 }
 

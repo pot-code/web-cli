@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type ShellCommandTask struct {
@@ -25,7 +25,7 @@ var _ Task = (*ShellCommandTask)(nil)
 
 func (t *ShellCommandTask) Run() error {
 	proc := exec.Command(t.bin, t.args...)
-	log.WithField("cwd", t.cwd).Infof("run shell command '%s'", t)
+	log.Info().Str("cwd", t.cwd).Str("cmd", t.String()).Msg("run shell command")
 
 	if t.cwd != "" {
 		proc.Dir = t.cwd

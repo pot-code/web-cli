@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 )
 
@@ -27,7 +27,7 @@ var RootCmd = &cli.App{
 	},
 	Before: func(c *cli.Context) error {
 		if c.Bool("verbose") {
-			log.SetLevel(log.DebugLevel)
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
 		}
 		return nil
 	},

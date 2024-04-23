@@ -6,7 +6,7 @@ import (
 	"io"
 	"text/template"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 )
 
 type TemplateRenderTask struct {
@@ -51,7 +51,7 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 		return fmt.Errorf("read template data: %w", err)
 	}
 
-	log.WithFields(log.Fields{"template_name": trt.name, "data": trt.data}).Debug("render template")
+	log.Debug().Str("template_name", trt.name).Interface("data", trt.data).Msg("render template")
 	err = RenderTextTemplate(&RenderRequest{
 		name:     trt.name,
 		template: string(b),

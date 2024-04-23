@@ -2,10 +2,11 @@ package provider
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"net/http"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 const ConnectionTimeout = 30 * time.Second
@@ -19,11 +20,11 @@ func NewRemoteFileProvider(url string) *RemoteFileProvider {
 }
 
 func (p *RemoteFileProvider) Get() (io.Reader, error) {
-	log.WithFields(log.Fields{
-		"path":     p.url,
-		"provider": "NewRemoteFileProvider",
-		"timeout":  ConnectionTimeout.String(),
-	}).Debug("fetch file")
+	log.Debug().
+		Str("path", p.url).
+		Str("provider", "RemoteFileProvider").
+		Dur("timeout", ConnectionTimeout).
+		Msg("fetch file")
 
 	conn := http.Client{
 		Timeout: ConnectionTimeout,

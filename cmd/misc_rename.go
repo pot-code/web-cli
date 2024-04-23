@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	"github.com/pot-code/web-cli/pkg/command"
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
 
@@ -60,7 +60,7 @@ func (mr *MassRename) Handle(c *cli.Context, cfg interface{}) error {
 
 		filename := d.Name()
 		if err != nil {
-			log.WithFields(log.Fields{"dir": filename, "error": err}).Error("failed to walk into directory")
+			log.Err(err).Str("dir", filename).Msg("failed to walk into directory")
 		}
 		if !mr.matchAnySuffix(filename) {
 			return nil
@@ -73,7 +73,7 @@ func (mr *MassRename) Handle(c *cli.Context, cfg interface{}) error {
 
 		dir := path.Dir(oldpath)
 		newpath := path.Join(dir, newname)
-		log.WithFields(log.Fields{"oldpath": oldpath, "newpath": newpath}).Info("renaming file")
+		log.Info().Str("oldpath", oldpath).Str("newpath", newpath).Msg("renaming file")
 		if !config.Dry {
 			err = os.Rename(oldpath, newpath)
 			if err != nil {
@@ -90,7 +90,7 @@ func (mr *MassRename) initSuffixMap(suffix []string) {
 		if !strings.HasPrefix(s, ".") {
 			s = "." + s
 		}
-		log.WithFields(log.Fields{"suffix": s}).Debug("registered suffix")
+		log.Debug().Str("suffix", s).Msg("registered suffix")
 		sm[s] = struct{}{}
 	}
 }
@@ -144,7 +144,7 @@ func (mr *MassRename) hashFile(fp string) (string, error) {
 	if err != nil {
 		panic(fmt.Errorf("failed to hash file '%s', err: %v", fp, err))
 	}
-	log.WithFields(log.Fields{"file": fp, "write": w}).Debug("copy file data to hash")
+	log.Debug().Str("file", fp).Int("write", int(w)).Msg("copy file data to hash")
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 

@@ -2,9 +2,10 @@ package provider
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"io"
 	"os"
+
+	"github.com/rs/zerolog/log"
 )
 
 type LocalFileProvider struct {
@@ -16,10 +17,10 @@ func NewLocalFileProvider(p string) *LocalFileProvider {
 }
 
 func (p *LocalFileProvider) Get() (io.Reader, error) {
-	log.WithFields(log.Fields{
-		"path":     p.p,
-		"provider": "LocalFileProvider",
-	}).Debug("open file")
+	log.Debug().
+		Str("path", p.p).
+		Str("provider", "LocalFileProvider").
+		Msg("open file")
 
 	fd, err := os.Open(p.p)
 	if err != nil {

@@ -3,7 +3,7 @@ package task
 import (
 	"time"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/rs/zerolog/log"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -36,7 +36,7 @@ func (se *SequentialScheduler) Run() error {
 		}
 	}
 
-	log.WithFields(log.Fields{"duration": time.Since(start), "total_task": total}).Debug("SequentialScheduler finished")
+	log.Debug().Int("total_task", total).Dur("duration", time.Since(start)).Msg("SequentialScheduler finished")
 	return nil
 }
 
@@ -71,9 +71,6 @@ func (pe *ParallelScheduler) Run() error {
 		return err
 	}
 
-	log.WithFields(log.Fields{
-		"duration":   time.Since(start),
-		"total_task": total,
-	}).Debug("ParallelScheduler finished")
+	log.Debug().Int("total_task", total).Dur("duration", time.Since(start)).Msg("ParallelScheduler finished")
 	return nil
 }
