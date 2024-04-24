@@ -32,18 +32,18 @@ type AddReactComponent struct {
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	rcc := cfg.(*ReactComponentConfig)
-	fileName := strcase.ToCamel(rcc.Name)
+	filename := strcase.ToKebab(rcc.Name)
 	varName := strcase.ToCamel(rcc.Name)
 	outDir := rcc.OutDir
 
 	if rcc.AddFolder {
-		outDir = path.Join(outDir, fileName)
-		fileName = "index"
+		outDir = path.Join(outDir, filename)
+		filename = "index"
 	}
-	arc.addComponent(varName, fileName, outDir)
+	arc.addComponent(varName, filename, outDir)
 
 	if rcc.AddStory {
-		arc.addStory(varName, fileName, outDir)
+		arc.addStory(varName, filename, outDir)
 	}
 
 	e := task.NewParallelScheduler()
@@ -56,23 +56,23 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	return nil
 }
 
-func (arc *AddReactComponent) addComponent(varName string, fileName string, outDir string) {
+func (arc *AddReactComponent) addComponent(varName string, filename string, outDir string) {
 	b := new(bytes.Buffer)
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": varName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(fileName, ReactComponentSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(filename, ReactComponentSuffix, outDir, false, b)))
 }
 
-func (arc *AddReactComponent) addStory(componentName string, fileName string, outDir string) {
+func (arc *AddReactComponent) addStory(componentName string, filename string, outDir string) {
 	b := new(bytes.Buffer)
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_storybook.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask(
 				"react_storybook",
-				map[string]string{"name": componentName, "file": fileName},
+				map[string]string{"name": componentName, "file": filename},
 				b, b)).
-			AddTask(task.NewWriteFileToDiskTask(fileName, StorybookSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(filename, StorybookSuffix, outDir, false, b)))
 }

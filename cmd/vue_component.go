@@ -27,12 +27,12 @@ var VueComponentCmd = command.NewCliCommand("component", "add vue component",
 
 var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*VueComponentConfig)
-	fileName := strcase.ToCamel(config.Name)
+	filename := strcase.ToCamel(config.Name)
 	kebabName := strcase.ToKebab(config.Name)
 	outDir := config.OutDir
 
 	if config.AddFolder {
-		fileName = "index"
+		filename = "index"
 		outDir = path.Join(config.OutDir, kebabName)
 	}
 
@@ -40,7 +40,7 @@ var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}
 	if err := task.NewSequentialScheduler().
 		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_component.gotmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_component", nil, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(fileName, VueComponentSuffix, outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, VueComponentSuffix, outDir, false, b)).
 		Run(); err != nil {
 		return err
 	}

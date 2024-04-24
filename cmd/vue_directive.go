@@ -26,8 +26,8 @@ var VueDirectiveCmd = command.NewCliCommand("directive", "add vue directive",
 
 var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*VueDirectiveConfig)
-	fileName := config.Name
-	camelName := strcase.ToCamel(fileName)
+	filename := config.Name
+	camelName := strcase.ToCamel(filename)
 	outDir := config.OutDir
 
 	b := new(bytes.Buffer)
@@ -36,7 +36,7 @@ var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}
 		AddTask(task.NewTemplateRenderTask("vue_directive", map[string]string{
 			"name": camelName,
 		}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(fileName, TypescriptSuffix, outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, TypescriptSuffix, outDir, false, b)).
 		Run(); err != nil {
 		return err
 	}
