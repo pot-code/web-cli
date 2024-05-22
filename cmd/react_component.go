@@ -12,10 +12,10 @@ import (
 )
 
 type ReactComponentConfig struct {
-	AddStory  bool   `flag:"add-storybook" alias:"s" usage:"add storybook"`
-	AddFolder bool   `flag:"add-folder" alias:"f" usage:"generate files in a folder with the name as the component"`
-	OutDir    string `flag:"output" alias:"o" usage:"destination directory"`
-	Name      string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
+	AddStory bool   `flag:"add-storybook" alias:"s" usage:"add storybook"`
+	Isolated bool   `flag:"isolated" alias:"i" usage:"generate files in a folder"`
+	OutDir   string `flag:"output" alias:"o" usage:"destination directory"`
+	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
 var ReactComponentCmd = command.NewCliCommand("component", "add react component",
@@ -36,7 +36,7 @@ func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	varName := strcase.ToCamel(rcc.Name)
 	outDir := rcc.OutDir
 
-	if rcc.AddFolder {
+	if rcc.Isolated {
 		outDir = path.Join(outDir, filename)
 		filename = "index"
 	}

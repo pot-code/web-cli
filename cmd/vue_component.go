@@ -12,9 +12,9 @@ import (
 )
 
 type VueComponentConfig struct {
-	AddFolder bool   `flag:"add-folder" alias:"f" usage:"generate files in a folder with the name as the component"`
-	OutDir    string `flag:"output" alias:"o" usage:"destination directory"`
-	Name      string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
+	Isolated bool   `flag:"isolated" alias:"i" usage:"generate files in a folder"`
+	OutDir   string `flag:"output" alias:"o" usage:"destination directory"`
+	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
 var VueComponentCmd = command.NewCliCommand("component", "add vue component",
@@ -31,7 +31,7 @@ var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}
 	kebabName := strcase.ToKebab(config.Name)
 	outDir := config.OutDir
 
-	if config.AddFolder {
+	if config.Isolated {
 		filename = "index"
 		outDir = path.Join(config.OutDir, kebabName)
 	}

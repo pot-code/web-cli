@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bytes"
+	"path"
 
 	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/pkg/command"
@@ -11,9 +12,9 @@ import (
 )
 
 type VueDirectiveConfig struct {
-	AddFolder bool   `flag:"add-folder" alias:"f" usage:"generate files in a folder with the name as the component"`
-	OutDir    string `flag:"output" alias:"o" usage:"destination directory"`
-	Name      string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
+	Isolated bool   `flag:"isolated" alias:"i" usage:"generate files in a folder"`
+	OutDir   string `flag:"output" alias:"o" usage:"destination directory"`
+	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
 var VueDirectiveCmd = command.NewCliCommand("directive", "add vue directive",
@@ -29,6 +30,11 @@ var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}
 	filename := config.Name
 	camelName := strcase.ToCamel(filename)
 	outDir := config.OutDir
+
+	if config.Isolated {
+		outDir = path.Join(config.OutDir, filename)
+		filename = "index"
+	}
 
 	b := new(bytes.Buffer)
 	if err := task.NewSequentialScheduler().
