@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/provider"
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/provider"
+	"github.com/pot-code/web-cli/internal/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,13 +17,13 @@ type ReactHookConfig struct {
 	AddTest bool   `flag:"add-test" alias:"t" usage:"add associated hook test file"`
 }
 
-var ReactHookCmd = command.NewCliCommand("hook", "add react hook",
+var ReactHookCmd = command.NewCommandBuilder("hook", "add react hook",
 	new(ReactHookConfig),
 	command.WithArgUsage("HOOK_NAME"),
 	command.WithAlias([]string{"k"}),
 ).AddHandlers(
 	AddReactHook,
-).BuildCommand()
+).Build()
 
 var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	rhc := cfg.(*ReactHookConfig)

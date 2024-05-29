@@ -5,9 +5,9 @@ import (
 	"path"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/provider"
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/provider"
+	"github.com/pot-code/web-cli/internal/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,13 +18,13 @@ type ReactComponentConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
-var ReactComponentCmd = command.NewCliCommand("component", "add react component",
+var ReactComponentCmd = command.NewCommandBuilder("component", "add react component",
 	new(ReactComponentConfig),
 	command.WithArgUsage("COMPONENT_NAME"),
 	command.WithAlias([]string{"c"}),
 ).AddHandlers(
 	new(AddReactComponent),
-).BuildCommand()
+).Build()
 
 type AddReactComponent struct {
 	tasks []task.Task

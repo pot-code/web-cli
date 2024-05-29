@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/provider"
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/provider"
+	"github.com/pot-code/web-cli/internal/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -16,13 +16,13 @@ type ReactZustandConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
-var ReactZustandCmd = command.NewCliCommand("zustand", "add zustand store",
+var ReactZustandCmd = command.NewCommandBuilder("zustand", "add zustand store",
 	new(ReactZustandConfig),
 	command.WithArgUsage("STORE_NAME"),
 	command.WithAlias([]string{"z"}),
 ).AddHandlers(
 	AddZustandStore,
-).BuildCommand()
+).Build()
 
 var AddZustandStore = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	rzc := cfg.(*ReactZustandConfig)

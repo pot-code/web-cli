@@ -6,12 +6,12 @@ import (
 	"reflect"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pot-code/web-cli/pkg/validate"
+	"github.com/pot-code/web-cli/internal/validate"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )
 
-type CliCommand struct {
+type CommandBuilder struct {
 	cmd           *cli.Command
 	defaultConfig interface{}
 	handlers      []CommandHandler
@@ -45,7 +45,7 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewCliCommand(name, usage string, defaultConfig interface{}, options ...CommandOption) *CliCommand {
+func NewCommandBuilder(name, usage string, defaultConfig interface{}, options ...CommandOption) *CommandBuilder {
 	validateConfig(defaultConfig)
 	cmd := &cli.Command{
 		Name:  name,
@@ -54,15 +54,15 @@ func NewCliCommand(name, usage string, defaultConfig interface{}, options ...Com
 	for _, option := range options {
 		option.apply(cmd)
 	}
-	return &CliCommand{cmd, defaultConfig, []CommandHandler{}}
+	return &CommandBuilder{cmd, defaultConfig, []CommandHandler{}}
 }
 
-func (cc *CliCommand) AddHandlers(h ...CommandHandler) *CliCommand {
+func (cc *CommandBuilder) AddHandlers(h ...CommandHandler) *CommandBuilder {
 	cc.handlers = append(cc.handlers, h...)
 	return cc
 }
 
-func (cc *CliCommand) BuildCommand() *cli.Command {
+func (cc *CommandBuilder) Build() *cli.Command {
 	dc := cc.defaultConfig
 	efv := newExtractFlagsVisitor()
 	walkConfig(dc, efv)

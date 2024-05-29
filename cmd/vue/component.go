@@ -5,9 +5,9 @@ import (
 	"path"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/provider"
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/provider"
+	"github.com/pot-code/web-cli/internal/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,13 +17,13 @@ type VueComponentConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
-var VueComponentCmd = command.NewCliCommand("component", "add vue component",
+var VueComponentCmd = command.NewCommandBuilder("component", "add vue component",
 	new(VueComponentConfig),
 	command.WithArgUsage("COMPONENT_NAME"),
 	command.WithAlias([]string{"c"}),
 ).AddHandlers(
 	AddVueComponent,
-).BuildCommand()
+).Build()
 
 var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
 	config := cfg.(*VueComponentConfig)

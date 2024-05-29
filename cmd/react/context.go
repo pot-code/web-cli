@@ -4,9 +4,9 @@ import (
 	"bytes"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/pkg/command"
-	"github.com/pot-code/web-cli/pkg/provider"
-	"github.com/pot-code/web-cli/pkg/task"
+	"github.com/pot-code/web-cli/internal/command"
+	"github.com/pot-code/web-cli/internal/provider"
+	"github.com/pot-code/web-cli/internal/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -15,13 +15,13 @@ type ReactContextConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
-var ReactContextCmd = command.NewCliCommand("context", "add custom context",
+var ReactContextCmd = command.NewCommandBuilder("context", "add custom context",
 	new(ReactContextConfig),
 	command.WithArgUsage("CONTEXT_NAME"),
 	command.WithAlias([]string{"ctx"}),
 ).AddHandlers(
 	AddContextStore,
-).BuildCommand()
+).Build()
 
 var AddContextStore = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	rzc := cfg.(*ReactContextConfig)

@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/pot-code/web-cli/cmd"
-	"github.com/pot-code/web-cli/pkg/provider"
-	"github.com/pot-code/web-cli/pkg/validate"
+	"github.com/pot-code/web-cli/internal/provider"
+	"github.com/pot-code/web-cli/internal/validate"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 )
