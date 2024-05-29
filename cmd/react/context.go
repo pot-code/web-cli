@@ -1,4 +1,4 @@
-package cmd
+package react
 
 import (
 	"bytes"
@@ -33,7 +33,7 @@ var AddContextStore = command.InlineHandler(func(c *cli.Context, cfg interface{}
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": ctxName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, ReactComponentSuffix, rzc.OutDir, false, b)),
+			AddTask(task.NewWriteFileToDiskTask(filename, ".tsx", rzc.OutDir, false, b)),
 	}
 
 	s := task.NewParallelScheduler()

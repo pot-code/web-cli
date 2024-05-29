@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"github.com/pot-code/web-cli/cmd/react"
+	"github.com/pot-code/web-cli/cmd/vue"
 	"github.com/rs/zerolog"
 	"github.com/urfave/cli/v2"
 )
@@ -11,9 +13,8 @@ var RootCmd = &cli.App{
 	Name:  "web-cli",
 	Usage: "A toolkit to for web development",
 	Commands: []*cli.Command{
-		ReactSet,
-		VueSet,
-		MiscSet,
+		react.CommandSet,
+		vue.CommandSet,
 	},
 	Version: AppVersion,
 	Flags: []cli.Flag{

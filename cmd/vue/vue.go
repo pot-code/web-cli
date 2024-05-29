@@ -1,8 +1,8 @@
-package cmd
+package vue
 
 import "github.com/urfave/cli/v2"
 
-var VueSet = &cli.Command{
+var CommandSet = &cli.Command{
 	Name:    "vue",
 	Aliases: []string{"v"},
 	Usage:   "vue kit",

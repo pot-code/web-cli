@@ -1,4 +1,4 @@
-package cmd
+package vue
 
 import (
 	"bytes"
@@ -34,7 +34,7 @@ var UseVueStore command.InlineHandler = func(c *cli.Context, cfg interface{}) er
 	if err := task.NewSequentialScheduler().
 		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_use_store.gotmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_use_store", map[string]string{"storeKey": storeKey, "name": name}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(filename, TypescriptSuffix, config.OutDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, ".ts", config.OutDir, false, b)).
 		Run(); err != nil {
 		return err
 	}

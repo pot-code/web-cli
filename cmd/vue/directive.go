@@ -1,4 +1,4 @@
-package cmd
+package vue
 
 import (
 	"bytes"
@@ -42,7 +42,7 @@ var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}
 		AddTask(task.NewTemplateRenderTask("vue_directive", map[string]string{
 			"name": camelName,
 		}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(filename, TypescriptSuffix, outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, ".ts", outDir, false, b)).
 		Run(); err != nil {
 		return err
 	}

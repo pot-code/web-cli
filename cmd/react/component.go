@@ -1,4 +1,4 @@
-package cmd
+package react
 
 import (
 	"bytes"
@@ -62,7 +62,7 @@ func (arc *AddReactComponent) addComponent(varName string, filename string, outD
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": varName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, ReactComponentSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(filename, ".tsx", outDir, false, b)))
 }
 
 func (arc *AddReactComponent) addStory(componentName string, filename string, outDir string) {
@@ -74,5 +74,5 @@ func (arc *AddReactComponent) addStory(componentName string, filename string, ou
 				"react_storybook",
 				map[string]string{"name": componentName, "file": filename},
 				b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, StorybookSuffix, outDir, false, b)))
+			AddTask(task.NewWriteFileToDiskTask(filename, ".stories.tsx", outDir, false, b)))
 }

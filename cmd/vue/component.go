@@ -1,4 +1,4 @@
-package cmd
+package vue
 
 import (
 	"bytes"
@@ -40,7 +40,7 @@ var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}
 	if err := task.NewSequentialScheduler().
 		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_component.gotmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_component", nil, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(filename, VueComponentSuffix, outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, ".vue", outDir, false, b)).
 		Run(); err != nil {
 		return err
 	}

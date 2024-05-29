@@ -1,8 +1,8 @@
-package cmd
+package react
 
 import "github.com/urfave/cli/v2"
 
-var ReactSet = &cli.Command{
+var CommandSet = &cli.Command{
 	Name:    "react",
 	Aliases: []string{"r"},
 	Usage:   "react kit",

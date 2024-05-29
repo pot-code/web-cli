@@ -1,4 +1,4 @@
-package cmd
+package react
 
 import (
 	"bytes"
@@ -35,7 +35,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.gotmpl"), b1)).
 			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(filename, TypescriptSuffix, rhc.OutDir, false, b1)),
+			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", rhc.OutDir, false, b1)),
 	}
 
 	if rhc.AddTest {
@@ -44,7 +44,7 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.gotmpl"), b2)).
 				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, b2, b2)).
-				AddTask(task.NewWriteFileToDiskTask(filename, TypescriptTestSuffix, rhc.OutDir, false, b2)))
+				AddTask(task.NewWriteFileToDiskTask(filename, ".test.ts", rhc.OutDir, false, b2)))
 	}
 
 	s := task.NewParallelScheduler()
