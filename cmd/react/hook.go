@@ -17,7 +17,7 @@ type ReactHookConfig struct {
 	AddTest bool   `flag:"add-test" alias:"t" usage:"add associated hook test file"`
 }
 
-var ReactHookCmd = command.NewCommandBuilder("hook", "add react hook",
+var ReactHookCmd = command.NewBuilder("hook", "add react hook",
 	new(ReactHookConfig),
 	command.WithArgUsage("HOOK_NAME"),
 	command.WithAlias([]string{"k"}),

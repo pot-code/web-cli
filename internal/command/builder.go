@@ -12,7 +12,9 @@ import (
 )
 
 type CommandBuilder struct {
-	cmd           *cli.Command
+	name          string
+	usage         string
+	options       []CommandOption
 	defaultConfig interface{}
 	handlers      []CommandHandler
 }
@@ -45,30 +47,38 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewCommandBuilder(name, usage string, defaultConfig interface{}, options ...CommandOption) *CommandBuilder {
+func NewBuilder(name, usage string, defaultConfig interface{}, options ...CommandOption) *CommandBuilder {
 	validateConfig(defaultConfig)
-	cmd := &cli.Command{
-		Name:  name,
-		Usage: usage,
+
+	return &CommandBuilder{
+		name:          name,
+		usage:         usage,
+		defaultConfig: defaultConfig,
+		options:       options,
 	}
-	for _, option := range options {
-		option.apply(cmd)
-	}
-	return &CommandBuilder{cmd, defaultConfig, []CommandHandler{}}
 }
 
-func (cc *CommandBuilder) AddHandlers(h ...CommandHandler) *CommandBuilder {
-	cc.handlers = append(cc.handlers, h...)
-	return cc
+func (cb *CommandBuilder) AddHandlers(h ...CommandHandler) *CommandBuilder {
+	cb.handlers = append(cb.handlers, h...)
+	return cb
 }
 
-func (cc *CommandBuilder) Build() *cli.Command {
-	dc := cc.defaultConfig
+func (cb *CommandBuilder) Build() *cli.Command {
+	dc := cb.defaultConfig
 	efv := newExtractFlagsVisitor()
 	walkConfig(dc, efv)
-	cc.cmd.Flags = append(cc.cmd.Flags, efv.getFlags()...)
 
-	cc.cmd.Before = func(c *cli.Context) error {
+	cmd := &cli.Command{
+		Name:  cb.name,
+		Usage: cb.usage,
+	}
+
+	for _, o := range cb.options {
+		o.apply(cmd)
+	}
+
+	cmd.Flags = append(cmd.Flags, efv.getFlags()...)
+	cmd.Before = func(c *cli.Context) error {
 		scv := newSetConfigVisitor(c)
 		if err := walkConfig(dc, scv); err != nil {
 			return err
@@ -84,20 +94,19 @@ func (cc *CommandBuilder) Build() *cli.Command {
 		}
 		return nil
 	}
-
-	cc.cmd.Action = func(c *cli.Context) error {
+	cmd.Action = func(c *cli.Context) error {
 		log.Debug().
 			Str("config", fmt.Sprintf("%+v", dc)).
 			Str("command", c.Command.FullName()).
 			Msg("run command")
-		for _, s := range cc.handlers {
+		for _, s := range cb.handlers {
 			if err := s.Handle(c, dc); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
-	return cc.cmd
+	return cmd
 }
 
 func validateConfig(config interface{}) {
@@ -105,19 +114,12 @@ func validateConfig(config interface{}) {
 		panic("config is nil")
 	}
 
-	if !isPointerType(config) {
+	if reflect.TypeOf(config).Kind() != reflect.Ptr {
 		panic("config value must be of pointer type")
 	}
 
-	configType := reflect.TypeOf(config).Elem()
-	if configType.Kind() != reflect.Struct {
+	et := reflect.TypeOf(config).Elem()
+	if et.Kind() != reflect.Struct {
 		panic("config must be of struct type")
 	}
-}
-
-func isPointerType(v interface{}) bool {
-	if v == nil {
-		return false
-	}
-	return reflect.TypeOf(v).Kind() == reflect.Ptr
 }

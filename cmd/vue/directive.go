@@ -17,7 +17,7 @@ type VueDirectiveConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
-var VueDirectiveCmd = command.NewCommandBuilder("directive", "add vue directive",
+var VueDirectiveCmd = command.NewBuilder("directive", "add vue directive",
 	new(VueDirectiveConfig),
 	command.WithArgUsage("DIRECTIVE_NAME"),
 	command.WithAlias([]string{"d"}),

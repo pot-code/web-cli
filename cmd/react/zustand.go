@@ -16,7 +16,7 @@ type ReactZustandConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
-var ReactZustandCmd = command.NewCommandBuilder("zustand", "add zustand store",
+var ReactZustandCmd = command.NewBuilder("zustand", "add zustand store",
 	new(ReactZustandConfig),
 	command.WithArgUsage("STORE_NAME"),
 	command.WithAlias([]string{"z"}),

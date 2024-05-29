@@ -16,7 +16,7 @@ type VueUseStoreConfig struct {
 	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required,var"`
 }
 
-var VueUseStoreCmd = command.NewCommandBuilder("store", "add vue pinia store",
+var VueUseStoreCmd = command.NewBuilder("store", "add vue pinia store",
 	new(VueUseStoreConfig),
 	command.WithArgUsage("MODULE_NAME"),
 	command.WithAlias([]string{"s"}),

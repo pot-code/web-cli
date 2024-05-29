@@ -18,7 +18,7 @@ type ReactComponentConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
-var ReactComponentCmd = command.NewCommandBuilder("component", "add react component",
+var ReactComponentCmd = command.NewBuilder("component", "add react component",
 	new(ReactComponentConfig),
 	command.WithArgUsage("COMPONENT_NAME"),
 	command.WithAlias([]string{"c"}),

@@ -15,7 +15,7 @@ type ReactContextConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
-var ReactContextCmd = command.NewCommandBuilder("context", "add custom context",
+var ReactContextCmd = command.NewBuilder("context", "add custom context",
 	new(ReactContextConfig),
 	command.WithArgUsage("CONTEXT_NAME"),
 	command.WithAlias([]string{"ctx"}),
