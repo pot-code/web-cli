@@ -45,7 +45,8 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewCliCommand(name, usage string, configSchema interface{}, options ...CommandOption) *CliCommand {
+func NewCliCommand(name, usage string, defaultConfig interface{}, options ...CommandOption) *CliCommand {
+	validateConfig(defaultConfig)
 	cmd := &cli.Command{
 		Name:  name,
 		Usage: usage,
@@ -53,7 +54,7 @@ func NewCliCommand(name, usage string, configSchema interface{}, options ...Comm
 	for _, option := range options {
 		option.apply(cmd)
 	}
-	return &CliCommand{cmd, configSchema, []CommandHandler{}}
+	return &CliCommand{cmd, defaultConfig, []CommandHandler{}}
 }
 
 func (cc *CliCommand) AddHandlers(h ...CommandHandler) *CliCommand {
@@ -63,8 +64,6 @@ func (cc *CliCommand) AddHandlers(h ...CommandHandler) *CliCommand {
 
 func (cc *CliCommand) BuildCommand() *cli.Command {
 	dc := cc.defaultConfig
-	validateConfig(dc)
-
 	efv := newExtractFlagsVisitor()
 	walkConfig(dc, efv)
 	cc.cmd.Flags = append(cc.cmd.Flags, efv.getFlags()...)
@@ -114,4 +113,11 @@ func validateConfig(config interface{}) {
 	if configType.Kind() != reflect.Struct {
 		panic("config must be of struct type")
 	}
+}
+
+func isPointerType(v interface{}) bool {
+	if v == nil {
+		return false
+	}
+	return reflect.TypeOf(v).Kind() == reflect.Ptr
 }

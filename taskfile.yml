@@ -2,10 +2,13 @@
 
 version: "3"
 
+vars:
+  VERSION:
+    sh: git describe --tags
+
 tasks:
   install:
+    silent: true
     cmds:
       - go install -ldflags '-s -w -X "github.com/pot-code/web-cli/cmd.AppVersion={{.VERSION}}"'
-    vars:
-      VERSION:
-        sh: git describe --tags
+      - echo "installed successfully"
