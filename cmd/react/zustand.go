@@ -26,14 +26,13 @@ var ReactZustandCmd = command.NewBuilder("zustand", "add zustand store",
 
 var AddZustandStore = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
 	rzc := cfg.(*ReactZustandConfig)
-	varName := strcase.ToCamel(rzc.Name)
-	filename := strcase.ToLowerCamel(fmt.Sprintf("use%sStore", varName))
+	filename := strcase.ToLowerCamel(fmt.Sprintf("use%sStore", strcase.ToCamel(rzc.Name)))
 
 	b := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_zustand.gotmpl"), b)).
-			AddTask(task.NewTemplateRenderTask("react_zustand", map[string]string{"name": varName}, b, b)).
+			AddTask(task.NewTemplateRenderTask("react_zustand", map[string]string{"name": filename}, b, b)).
 			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", rzc.OutDir, false, b)),
 	}
 
