@@ -32,7 +32,7 @@ type AddReactComponent struct {
 
 func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
 	rcc := cfg.(*ReactComponentConfig)
-	filename := strcase.ToKebab(rcc.Name)
+	filename := strcase.ToCamel(rcc.Name)
 	varName := strcase.ToCamel(rcc.Name)
 	outDir := rcc.OutDir
 
