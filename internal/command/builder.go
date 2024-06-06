@@ -11,11 +11,21 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+type CommandHandler[T any] interface {
+	Handle(c *cli.Context, cfg T) error
+}
+
+type InlineHandler[T any] func(c *cli.Context, cfg T) error
+
+func (s InlineHandler[T]) Handle(c *cli.Context, cfg T) error {
+	return s(c, cfg)
+}
+
 type CommandBuilder[T any] struct {
 	name          string
 	usage         string
-	options       []CommandOption
 	defaultConfig T
+	options       []CommandOption
 	handlers      []CommandHandler[T]
 }
 
