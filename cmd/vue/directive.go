@@ -25,8 +25,7 @@ var VueDirectiveCmd = command.NewBuilder("directive", "add vue directive",
 	AddVueDirective,
 ).Build()
 
-var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*VueDirectiveConfig)
+var AddVueDirective = command.InlineHandler[*VueDirectiveConfig](func(c *cli.Context, config *VueDirectiveConfig) error {
 	filename := config.Name
 	camelName := strcase.ToCamel(filename)
 	outDir := config.OutDir
@@ -47,4 +46,4 @@ var AddVueDirective command.InlineHandler = func(c *cli.Context, cfg interface{}
 		return err
 	}
 	return nil
-}
+})

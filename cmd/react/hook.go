@@ -25,9 +25,8 @@ var ReactHookCmd = command.NewBuilder("hook", "add react hook",
 	AddReactHook,
 ).Build()
 
-var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
-	rhc := cfg.(*ReactHookConfig)
-	varName := strcase.ToCamel(rhc.Name)
+var AddReactHook = command.InlineHandler[*ReactHookConfig](func(c *cli.Context, config *ReactHookConfig) error {
+	varName := strcase.ToCamel(config.Name)
 	filename := strcase.ToLowerCamel(fmt.Sprintf("use%s", varName))
 
 	b1 := new(bytes.Buffer)
@@ -35,16 +34,16 @@ var AddReactHook = command.InlineHandler(func(c *cli.Context, cfg interface{}) e
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.gotmpl"), b1)).
 			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", rhc.OutDir, false, b1)),
+			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", config.OutDir, false, b1)),
 	}
 
-	if rhc.AddTest {
+	if config.AddTest {
 		b2 := new(bytes.Buffer)
 		tasks = append(tasks,
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.gotmpl"), b2)).
 				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, b2, b2)).
-				AddTask(task.NewWriteFileToDiskTask(filename, ".test.ts", rhc.OutDir, false, b2)))
+				AddTask(task.NewWriteFileToDiskTask(filename, ".test.ts", config.OutDir, false, b2)))
 	}
 
 	s := task.NewParallelScheduler()

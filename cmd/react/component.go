@@ -30,19 +30,18 @@ type AddReactComponent struct {
 	tasks []task.Task
 }
 
-func (arc *AddReactComponent) Handle(c *cli.Context, cfg interface{}) error {
-	rcc := cfg.(*ReactComponentConfig)
-	filename := strcase.ToCamel(rcc.Name)
-	varName := strcase.ToCamel(rcc.Name)
-	outDir := rcc.OutDir
+func (arc *AddReactComponent) Handle(c *cli.Context, config *ReactComponentConfig) error {
+	filename := strcase.ToCamel(config.Name)
+	varName := strcase.ToCamel(config.Name)
+	outDir := config.OutDir
 
-	if rcc.Isolated {
+	if config.Isolated {
 		outDir = path.Join(outDir, filename)
 		filename = "index"
 	}
 	arc.addComponent(varName, filename, outDir)
 
-	if rcc.AddStory {
+	if config.AddStory {
 		arc.addStory(varName, filename, outDir)
 	}
 

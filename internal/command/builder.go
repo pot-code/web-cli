@@ -11,12 +11,12 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type CommandBuilder struct {
+type CommandBuilder[T any] struct {
 	name          string
 	usage         string
 	options       []CommandOption
-	defaultConfig interface{}
-	handlers      []CommandHandler
+	defaultConfig T
+	handlers      []CommandHandler[T]
 }
 
 type CommandOption interface {
@@ -47,10 +47,10 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewBuilder(name, usage string, defaultConfig interface{}, options ...CommandOption) *CommandBuilder {
+func NewBuilder[T any](name, usage string, defaultConfig T, options ...CommandOption) *CommandBuilder[T] {
 	validateConfig(defaultConfig)
 
-	return &CommandBuilder{
+	return &CommandBuilder[T]{
 		name:          name,
 		usage:         usage,
 		defaultConfig: defaultConfig,
@@ -58,12 +58,12 @@ func NewBuilder(name, usage string, defaultConfig interface{}, options ...Comman
 	}
 }
 
-func (cb *CommandBuilder) AddHandlers(h ...CommandHandler) *CommandBuilder {
+func (cb *CommandBuilder[T]) AddHandlers(h ...CommandHandler[T]) *CommandBuilder[T] {
 	cb.handlers = append(cb.handlers, h...)
 	return cb
 }
 
-func (cb *CommandBuilder) Build() *cli.Command {
+func (cb *CommandBuilder[T]) Build() *cli.Command {
 	dc := cb.defaultConfig
 	efv := newExtractFlagsVisitor()
 	walkConfig(dc, efv)

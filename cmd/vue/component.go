@@ -25,8 +25,7 @@ var VueComponentCmd = command.NewBuilder("component", "add vue component",
 	AddVueComponent,
 ).Build()
 
-var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*VueComponentConfig)
+var AddVueComponent = command.InlineHandler[*VueComponentConfig](func(c *cli.Context, config *VueComponentConfig) error {
 	filename := strcase.ToCamel(config.Name)
 	kebabName := strcase.ToKebab(config.Name)
 	outDir := config.OutDir
@@ -45,4 +44,4 @@ var AddVueComponent command.InlineHandler = func(c *cli.Context, cfg interface{}
 		return err
 	}
 	return nil
-}
+})

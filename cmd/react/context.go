@@ -23,17 +23,16 @@ var ReactContextCmd = command.NewBuilder("context", "add custom context",
 	AddContextStore,
 ).Build()
 
-var AddContextStore = command.InlineHandler(func(c *cli.Context, cfg interface{}) error {
-	rzc := cfg.(*ReactContextConfig)
-	filename := strcase.ToCamel(rzc.Name)
-	ctxName := strcase.ToCamel(rzc.Name)
+var AddContextStore = command.InlineHandler[*ReactContextConfig](func(c *cli.Context, config *ReactContextConfig) error {
+	filename := strcase.ToCamel(config.Name)
+	ctxName := strcase.ToCamel(config.Name)
 
 	b := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.gotmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": ctxName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, ".tsx", rzc.OutDir, false, b)),
+			AddTask(task.NewWriteFileToDiskTask(filename, ".tsx", config.OutDir, false, b)),
 	}
 
 	s := task.NewParallelScheduler()

@@ -24,8 +24,7 @@ var VueUseStoreCmd = command.NewBuilder("store", "add vue pinia store",
 	UseVueStore,
 ).Build()
 
-var UseVueStore command.InlineHandler = func(c *cli.Context, cfg interface{}) error {
-	config := cfg.(*VueUseStoreConfig)
+var UseVueStore = command.InlineHandler[*VueUseStoreConfig](func(c *cli.Context, config *VueUseStoreConfig) error {
 	name := strcase.ToCamel(config.Name)
 	storeKey := strcase.ToKebab(config.Name)
 	filename := fmt.Sprintf("use%sStore", name)
@@ -39,4 +38,4 @@ var UseVueStore command.InlineHandler = func(c *cli.Context, cfg interface{}) er
 		return err
 	}
 	return nil
-}
+})
