@@ -211,12 +211,7 @@ func (a *argParser) parseField(field *reflect.StructField) {
 }
 
 func (p *argParser) parseString(field *reflect.StructField) {
-	tv := field.Tag.Get("arg")
-	pos, err := strconv.Atoi(tv)
-	if err != nil {
-		panic(fmt.Errorf("arg tag value must be int: %s", tv))
-	}
-
+	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.String,
 		fieldName: field.Name,
@@ -226,12 +221,7 @@ func (p *argParser) parseString(field *reflect.StructField) {
 }
 
 func (p *argParser) parseInt(field *reflect.StructField) {
-	tv := field.Tag.Get("arg")
-	pos, err := strconv.Atoi(tv)
-	if err != nil {
-		panic(fmt.Errorf("arg tag value must be int: %s", tv))
-	}
-
+	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.Int,
 		fieldName: field.Name,
@@ -241,12 +231,7 @@ func (p *argParser) parseInt(field *reflect.StructField) {
 }
 
 func (p *argParser) parseBool(field *reflect.StructField) {
-	tv := field.Tag.Get("arg")
-	pos, err := strconv.Atoi(tv)
-	if err != nil {
-		panic(fmt.Errorf("arg tag value must be int: %s", tv))
-	}
-
+	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.Bool,
 		fieldName: field.Name,
@@ -256,18 +241,22 @@ func (p *argParser) parseBool(field *reflect.StructField) {
 }
 
 func (p *argParser) parseFloat64(field *reflect.StructField) {
-	tv := field.Tag.Get("arg")
-	pos, err := strconv.Atoi(tv)
-	if err != nil {
-		panic(fmt.Errorf("arg tag value must be int: %s", tv))
-	}
-
+	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.Float64,
 		fieldName: field.Name,
 		position:  pos,
 		alias:     field.Tag.Get("alias"),
 	})
+}
+
+func (p *argParser) parsePosition(field *reflect.StructField) int {
+	tv := field.Tag.Get("arg")
+	pos, err := strconv.Atoi(tv)
+	if err != nil {
+		panic(fmt.Errorf("arg tag value must be int: %s", tv))
+	}
+	return pos
 }
 
 func (a *argParser) getFields() []*argField {
