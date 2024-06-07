@@ -32,15 +32,11 @@ func getLang() string {
 	return b.String()
 }
 
-func initialize() {
+func init() {
 	var once sync.Once
 	once.Do(func() {
 		V = validator.New()
 	})
-}
-
-func InitValidator() {
-	initialize()
 
 	en := en.New()
 	zh := zh.New()

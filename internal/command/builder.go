@@ -3,7 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pot-code/web-cli/internal/validate"
@@ -58,8 +57,6 @@ func WithFlags(flags cli.Flag) CommandOption {
 }
 
 func NewBuilder[T any](name, usage string, defaultConfig T, options ...CommandOption) *CommandBuilder[T] {
-	validateConfig(defaultConfig)
-
 	return &CommandBuilder[T]{
 		name:          name,
 		usage:         usage,
@@ -74,27 +71,33 @@ func (cb *CommandBuilder[T]) AddHandlers(h ...CommandHandler[T]) *CommandBuilder
 }
 
 func (cb *CommandBuilder[T]) Build() *cli.Command {
-	dc := cb.defaultConfig
-	efv := newExtractFlagsVisitor()
-	walkConfig(dc, efv)
+	config := cb.defaultConfig
+	fp := newFlagParser()
+	ap := newArgParser()
+
+	if err := fp.parse(config); err != nil {
+		panic(fmt.Errorf("parse flags: %w", err))
+	}
+	if err := ap.parse(config); err != nil {
+		panic(fmt.Errorf("parse args: %w", err))
+	}
 
 	cmd := &cli.Command{
 		Name:  cb.name,
 		Usage: cb.usage,
 	}
-
 	for _, o := range cb.options {
 		o.apply(cmd)
 	}
-
-	cmd.Flags = append(cmd.Flags, efv.getFlags()...)
+	cmd.Flags = append(cmd.Flags, fp.getFlags()...)
 	cmd.Before = func(c *cli.Context) error {
-		scv := newSetConfigVisitor(c)
-		if err := walkConfig(dc, scv); err != nil {
+		cs := newConfigSetter(fp.getFields(), ap.getFields())
+		if err := cs.setFromContext(c, config); err != nil {
+			log.Err(err).Msg("set config from context")
 			return err
 		}
 
-		if err := validate.V.Struct(dc); err != nil {
+		if err := validate.V.Struct(config); err != nil {
 			if v, ok := err.(validator.ValidationErrors); ok {
 				msg := v[0].Translate(validate.T)
 				cli.ShowCommandHelp(c, c.Command.Name)
@@ -106,30 +109,15 @@ func (cb *CommandBuilder[T]) Build() *cli.Command {
 	}
 	cmd.Action = func(c *cli.Context) error {
 		log.Debug().
-			Str("config", fmt.Sprintf("%+v", dc)).
+			Str("config", fmt.Sprintf("%+v", config)).
 			Str("command", c.Command.FullName()).
 			Msg("run command")
 		for _, s := range cb.handlers {
-			if err := s.Handle(c, dc); err != nil {
+			if err := s.Handle(c, config); err != nil {
 				return err
 			}
 		}
 		return nil
 	}
 	return cmd
-}
-
-func validateConfig(config interface{}) {
-	if config == nil {
-		panic("config is nil")
-	}
-
-	if reflect.TypeOf(config).Kind() != reflect.Ptr {
-		panic("config value must be of pointer type")
-	}
-
-	et := reflect.TypeOf(config).Elem()
-	if et.Kind() != reflect.Struct {
-		panic("config must be of struct type")
-	}
 }
