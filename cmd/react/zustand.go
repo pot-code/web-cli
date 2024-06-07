@@ -18,7 +18,6 @@ type ReactZustandConfig struct {
 
 var ReactZustandCmd = command.NewBuilder("zustand", "add zustand store",
 	new(ReactZustandConfig),
-	command.WithArgUsage("STORE_NAME"),
 	command.WithAlias([]string{"z"}),
 ).AddHandlers(
 	AddZustandStore,

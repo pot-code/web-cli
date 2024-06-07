@@ -17,7 +17,6 @@ type ReactContextConfig struct {
 
 var ReactContextCmd = command.NewBuilder("context", "add custom context",
 	new(ReactContextConfig),
-	command.WithArgUsage("CONTEXT_NAME"),
 	command.WithAlias([]string{"ctx"}),
 ).AddHandlers(
 	AddContextStore,

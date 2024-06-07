@@ -19,7 +19,6 @@ type VueDirectiveConfig struct {
 
 var VueDirectiveCmd = command.NewBuilder("directive", "add vue directive",
 	new(VueDirectiveConfig),
-	command.WithArgUsage("DIRECTIVE_NAME"),
 	command.WithAlias([]string{"d"}),
 ).AddHandlers(
 	AddVueDirective,

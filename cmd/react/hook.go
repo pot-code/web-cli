@@ -19,7 +19,6 @@ type ReactHookConfig struct {
 
 var ReactHookCmd = command.NewBuilder("hook", "add react hook",
 	new(ReactHookConfig),
-	command.WithArgUsage("HOOK_NAME"),
 	command.WithAlias([]string{"k"}),
 ).AddHandlers(
 	AddReactHook,

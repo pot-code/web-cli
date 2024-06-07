@@ -18,7 +18,6 @@ type VueUseStoreConfig struct {
 
 var VueUseStoreCmd = command.NewBuilder("store", "add vue pinia store",
 	new(VueUseStoreConfig),
-	command.WithArgUsage("MODULE_NAME"),
 	command.WithAlias([]string{"s"}),
 ).AddHandlers(
 	UseVueStore,

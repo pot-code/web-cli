@@ -19,7 +19,6 @@ type VueComponentConfig struct {
 
 var VueComponentCmd = command.NewBuilder("component", "add vue component",
 	new(VueComponentConfig),
-	command.WithArgUsage("COMPONENT_NAME"),
 	command.WithAlias([]string{"c"}),
 ).AddHandlers(
 	AddVueComponent,

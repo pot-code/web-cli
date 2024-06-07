@@ -44,12 +44,6 @@ func WithAlias(alias []string) CommandOption {
 	})
 }
 
-func WithArgUsage(usage string) CommandOption {
-	return optionFunc(func(c *cli.Command) {
-		c.ArgsUsage = usage
-	})
-}
-
 func WithFlags(flags cli.Flag) CommandOption {
 	return optionFunc(func(c *cli.Command) {
 		c.Flags = append(c.Flags, flags)
@@ -89,6 +83,7 @@ func (cb *CommandBuilder[T]) Build() *cli.Command {
 	for _, o := range cb.options {
 		o.apply(cmd)
 	}
+	cmd.ArgsUsage = " " + ap.getArgsUsage()
 	cmd.Flags = append(cmd.Flags, fp.getFlags()...)
 	cmd.Before = func(c *cli.Context) error {
 		cs := newConfigSetter(fp.getFields(), ap.getFields())

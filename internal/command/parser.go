@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 
 	"github.com/urfave/cli/v2"
 )
@@ -165,6 +166,7 @@ type argField struct {
 	kind      reflect.Kind
 	position  int
 	fieldName string
+	alias     string
 }
 
 type argParser struct {
@@ -209,35 +211,75 @@ func (a *argParser) parseField(field *reflect.StructField) {
 }
 
 func (p *argParser) parseString(field *reflect.StructField) {
+	tv := field.Tag.Get("arg")
+	pos, err := strconv.Atoi(tv)
+	if err != nil {
+		panic(fmt.Errorf("arg tag value must be int: %s", tv))
+	}
+
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.String,
 		fieldName: field.Name,
+		position:  pos,
+		alias:     field.Tag.Get("alias"),
 	})
 }
 
 func (p *argParser) parseInt(field *reflect.StructField) {
+	tv := field.Tag.Get("arg")
+	pos, err := strconv.Atoi(tv)
+	if err != nil {
+		panic(fmt.Errorf("arg tag value must be int: %s", tv))
+	}
+
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.Int,
 		fieldName: field.Name,
+		position:  pos,
+		alias:     field.Tag.Get("alias"),
 	})
 }
 
 func (p *argParser) parseBool(field *reflect.StructField) {
+	tv := field.Tag.Get("arg")
+	pos, err := strconv.Atoi(tv)
+	if err != nil {
+		panic(fmt.Errorf("arg tag value must be int: %s", tv))
+	}
+
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.Bool,
 		fieldName: field.Name,
+		position:  pos,
+		alias:     field.Tag.Get("alias"),
 	})
 }
 
 func (p *argParser) parseFloat64(field *reflect.StructField) {
+	tv := field.Tag.Get("arg")
+	pos, err := strconv.Atoi(tv)
+	if err != nil {
+		panic(fmt.Errorf("arg tag value must be int: %s", tv))
+	}
+
 	p.fields = append(p.fields, &argField{
 		kind:      reflect.Float64,
 		fieldName: field.Name,
+		position:  pos,
+		alias:     field.Tag.Get("alias"),
 	})
 }
 
 func (a *argParser) getFields() []*argField {
 	return a.fields
+}
+
+func (a *argParser) getArgsUsage() string {
+	var sb strings.Builder
+	for _, f := range a.fields {
+		sb.WriteString(fmt.Sprintf("%s ", f.alias))
+	}
+	return sb.String()
 }
 
 type argValueParser struct{}
