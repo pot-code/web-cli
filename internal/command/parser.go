@@ -10,10 +10,9 @@ import (
 )
 
 type flagField struct {
-	kind        reflect.Kind
-	elementKind reflect.Kind
-	fieldName   string
-	flagName    string
+	kind      reflect.Kind
+	fieldName string
+	flagName  string
 }
 
 type flagParser struct {
@@ -122,10 +121,9 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 			Usage: field.Tag.Get("usage"),
 		})
 		p.fields = append(p.fields, &flagField{
-			kind:        reflect.Slice,
-			elementKind: reflect.String,
-			fieldName:   field.Name,
-			flagName:    field.Tag.Get("flag"),
+			kind:      reflect.Slice,
+			fieldName: field.Name,
+			flagName:  field.Tag.Get("flag"),
 		})
 	case reflect.Int:
 		p.flags = append(p.flags, &cli.IntSliceFlag{
@@ -133,10 +131,9 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 			Usage: field.Tag.Get("usage"),
 		})
 		p.fields = append(p.fields, &flagField{
-			kind:        reflect.Slice,
-			elementKind: reflect.Int,
-			fieldName:   field.Name,
-			flagName:    field.Tag.Get("flag"),
+			kind:      reflect.Slice,
+			fieldName: field.Name,
+			flagName:  field.Tag.Get("flag"),
 		})
 	case reflect.Float64:
 		p.flags = append(p.flags, &cli.Float64SliceFlag{
@@ -144,10 +141,9 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 			Usage: field.Tag.Get("usage"),
 		})
 		p.fields = append(p.fields, &flagField{
-			kind:        reflect.Slice,
-			elementKind: reflect.Float64,
-			fieldName:   field.Name,
-			flagName:    field.Tag.Get("flag"),
+			kind:      reflect.Slice,
+			fieldName: field.Name,
+			flagName:  field.Tag.Get("flag"),
 		})
 	default:
 		panic(fmt.Errorf("unsupported config field kind: %s", ek))
