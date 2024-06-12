@@ -13,6 +13,7 @@ type flagField struct {
 	kind      reflect.Kind
 	fieldName string
 	flagName  string
+	alias     string
 }
 
 type flagParser struct {
@@ -61,8 +62,9 @@ func (p *flagParser) parseField(field *reflect.StructField) {
 
 func (p *flagParser) parseString(field *reflect.StructField) {
 	p.flags = append(p.flags, &cli.StringFlag{
-		Name:  field.Tag.Get("flag"),
-		Usage: field.Tag.Get("usage"),
+		Name:    field.Tag.Get("flag"),
+		Usage:   field.Tag.Get("usage"),
+		Aliases: []string{field.Tag.Get("alias")},
 	})
 
 	p.fields = append(p.fields, &flagField{
@@ -74,8 +76,9 @@ func (p *flagParser) parseString(field *reflect.StructField) {
 
 func (p *flagParser) parseInt(field *reflect.StructField) {
 	p.flags = append(p.flags, &cli.IntFlag{
-		Name:  field.Tag.Get("flag"),
-		Usage: field.Tag.Get("usage"),
+		Name:    field.Tag.Get("flag"),
+		Usage:   field.Tag.Get("usage"),
+		Aliases: []string{field.Tag.Get("alias")},
 	})
 
 	p.fields = append(p.fields, &flagField{
@@ -101,8 +104,9 @@ func (p *flagParser) parseBool(field *reflect.StructField) {
 
 func (p *flagParser) parseFloat(field *reflect.StructField) {
 	p.flags = append(p.flags, &cli.Float64Flag{
-		Name:  field.Tag.Get("flag"),
-		Usage: field.Tag.Get("usage"),
+		Name:    field.Tag.Get("flag"),
+		Usage:   field.Tag.Get("usage"),
+		Aliases: []string{field.Tag.Get("alias")},
 	})
 
 	p.fields = append(p.fields, &flagField{
@@ -117,8 +121,9 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 	switch ek {
 	case reflect.String:
 		p.flags = append(p.flags, &cli.StringSliceFlag{
-			Name:  field.Tag.Get("flag"),
-			Usage: field.Tag.Get("usage"),
+			Name:    field.Tag.Get("flag"),
+			Usage:   field.Tag.Get("usage"),
+			Aliases: []string{field.Tag.Get("alias")},
 		})
 		p.fields = append(p.fields, &flagField{
 			kind:      reflect.Slice,
@@ -127,8 +132,9 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 		})
 	case reflect.Int:
 		p.flags = append(p.flags, &cli.IntSliceFlag{
-			Name:  field.Tag.Get("flag"),
-			Usage: field.Tag.Get("usage"),
+			Name:    field.Tag.Get("flag"),
+			Usage:   field.Tag.Get("usage"),
+			Aliases: []string{field.Tag.Get("alias")},
 		})
 		p.fields = append(p.fields, &flagField{
 			kind:      reflect.Slice,
@@ -137,8 +143,9 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 		})
 	case reflect.Float64:
 		p.flags = append(p.flags, &cli.Float64SliceFlag{
-			Name:  field.Tag.Get("flag"),
-			Usage: field.Tag.Get("usage"),
+			Name:    field.Tag.Get("flag"),
+			Usage:   field.Tag.Get("usage"),
+			Aliases: []string{field.Tag.Get("alias")},
 		})
 		p.fields = append(p.fields, &flagField{
 			kind:      reflect.Slice,
