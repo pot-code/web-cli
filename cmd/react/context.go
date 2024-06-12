@@ -23,7 +23,7 @@ var ReactContextCmd = command.NewBuilder("context", "add custom context",
 ).Build()
 
 var AddContextStore = command.InlineHandler[*ReactContextConfig](func(c *cli.Context, config *ReactContextConfig) error {
-	filename := strcase.ToCamel(config.Name)
+	filename := strcase.ToKebab(config.Name)
 	ctxName := strcase.ToCamel(config.Name)
 
 	b := new(bytes.Buffer)

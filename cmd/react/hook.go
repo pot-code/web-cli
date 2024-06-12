@@ -26,7 +26,7 @@ var ReactHookCmd = command.NewBuilder("hook", "add react hook",
 
 var AddReactHook = command.InlineHandler[*ReactHookConfig](func(c *cli.Context, config *ReactHookConfig) error {
 	varName := strcase.ToCamel(config.Name)
-	filename := strcase.ToLowerCamel(fmt.Sprintf("use%s", varName))
+	filename := strcase.ToKebab(fmt.Sprintf("use%s", varName))
 
 	b1 := new(bytes.Buffer)
 	tasks := []task.Task{

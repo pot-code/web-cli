@@ -24,7 +24,8 @@ var ReactZustandCmd = command.NewBuilder("zustand", "add zustand store",
 ).Build()
 
 var AddZustandStore = command.InlineHandler[*ReactZustandConfig](func(c *cli.Context, config *ReactZustandConfig) error {
-	filename := strcase.ToLowerCamel(fmt.Sprintf("use%sStore", strcase.ToCamel(config.Name)))
+	varName := fmt.Sprintf("use%sStore", strcase.ToCamel(config.Name))
+	filename := strcase.ToKebab(varName)
 
 	b := new(bytes.Buffer)
 	tasks := []task.Task{
