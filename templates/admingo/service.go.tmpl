@@ -1,0 +1,14 @@
+package {{.packageName}}
+
+import (
+	"gorm.io/gorm"
+)
+
+type Service struct {
+	db *gorm.DB
+	c  Converter
+}
+
+func NewService(db *gorm.DB, c Converter) *Service {
+	return &Service{db: db, c: c}
+}

@@ -25,7 +25,10 @@ func (c *configParser) parseFromCliContext(ctx *cli.Context, receiver any) error
 	rv := reflect.ValueOf(receiver).Elem()
 
 	for _, f := range c.flags {
-		rv.FieldByName(f.fieldName).Set(reflect.ValueOf(ctx.Value(f.flagName)))
+		passValue := reflect.ValueOf(ctx.Value(f.flagName))
+		if !passValue.IsZero() {
+			rv.FieldByName(f.fieldName).Set(reflect.ValueOf(ctx.Value(f.flagName)))
+		}
 	}
 	for _, f := range c.args {
 		v, err := c.avg.parse(f, ctx.Args().Get(f.position))

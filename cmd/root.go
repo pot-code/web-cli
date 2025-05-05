@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/pot-code/web-cli/cmd/admingo"
 	"github.com/pot-code/web-cli/cmd/react"
 	"github.com/pot-code/web-cli/cmd/vue"
 	"github.com/rs/zerolog"
@@ -15,6 +16,7 @@ var RootCmd = &cli.App{
 	Commands: []*cli.Command{
 		react.CommandSet,
 		vue.CommandSet,
+		admingo.CommandSet,
 	},
 	Version: AppVersion,
 	Flags: []cli.Flag{

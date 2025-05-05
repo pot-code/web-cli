@@ -31,41 +31,41 @@ func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite
 	}
 }
 
-func (wft *WriteFileToDiskTask) Run() error {
-	if wft.shouldSkip() {
-		log.Info().Str("file", wft.getFullPath()).Bool("overwrite", wft.overwrite).Msg("emit file [skipped]")
+func (w *WriteFileToDiskTask) Run() error {
+	if w.shouldSkip() {
+		log.Info().Str("file", w.getFullPath()).Bool("overwrite", w.overwrite).Msg("emit file [skipped]")
 		return nil
 	}
 
-	if err := wft.write(); err != nil {
+	if err := w.write(); err != nil {
 		return err
 	}
 
-	log.Info().Str("file", wft.getFullPath()).Msg("emit file")
+	log.Info().Str("file", w.getFullPath()).Msg("emit file")
 	return nil
 }
 
-func (wft *WriteFileToDiskTask) shouldSkip() bool {
-	return fileExists(wft.getFullPath()) && !wft.overwrite
+func (w *WriteFileToDiskTask) shouldSkip() bool {
+	return fileExists(w.getFullPath()) && !w.overwrite
 }
 
-func (wft *WriteFileToDiskTask) getFullPath() string {
-	return path.Join(wft.folder, wft.name+wft.suffix)
+func (w *WriteFileToDiskTask) getFullPath() string {
+	return path.Join(w.folder, w.name+w.suffix)
 }
 
-func (wft *WriteFileToDiskTask) write() error {
-	if err := wft.mkdirIfNecessary(); err != nil {
+func (w *WriteFileToDiskTask) write() error {
+	if err := w.mkdirIfNecessary(); err != nil {
 		return err
 	}
 
-	filePath := wft.getFullPath()
+	filePath := w.getFullPath()
 	fd, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
 	if err != nil {
 		return fmt.Errorf("open file [path: %s]: %w", filePath, err)
 	}
 	defer fd.Close()
 
-	n, err := io.Copy(fd, wft.data)
+	n, err := io.Copy(fd, w.data)
 	if err != nil {
 		return fmt.Errorf("write data to %s: %w", filePath, err)
 	}
@@ -73,8 +73,8 @@ func (wft *WriteFileToDiskTask) write() error {
 	return nil
 }
 
-func (wft *WriteFileToDiskTask) mkdirIfNecessary() error {
-	dir := wft.folder
+func (w *WriteFileToDiskTask) mkdirIfNecessary() error {
+	dir := w.folder
 	if dir == "" {
 		return nil
 	}

@@ -5,7 +5,7 @@ import (
 	"reflect"
 )
 
-func validateConfig(config interface{}) error {
+func validateConfig(config any) error {
 	if config == nil {
 		return errors.New("config is nil")
 	}

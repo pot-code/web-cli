@@ -48,10 +48,7 @@ func (arc *AddReactComponent) Handle(c *cli.Context, config *ReactComponentConfi
 	for _, t := range arc.tasks {
 		e.AddTask(t)
 	}
-	if err := e.Run(); err != nil {
-		return err
-	}
-	return nil
+	return e.Run()
 }
 
 func (arc *AddReactComponent) addComponent(varName string, filename string, outDir string) {

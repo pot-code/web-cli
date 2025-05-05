@@ -1,0 +1,14 @@
+//go:build !goverter
+
+package {{.packageName}}
+
+import (
+	"{{.projectName}}/internal/design"
+)
+
+var FxModule = design.NewModule("{{.moduleName}}").
+	Public(NewService).
+	// PrivateValue(di.InterfaceValue(new(Converter), new(ConverterImpl))).
+	Endpoint(func(g *design.ApiGroup, svc *Service) {
+	}).
+	ToFxModule()
