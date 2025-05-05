@@ -7,17 +7,17 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type configReader struct {
+type configParser struct {
 	flags []*flagField
 	args  []*argField
 	avg   *argValueParser
 }
 
-func newConfigReader(flags []*flagField, args []*argField) *configReader {
-	return &configReader{flags: flags, args: args, avg: newArgValueParser()}
+func newConfigParser(flags []*flagField, args []*argField) *configParser {
+	return &configParser{flags: flags, args: args, avg: newArgValueParser()}
 }
 
-func (c *configReader) readFromCliContext(ctx *cli.Context, receiver any) error {
+func (c *configParser) parseFromCliContext(ctx *cli.Context, receiver any) error {
 	if err := validateConfig(receiver); err != nil {
 		return nil
 	}
