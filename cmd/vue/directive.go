@@ -36,7 +36,7 @@ var AddVueDirective = command.InlineHandler[*VueDirectiveConfig](func(c *cli.Con
 
 	b := new(bytes.Buffer)
 	if err := task.NewSequentialScheduler().
-		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_directive.gotmpl"), b)).
+		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_directive.go.tmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_directive", map[string]string{
 			"name": camelName,
 		}, b, b)).

@@ -32,11 +32,11 @@ var AddContextStore = command.InlineHandler[*ReactContextConfig](func(c *cli.Con
 	b1 := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.gotmpl"), b)).
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.go.tmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": contextName}, b, b)).
 			AddTask(task.NewWriteFileToDiskTask(contextFileName, ".tsx", config.OutDir, false, b)),
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context_hook.gotmpl"), b1)).
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context_hook.go.tmpl"), b1)).
 			AddTask(task.NewTemplateRenderTask("react_context_hook", map[string]string{"name": contextName, "file": contextFileName}, b1, b1)).
 			AddTask(task.NewWriteFileToDiskTask(hookFileName, ".ts", config.OutDir, false, b1)),
 	}

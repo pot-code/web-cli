@@ -58,7 +58,7 @@ func (arc *AddReactComponent) addComponent(varName string, filename string, outD
 	b := new(bytes.Buffer)
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.gotmpl"), b)).
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_component.go.tmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_component", map[string]string{"name": varName}, b, b)).
 			AddTask(task.NewWriteFileToDiskTask(filename, ".tsx", outDir, false, b)))
 }
@@ -67,7 +67,7 @@ func (arc *AddReactComponent) addStory(componentName string, filename string, ou
 	b := new(bytes.Buffer)
 	arc.tasks = append(arc.tasks,
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_storybook.gotmpl"), b)).
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_storybook.go.tmpl"), b)).
 			AddTask(task.NewTemplateRenderTask(
 				"react_storybook",
 				map[string]string{"name": componentName, "file": filename},

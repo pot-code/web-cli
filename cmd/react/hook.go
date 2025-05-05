@@ -31,7 +31,7 @@ var AddReactHook = command.InlineHandler[*ReactHookConfig](func(c *cli.Context, 
 	b1 := new(bytes.Buffer)
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.gotmpl"), b1)).
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.go.tmpl"), b1)).
 			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, b1, b1)).
 			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", config.OutDir, false, b1)),
 	}
@@ -40,7 +40,7 @@ var AddReactHook = command.InlineHandler[*ReactHookConfig](func(c *cli.Context, 
 		b2 := new(bytes.Buffer)
 		tasks = append(tasks,
 			task.NewSequentialScheduler().
-				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.gotmpl"), b2)).
+				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.go.tmpl"), b2)).
 				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, b2, b2)).
 				AddTask(task.NewWriteFileToDiskTask(filename, ".test.ts", config.OutDir, false, b2)))
 	}
