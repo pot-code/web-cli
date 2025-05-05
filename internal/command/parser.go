@@ -13,7 +13,6 @@ type flagField struct {
 	kind      reflect.Kind
 	fieldName string
 	flagName  string
-	alias     string
 }
 
 type flagParser struct {
@@ -25,7 +24,7 @@ func newFlagParser() *flagParser {
 	return &flagParser{}
 }
 
-func (p *flagParser) parse(config interface{}) error {
+func (p *flagParser) parse(config any) error {
 	if err := validateConfig(config); err != nil {
 		return err
 	}
@@ -180,7 +179,7 @@ func newArgParser() *argParser {
 	return &argParser{}
 }
 
-func (a *argParser) parse(config interface{}) error {
+func (a *argParser) parse(config any) error {
 	if err := validateConfig(config); err != nil {
 		return err
 	}

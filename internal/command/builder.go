@@ -50,7 +50,7 @@ func WithFlags(flags cli.Flag) CommandOption {
 	})
 }
 
-func NewBuilder[T any](name, usage string, defaultConfig T, options ...CommandOption) *CommandBuilder[T] {
+func NewCommand[T any](name, usage string, defaultConfig T, options ...CommandOption) *CommandBuilder[T] {
 	return &CommandBuilder[T]{
 		name:          name,
 		usage:         usage,
@@ -59,12 +59,12 @@ func NewBuilder[T any](name, usage string, defaultConfig T, options ...CommandOp
 	}
 }
 
-func (cb *CommandBuilder[T]) AddHandlers(h ...CommandHandler[T]) *CommandBuilder[T] {
-	cb.handlers = append(cb.handlers, h...)
+func (cb *CommandBuilder[T]) AddHandler(h CommandHandler[T]) *CommandBuilder[T] {
+	cb.handlers = append(cb.handlers, h)
 	return cb
 }
 
-func (cb *CommandBuilder[T]) Build() *cli.Command {
+func (cb *CommandBuilder[T]) Create() *cli.Command {
 	config := cb.defaultConfig
 	fp := newFlagParser()
 	ap := newArgParser()
@@ -86,8 +86,8 @@ func (cb *CommandBuilder[T]) Build() *cli.Command {
 	cmd.ArgsUsage = " " + ap.getArgsUsage()
 	cmd.Flags = append(cmd.Flags, fp.getFlags()...)
 	cmd.Before = func(c *cli.Context) error {
-		cs := newConfigSetter(fp.getFields(), ap.getFields())
-		if err := cs.setFromContext(c, config); err != nil {
+		cs := newConfigReader(fp.getFields(), ap.getFields())
+		if err := cs.readFromCliContext(c, config); err != nil {
 			log.Err(err).Msg("set config from context")
 			return err
 		}

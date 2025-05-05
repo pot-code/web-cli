@@ -17,12 +17,12 @@ type VueComponentConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
-var VueComponentCmd = command.NewBuilder("component", "add vue component",
+var VueComponentCmd = command.NewCommand("component", "add vue component",
 	new(VueComponentConfig),
 	command.WithAlias([]string{"c"}),
-).AddHandlers(
+).AddHandler(
 	AddVueComponent,
-).Build()
+).Create()
 
 var AddVueComponent = command.InlineHandler[*VueComponentConfig](func(c *cli.Context, config *VueComponentConfig) error {
 	filename := strcase.ToCamel(config.Name)

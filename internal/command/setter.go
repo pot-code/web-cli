@@ -7,22 +7,22 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type configSetter struct {
+type configReader struct {
 	flags []*flagField
 	args  []*argField
 	avg   *argValueParser
 }
 
-func newConfigSetter(flags []*flagField, args []*argField) *configSetter {
-	return &configSetter{flags: flags, args: args, avg: newArgValueParser()}
+func newConfigReader(flags []*flagField, args []*argField) *configReader {
+	return &configReader{flags: flags, args: args, avg: newArgValueParser()}
 }
 
-func (c *configSetter) setFromContext(ctx *cli.Context, config interface{}) error {
-	if err := validateConfig(config); err != nil {
+func (c *configReader) readFromCliContext(ctx *cli.Context, receiver any) error {
+	if err := validateConfig(receiver); err != nil {
 		return nil
 	}
 
-	rv := reflect.ValueOf(config).Elem()
+	rv := reflect.ValueOf(receiver).Elem()
 
 	for _, f := range c.flags {
 		rv.FieldByName(f.fieldName).Set(reflect.ValueOf(ctx.Value(f.flagName)))

@@ -16,12 +16,12 @@ type VueUseStoreConfig struct {
 	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required,var"`
 }
 
-var VueUseStoreCmd = command.NewBuilder("store", "add vue pinia store",
+var VueUseStoreCmd = command.NewCommand("store", "add vue pinia store",
 	new(VueUseStoreConfig),
 	command.WithAlias([]string{"s"}),
-).AddHandlers(
+).AddHandler(
 	UseVueStore,
-).Build()
+).Create()
 
 var UseVueStore = command.InlineHandler[*VueUseStoreConfig](func(c *cli.Context, config *VueUseStoreConfig) error {
 	name := strcase.ToCamel(config.Name)

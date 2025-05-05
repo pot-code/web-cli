@@ -17,12 +17,12 @@ type VueDirectiveConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
 }
 
-var VueDirectiveCmd = command.NewBuilder("directive", "add vue directive",
+var VueDirectiveCmd = command.NewCommand("directive", "add vue directive",
 	new(VueDirectiveConfig),
 	command.WithAlias([]string{"d"}),
-).AddHandlers(
+).AddHandler(
 	AddVueDirective,
-).Build()
+).Create()
 
 var AddVueDirective = command.InlineHandler[*VueDirectiveConfig](func(c *cli.Context, config *VueDirectiveConfig) error {
 	filename := config.Name

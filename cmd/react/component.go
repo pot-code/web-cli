@@ -18,12 +18,12 @@ type ReactComponentConfig struct {
 	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,min=1,max=32,var"`
 }
 
-var ReactComponentCmd = command.NewBuilder("component", "add react component",
+var ReactComponentCmd = command.NewCommand("component", "add react component",
 	new(ReactComponentConfig),
 	command.WithAlias([]string{"c"}),
-).AddHandlers(
+).AddHandler(
 	new(AddReactComponent),
-).Build()
+).Create()
 
 type AddReactComponent struct {
 	tasks []task.Task

@@ -16,12 +16,12 @@ type ReactContextConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
-var ReactContextCmd = command.NewBuilder("context", "add custom context",
+var ReactContextCmd = command.NewCommand("context", "add custom context",
 	new(ReactContextConfig),
 	command.WithAlias([]string{"ctx"}),
-).AddHandlers(
+).AddHandler(
 	AddContextStore,
-).Build()
+).Create()
 
 var AddContextStore = command.InlineHandler[*ReactContextConfig](func(c *cli.Context, config *ReactContextConfig) error {
 	contextFileName := strcase.ToKebab(fmt.Sprintf("%sContext", config.Name))

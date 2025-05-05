@@ -16,12 +16,12 @@ type ReactZustandConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
-var ReactZustandCmd = command.NewBuilder("zustand", "add zustand store",
+var ReactZustandCmd = command.NewCommand("zustand", "add zustand store",
 	new(ReactZustandConfig),
 	command.WithAlias([]string{"z"}),
-).AddHandlers(
+).AddHandler(
 	AddZustandStore,
-).Build()
+).Create()
 
 var AddZustandStore = command.InlineHandler[*ReactZustandConfig](func(c *cli.Context, config *ReactZustandConfig) error {
 	varName := fmt.Sprintf("use%sStore", strcase.ToCamel(config.Name))

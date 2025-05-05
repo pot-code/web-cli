@@ -17,12 +17,12 @@ type ReactHookConfig struct {
 	AddTest bool   `flag:"add-test" alias:"t" usage:"add associated hook test file"`
 }
 
-var ReactHookCmd = command.NewBuilder("hook", "add react hook",
+var ReactHookCmd = command.NewCommand("hook", "add react hook",
 	new(ReactHookConfig),
 	command.WithAlias([]string{"k"}),
-).AddHandlers(
+).AddHandler(
 	AddReactHook,
-).Build()
+).Create()
 
 var AddReactHook = command.InlineHandler[*ReactHookConfig](func(c *cli.Context, config *ReactHookConfig) error {
 	varName := strcase.ToCamel(config.Name)
