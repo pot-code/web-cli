@@ -40,6 +40,7 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 		packageName := strings.ToLower(config.Name)
 		moduleName := packageName + "s"
 		outputDir := path.Join(cwd, config.OutDir, packageName)
+		outputPackage := path.Join(projectName, config.OutDir, packageName)
 
 		var buffers []*bytes.Buffer
 		for range 4 {
@@ -61,9 +62,8 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/converter.go.tmpl"), buffers[1])).
 				AddTask(task.NewTemplateRenderTask("converter", map[string]string{
-					"projectName": projectName,
-					"moduleName":  moduleName,
-					"packageName": packageName,
+					"packageName":   packageName,
+					"outputPackage": outputPackage,
 				}, buffers[1], buffers[1])).
 				AddTask(task.NewWriteFileToDiskTask("converter", ".go", outputDir, false, buffers[1])),
 		)
@@ -71,8 +71,6 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/schemas.go.tmpl"), buffers[2])).
 				AddTask(task.NewTemplateRenderTask("schemas", map[string]string{
-					"projectName": projectName,
-					"moduleName":  moduleName,
 					"packageName": packageName,
 				}, buffers[2], buffers[2])).
 				AddTask(task.NewWriteFileToDiskTask("schemas", ".go", outputDir, false, buffers[2])),
@@ -81,8 +79,6 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 			task.NewSequentialScheduler().
 				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/service.go.tmpl"), buffers[3])).
 				AddTask(task.NewTemplateRenderTask("service", map[string]string{
-					"projectName": projectName,
-					"moduleName":  moduleName,
 					"packageName": packageName,
 				}, buffers[3], buffers[3])).
 				AddTask(task.NewWriteFileToDiskTask("service", ".go", outputDir, false, buffers[3])),
