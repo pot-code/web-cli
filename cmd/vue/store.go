@@ -13,7 +13,7 @@ import (
 
 type VueUseStoreConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
-	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required,var"`
+	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required,identifier"`
 }
 
 var VueUseStoreCmd = command.NewCommand("store", "add vue pinia store",

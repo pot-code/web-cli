@@ -53,11 +53,11 @@ func init() {
 	T, _ = uni.GetTranslator(getLang())
 
 	V.RegisterValidation("version", func(fl validator.FieldLevel) bool {
-		return ValidateVersion(fl.Field().String()) == nil
+		return validateVersion(fl.Field().String()) == nil
 	})
 
-	V.RegisterValidation("var", func(fl validator.FieldLevel) bool {
-		return ValidateVariableName(fl.Field().String()) == nil
+	V.RegisterValidation("identifier", func(fl validator.FieldLevel) bool {
+		return validateIdentifier(fl.Field().String()) == nil
 	})
 
 	V.RegisterTagNameFunc(func(field reflect.StructField) string {

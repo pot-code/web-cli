@@ -12,7 +12,7 @@ import (
 )
 
 type ReactHookConfig struct {
-	Name    string `arg:"0" alias:"HOOK_NAME" validate:"required,var"`
+	Name    string `arg:"0" alias:"HOOK_NAME" validate:"required,identifier"`
 	OutDir  string `flag:"output" alias:"o" usage:"destination directory"`
 	AddTest bool   `flag:"add-test" alias:"t" usage:"add associated hook test file"`
 }

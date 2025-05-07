@@ -84,9 +84,9 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 		o.apply(cmd)
 	}
 	cmd.ArgsUsage = " " + ap.getArgsUsage()
-	cmd.Flags = append(cmd.Flags, fp.getFlags()...)
+	cmd.Flags = append(cmd.Flags, fp.flags...)
 	cmd.Before = func(c *cli.Context) error {
-		cs := newConfigParser(fp.getFields(), ap.getFields())
+		cs := newConfigParser(fp.fields, ap.fields)
 		if err := cs.parseFromCliContext(c, config); err != nil {
 			log.Err(err).Msg("set config from context")
 			return err

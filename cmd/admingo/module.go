@@ -16,7 +16,7 @@ import (
 
 type CreateModuleConfig struct {
 	OutDir string `flag:"output" alias:"o" usage:"输出目录"`
-	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required" usage:"模块名"`
+	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required,identifier"`
 }
 
 var CreateModuleCmd = command.NewCommand("module", "生成业务模块",

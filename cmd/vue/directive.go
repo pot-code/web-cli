@@ -14,7 +14,7 @@ import (
 type VueDirectiveConfig struct {
 	Isolated bool   `flag:"isolated" alias:"i" usage:"generate files in a folder"`
 	OutDir   string `flag:"output" alias:"o" usage:"destination directory"`
-	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,var"`
+	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,identifier"`
 }
 
 var VueDirectiveCmd = command.NewCommand("directive", "add vue directive",

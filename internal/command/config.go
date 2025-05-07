@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"reflect"
 
 	"github.com/rs/zerolog/log"
@@ -37,6 +38,18 @@ func (c *configParser) parseFromCliContext(ctx *cli.Context, receiver any) error
 			return err
 		}
 		rv.FieldByName(f.fieldName).Set(reflect.ValueOf(v))
+	}
+	return nil
+}
+
+func validateConfig(config any) error {
+	if config == nil {
+		return errors.New("config is nil")
+	}
+
+	rv := reflect.ValueOf(config)
+	if rv.Kind() != reflect.Ptr && rv.Elem().Kind() != reflect.Struct {
+		return errors.New("config must be of pointer of struct type")
 	}
 	return nil
 }

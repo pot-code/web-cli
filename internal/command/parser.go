@@ -10,7 +10,7 @@ import (
 )
 
 type flagField struct {
-	kind      reflect.Kind
+	fieldKind reflect.Kind
 	fieldName string
 	flagName  string
 }
@@ -55,7 +55,7 @@ func (p *flagParser) parseField(field *reflect.StructField) {
 	case reflect.Slice:
 		p.parseSlice(field)
 	default:
-		panic(fmt.Errorf("unsupported config field kind: %s", fk))
+		panic(fmt.Errorf("不支持的配置类型: %s", fk))
 	}
 }
 
@@ -67,7 +67,7 @@ func (p *flagParser) parseString(field *reflect.StructField) {
 	})
 
 	p.fields = append(p.fields, &flagField{
-		kind:      reflect.String,
+		fieldKind: reflect.String,
 		fieldName: field.Name,
 		flagName:  field.Tag.Get("flag"),
 	})
@@ -81,7 +81,7 @@ func (p *flagParser) parseInt(field *reflect.StructField) {
 	})
 
 	p.fields = append(p.fields, &flagField{
-		kind:      reflect.Int,
+		fieldKind: reflect.Int,
 		fieldName: field.Name,
 		flagName:  field.Tag.Get("flag"),
 	})
@@ -95,7 +95,7 @@ func (p *flagParser) parseBool(field *reflect.StructField) {
 	})
 
 	p.fields = append(p.fields, &flagField{
-		kind:      reflect.Bool,
+		fieldKind: reflect.Bool,
 		fieldName: field.Name,
 		flagName:  field.Tag.Get("flag"),
 	})
@@ -109,7 +109,7 @@ func (p *flagParser) parseFloat(field *reflect.StructField) {
 	})
 
 	p.fields = append(p.fields, &flagField{
-		kind:      reflect.Float64,
+		fieldKind: reflect.Float64,
 		fieldName: field.Name,
 		flagName:  field.Tag.Get("flag"),
 	})
@@ -125,7 +125,7 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 			Aliases: []string{field.Tag.Get("alias")},
 		})
 		p.fields = append(p.fields, &flagField{
-			kind:      reflect.Slice,
+			fieldKind: reflect.Slice,
 			fieldName: field.Name,
 			flagName:  field.Tag.Get("flag"),
 		})
@@ -136,7 +136,7 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 			Aliases: []string{field.Tag.Get("alias")},
 		})
 		p.fields = append(p.fields, &flagField{
-			kind:      reflect.Slice,
+			fieldKind: reflect.Slice,
 			fieldName: field.Name,
 			flagName:  field.Tag.Get("flag"),
 		})
@@ -147,28 +147,20 @@ func (p *flagParser) parseSlice(field *reflect.StructField) {
 			Aliases: []string{field.Tag.Get("alias")},
 		})
 		p.fields = append(p.fields, &flagField{
-			kind:      reflect.Slice,
+			fieldKind: reflect.Slice,
 			fieldName: field.Name,
 			flagName:  field.Tag.Get("flag"),
 		})
 	default:
-		panic(fmt.Errorf("unsupported config field kind: %s", ek))
+		panic(fmt.Errorf("不支持的配置类型: %s", ek))
 	}
 }
 
-func (p *flagParser) getFlags() []cli.Flag {
-	return p.flags
-}
-
-func (p *flagParser) getFields() []*flagField {
-	return p.fields
-}
-
 type argField struct {
-	kind      reflect.Kind
-	position  int
+	fieldKind reflect.Kind
 	fieldName string
-	alias     string
+	position  int
+	alias     string // positional 参数的别名，一般用在命令行的 usage 里，全大写格式
 }
 
 type argParser struct {
@@ -208,14 +200,14 @@ func (a *argParser) parseField(field *reflect.StructField) {
 	case reflect.Float64:
 		a.parseFloat64(field)
 	default:
-		panic(fmt.Errorf("unsupported config field kind: %s", fk))
+		panic(fmt.Errorf("不支持的配置类型: %s", fk))
 	}
 }
 
 func (p *argParser) parseString(field *reflect.StructField) {
 	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
-		kind:      reflect.String,
+		fieldKind: reflect.String,
 		fieldName: field.Name,
 		position:  pos,
 		alias:     field.Tag.Get("alias"),
@@ -225,7 +217,7 @@ func (p *argParser) parseString(field *reflect.StructField) {
 func (p *argParser) parseInt(field *reflect.StructField) {
 	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
-		kind:      reflect.Int,
+		fieldKind: reflect.Int,
 		fieldName: field.Name,
 		position:  pos,
 		alias:     field.Tag.Get("alias"),
@@ -235,7 +227,7 @@ func (p *argParser) parseInt(field *reflect.StructField) {
 func (p *argParser) parseBool(field *reflect.StructField) {
 	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
-		kind:      reflect.Bool,
+		fieldKind: reflect.Bool,
 		fieldName: field.Name,
 		position:  pos,
 		alias:     field.Tag.Get("alias"),
@@ -245,24 +237,24 @@ func (p *argParser) parseBool(field *reflect.StructField) {
 func (p *argParser) parseFloat64(field *reflect.StructField) {
 	pos := p.parsePosition(field)
 	p.fields = append(p.fields, &argField{
-		kind:      reflect.Float64,
+		fieldKind: reflect.Float64,
 		fieldName: field.Name,
 		position:  pos,
 		alias:     field.Tag.Get("alias"),
 	})
 }
 
+// 解析 positional arg 的位置
 func (p *argParser) parsePosition(field *reflect.StructField) int {
 	tv := field.Tag.Get("arg")
 	pos, err := strconv.Atoi(tv)
 	if err != nil {
-		panic(fmt.Errorf("arg tag value must be int: %s", tv))
+		panic(fmt.Errorf("arg 标签值必须是整数: %s", tv))
+	}
+	if pos < 0 {
+		panic(fmt.Errorf("arg 标签值不能小于0: %s", tv))
 	}
 	return pos
-}
-
-func (a *argParser) getFields() []*argField {
-	return a.fields
 }
 
 func (a *argParser) getArgsUsage() string {
@@ -280,7 +272,7 @@ func newArgValueParser() *argValueParser {
 }
 
 func (a *argValueParser) parse(af *argField, v string) (any, error) {
-	switch af.kind {
+	switch af.fieldKind {
 	case reflect.String:
 		return v, nil
 	case reflect.Int:
@@ -290,8 +282,8 @@ func (a *argValueParser) parse(af *argField, v string) (any, error) {
 	case reflect.Float64:
 		return a.parseFloat64(v)
 	default:
+		panic(fmt.Errorf("不支持的配置类型: %s", af.fieldKind))
 	}
-	return nil, nil
 }
 
 func (a *argValueParser) parseInt(s string) (int, error) {

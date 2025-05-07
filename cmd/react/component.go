@@ -15,7 +15,7 @@ type ReactComponentConfig struct {
 	AddStory bool   `flag:"add-storybook" alias:"s" usage:"add storybook"`
 	Isolated bool   `flag:"isolated" alias:"i" usage:"generate files in a folder"`
 	OutDir   string `flag:"output" alias:"o" usage:"destination directory"`
-	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,min=1,max=32,var"`
+	Name     string `arg:"0" alias:"COMPONENT_NAME" validate:"required,min=1,max=32,identifier"`
 }
 
 var ReactComponentCmd = command.NewCommand("component", "add react component",

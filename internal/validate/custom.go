@@ -7,17 +7,19 @@ import (
 	"github.com/hashicorp/go-version"
 )
 
-var variableNameExp = `^[-_\w][-_\w\d]+$`
-var variableNameReg = regexp.MustCompile(variableNameExp)
+var identifierRegExp = `^[-_\w][-_\w\d]+$`
+var identifierReg = regexp.MustCompile(identifierRegExp)
 
-func ValidateVariableName(name string) error {
-	if !variableNameReg.MatchString(name) {
-		return fmt.Errorf("input must be in form: %s", variableNameExp)
+// validateIdentifier 校验标识符类型字符串
+func validateIdentifier(name string) error {
+	if !identifierReg.MatchString(name) {
+		return fmt.Errorf("input must be in form: %s", identifierRegExp)
 	}
 	return nil
 }
 
-func ValidateVersion(v string) error {
+// validateVersion 校验版本号
+func validateVersion(v string) error {
 	if _, err := version.NewVersion(v); err != nil {
 		return fmt.Errorf("invalid version format")
 	}
