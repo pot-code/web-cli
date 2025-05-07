@@ -18,21 +18,21 @@ type WriteFileToDiskTask struct {
 	data      io.Reader
 }
 
-type writeFileOption func(*WriteFileToDiskTask)
+type WriteFileOption func(*WriteFileToDiskTask)
 
-func WithFolder(folder string) writeFileOption {
+func WithFolder(folder string) WriteFileOption {
 	return func(w *WriteFileToDiskTask) {
 		w.folder = folder
 	}
 }
 
-func WithOverwrite(overwrite bool) writeFileOption {
+func WithOverwrite(overwrite bool) WriteFileOption {
 	return func(w *WriteFileToDiskTask) {
 		w.overwrite = overwrite
 	}
 }
 
-func NewWriteFileToDiskTask(name string, suffix string, in io.Reader, options ...writeFileOption) *WriteFileToDiskTask {
+func NewWriteFileToDiskTask(name string, suffix string, in io.Reader, options ...WriteFileOption) *WriteFileToDiskTask {
 	w := &WriteFileToDiskTask{
 		name:   name,
 		suffix: suffix,

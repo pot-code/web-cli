@@ -1,15 +1,14 @@
 package admingo
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"path"
 	"strings"
 
+	"github.com/pot-code/web-cli/common/workflow"
 	"github.com/pot-code/web-cli/internal/command"
 	"github.com/pot-code/web-cli/internal/gomod"
-	"github.com/pot-code/web-cli/internal/provider"
 	"github.com/pot-code/web-cli/internal/task"
 	"github.com/urfave/cli/v2"
 )
@@ -42,46 +41,29 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 		outputDir := path.Join(cwd, config.OutDir, packageName)
 		outputPackage := path.Join(projectName, config.OutDir, packageName)
 
-		var buffers []*bytes.Buffer
-		for range 4 {
-			buffers = append(buffers, new(bytes.Buffer))
-		}
-
 		e := task.NewParallelScheduler()
 		e.AddTask(
-			task.NewSequentialScheduler().
-				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/fx.go.tmpl"), buffers[0])).
-				AddTask(task.NewTemplateRenderTask("fx", map[string]string{
-					"projectName": projectName,
-					"moduleName":  moduleName,
-					"packageName": packageName,
-				}, buffers[0], buffers[0])).
-				AddTask(task.NewWriteFileToDiskTask("fx", ".go", buffers[0], task.WithFolder(outputDir))),
+			workflow.NewRenderEmbedTemplateWorkflow("templates/admingo/fx.go.tmpl", map[string]string{
+				"projectName": projectName,
+				"moduleName":  moduleName,
+				"packageName": packageName,
+			}, "fx", ".go", task.WithFolder(outputDir)),
 		)
 		e.AddTask(
-			task.NewSequentialScheduler().
-				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/converter.go.tmpl"), buffers[1])).
-				AddTask(task.NewTemplateRenderTask("converter", map[string]string{
-					"packageName":   packageName,
-					"outputPackage": outputPackage,
-				}, buffers[1], buffers[1])).
-				AddTask(task.NewWriteFileToDiskTask("converter", ".go", buffers[1], task.WithFolder(outputDir))),
+			workflow.NewRenderEmbedTemplateWorkflow("templates/admingo/converter.go.tmpl", map[string]string{
+				"packageName":   packageName,
+				"outputPackage": outputPackage,
+			}, "converter", ".go", task.WithFolder(outputDir)),
 		)
 		e.AddTask(
-			task.NewSequentialScheduler().
-				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/schemas.go.tmpl"), buffers[2])).
-				AddTask(task.NewTemplateRenderTask("schemas", map[string]string{
-					"packageName": packageName,
-				}, buffers[2], buffers[2])).
-				AddTask(task.NewWriteFileToDiskTask("schemas", ".go", buffers[2], task.WithFolder(outputDir))),
+			workflow.NewRenderEmbedTemplateWorkflow("templates/admingo/schemas.go.tmpl", map[string]string{
+				"packageName": packageName,
+			}, "schemas", ".go", task.WithFolder(outputDir)),
 		)
 		e.AddTask(
-			task.NewSequentialScheduler().
-				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/admingo/service.go.tmpl"), buffers[3])).
-				AddTask(task.NewTemplateRenderTask("service", map[string]string{
-					"packageName": packageName,
-				}, buffers[3], buffers[3])).
-				AddTask(task.NewWriteFileToDiskTask("service", ".go", buffers[3], task.WithFolder(outputDir))),
+			workflow.NewRenderEmbedTemplateWorkflow("templates/admingo/service.go.tmpl", map[string]string{
+				"packageName": packageName,
+			}, "service", ".go", task.WithFolder(outputDir)),
 		)
 		return e.Run()
 	}),

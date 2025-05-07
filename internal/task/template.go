@@ -13,12 +13,12 @@ type TemplateRenderTask struct {
 	// name template name
 	name string
 	// data template data
-	data interface{}
+	data any
 	in   io.Reader
 	out  io.Writer
 }
 
-func NewTemplateRenderTask(name string, data interface{}, in io.Reader, out io.Writer) *TemplateRenderTask {
+func NewTemplateRenderTask(name string, data any, in io.Reader, out io.Writer) *TemplateRenderTask {
 	return &TemplateRenderTask{
 		name: name,
 		data: data,
@@ -67,7 +67,7 @@ type RenderRequest struct {
 	// name template name
 	name     string
 	template string
-	data     interface{}
+	data     any
 }
 
 func RenderTextTemplate(req *RenderRequest, out io.Writer) error {
