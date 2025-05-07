@@ -75,13 +75,13 @@ func (w *WriteFileToDiskTask) write() error {
 	filePath := w.getFullPath()
 	fd, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE, fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("open file [path: %s]: %w", filePath, err)
+		return fmt.Errorf("读取文件 %s: %w", filePath, err)
 	}
 	defer fd.Close()
 
 	n, err := io.Copy(fd, w.data)
 	if err != nil {
-		return fmt.Errorf("write data to %s: %w", filePath, err)
+		return fmt.Errorf("写出文件 %s: %w", filePath, err)
 	}
 	log.Debug().Str("file", filePath).Int64("bytes", n).Msg("write file")
 	return nil
@@ -97,7 +97,7 @@ func (w *WriteFileToDiskTask) mkdirIfNecessary() error {
 	}
 	err := os.MkdirAll(dir, fs.ModePerm)
 	if err != nil {
-		return fmt.Errorf("make dir %s: %w", dir, err)
+		return fmt.Errorf("创建目录 %s: %w", dir, err)
 	}
 	return nil
 }

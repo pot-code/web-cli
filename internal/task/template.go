@@ -51,7 +51,7 @@ func (trt *TemplateRenderTask) renderTemplate() error {
 		return fmt.Errorf("read template data: %w", err)
 	}
 
-	log.Debug().Str("template_name", trt.name).Interface("data", trt.data).Msg("render template")
+	log.Debug().Str("task", "TemplateRenderTask").Str("template_name", trt.name).Interface("data", trt.data).Msg("render template")
 	err = RenderTextTemplate(&RenderRequest{
 		name:     trt.name,
 		template: string(b),
