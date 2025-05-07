@@ -24,33 +24,25 @@ type CommandBuilder[T any] struct {
 	name          string
 	usage         string
 	defaultConfig T
-	options       []CommandOption
+	options       []commandOption
 	handlers      []CommandHandler[T]
 }
 
-type CommandOption interface {
-	apply(*cli.Command)
-}
+type commandOption func(*cli.Command)
 
-type optionFunc func(*cli.Command)
-
-func (o optionFunc) apply(c *cli.Command) {
-	o(c)
-}
-
-func WithAlias(alias []string) CommandOption {
-	return optionFunc(func(c *cli.Command) {
+func WithAlias(alias []string) commandOption {
+	return func(c *cli.Command) {
 		c.Aliases = alias
-	})
+	}
 }
 
-func WithFlags(flags cli.Flag) CommandOption {
-	return optionFunc(func(c *cli.Command) {
+func WithFlags(flags cli.Flag) commandOption {
+	return func(c *cli.Command) {
 		c.Flags = append(c.Flags, flags)
-	})
+	}
 }
 
-func NewCommand[T any](name, usage string, defaultConfig T, options ...CommandOption) *CommandBuilder[T] {
+func NewCommand[T any](name, usage string, defaultConfig T, options ...commandOption) *CommandBuilder[T] {
 	return &CommandBuilder[T]{
 		name:          name,
 		usage:         usage,
@@ -80,18 +72,22 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 		Name:  cb.name,
 		Usage: cb.usage,
 	}
-	for _, o := range cb.options {
-		o.apply(cmd)
-	}
 	cmd.ArgsUsage = " " + ap.getArgsUsage()
 	cmd.Flags = append(cmd.Flags, fp.flags...)
+
+	for _, opt := range cb.options {
+		opt(cmd)
+	}
+
 	cmd.Before = func(c *cli.Context) error {
-		cs := newConfigParser(fp.fields, ap.fields)
-		if err := cs.parseFromCliContext(c, config); err != nil {
+		// 从 cli 上下文中解析配置
+		cp := newConfigParser(fp.fields, ap.fields)
+		if err := cp.parseFromCliContext(c, config); err != nil {
 			log.Err(err).Msg("set config from context")
 			return err
 		}
 
+		// 校验配置
 		if err := validate.V.Struct(config); err != nil {
 			if v, ok := err.(validator.ValidationErrors); ok {
 				msg := v[0].Translate(validate.T)
@@ -114,5 +110,6 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 		}
 		return nil
 	}
+
 	return cmd
 }

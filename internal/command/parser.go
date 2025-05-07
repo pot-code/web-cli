@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -258,11 +259,16 @@ func (p *argParser) parsePosition(field *reflect.StructField) int {
 }
 
 func (a *argParser) getArgsUsage() string {
-	var sb strings.Builder
+	// 按照位置排序
+	sort.Slice(a.fields, func(i, j int) bool {
+		return a.fields[i].position < a.fields[j].position
+	})
+
+	var alias []string
 	for _, f := range a.fields {
-		sb.WriteString(fmt.Sprintf("%s ", f.alias))
+		alias = append(alias, f.alias)
 	}
-	return sb.String()
+	return strings.Join(alias, " ")
 }
 
 type argValueParser struct{}
