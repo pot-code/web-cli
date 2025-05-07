@@ -32,7 +32,7 @@ var UseVueStore = command.InlineHandler[*VueUseStoreConfig](func(c *cli.Context,
 	if err := task.NewSequentialScheduler().
 		AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/vue/vue_use_store.go.tmpl"), b)).
 		AddTask(task.NewTemplateRenderTask("vue_use_store", map[string]string{"storeKey": storeKey, "name": name}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(filename, ".ts", config.OutDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, ".ts", b, task.WithFolder(config.OutDir))).
 		Run(); err != nil {
 		return err
 	}

@@ -56,7 +56,7 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 					"moduleName":  moduleName,
 					"packageName": packageName,
 				}, buffers[0], buffers[0])).
-				AddTask(task.NewWriteFileToDiskTask("fx", ".go", outputDir, false, buffers[0])),
+				AddTask(task.NewWriteFileToDiskTask("fx", ".go", buffers[0], task.WithFolder(outputDir))),
 		)
 		e.AddTask(
 			task.NewSequentialScheduler().
@@ -65,7 +65,7 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 					"packageName":   packageName,
 					"outputPackage": outputPackage,
 				}, buffers[1], buffers[1])).
-				AddTask(task.NewWriteFileToDiskTask("converter", ".go", outputDir, false, buffers[1])),
+				AddTask(task.NewWriteFileToDiskTask("converter", ".go", buffers[1], task.WithFolder(outputDir))),
 		)
 		e.AddTask(
 			task.NewSequentialScheduler().
@@ -73,7 +73,7 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 				AddTask(task.NewTemplateRenderTask("schemas", map[string]string{
 					"packageName": packageName,
 				}, buffers[2], buffers[2])).
-				AddTask(task.NewWriteFileToDiskTask("schemas", ".go", outputDir, false, buffers[2])),
+				AddTask(task.NewWriteFileToDiskTask("schemas", ".go", buffers[2], task.WithFolder(outputDir))),
 		)
 		e.AddTask(
 			task.NewSequentialScheduler().
@@ -81,7 +81,7 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 				AddTask(task.NewTemplateRenderTask("service", map[string]string{
 					"packageName": packageName,
 				}, buffers[3], buffers[3])).
-				AddTask(task.NewWriteFileToDiskTask("service", ".go", outputDir, false, buffers[3])),
+				AddTask(task.NewWriteFileToDiskTask("service", ".go", buffers[3], task.WithFolder(outputDir))),
 		)
 		return e.Run()
 	}),

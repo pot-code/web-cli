@@ -40,7 +40,7 @@ var AddVueDirective = command.InlineHandler[*VueDirectiveConfig](func(c *cli.Con
 		AddTask(task.NewTemplateRenderTask("vue_directive", map[string]string{
 			"name": camelName,
 		}, b, b)).
-		AddTask(task.NewWriteFileToDiskTask(filename, ".ts", outDir, false, b)).
+		AddTask(task.NewWriteFileToDiskTask(filename, ".ts", b, task.WithFolder(outDir))).
 		Run(); err != nil {
 		return err
 	}

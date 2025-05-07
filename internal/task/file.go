@@ -11,24 +11,38 @@ import (
 )
 
 type WriteFileToDiskTask struct {
-	// name filename
-	name string
-	// suffix file suffix
-	suffix string
-	folder string
-	// overwrite if exists
-	overwrite bool
+	name      string // 文件名
+	suffix    string // 文件后缀
+	folder    string // 输出文件夹
+	overwrite bool   // 是否覆盖
 	data      io.Reader
 }
 
-func NewWriteFileToDiskTask(name string, suffix string, folder string, overwrite bool, in io.Reader) *WriteFileToDiskTask {
-	return &WriteFileToDiskTask{
-		name:      name,
-		suffix:    suffix,
-		folder:    folder,
-		overwrite: overwrite,
-		data:      in,
+type writeFileOption func(*WriteFileToDiskTask)
+
+func WithFolder(folder string) writeFileOption {
+	return func(w *WriteFileToDiskTask) {
+		w.folder = folder
 	}
+}
+
+func WithOverwrite(overwrite bool) writeFileOption {
+	return func(w *WriteFileToDiskTask) {
+		w.overwrite = overwrite
+	}
+}
+
+func NewWriteFileToDiskTask(name string, suffix string, in io.Reader, options ...writeFileOption) *WriteFileToDiskTask {
+	w := &WriteFileToDiskTask{
+		name:   name,
+		suffix: suffix,
+		data:   in,
+	}
+
+	for _, opt := range options {
+		opt(w)
+	}
+	return w
 }
 
 func (w *WriteFileToDiskTask) Run() error {

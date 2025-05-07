@@ -28,17 +28,19 @@ var AddContextStore = command.InlineHandler[*ReactContextConfig](func(c *cli.Con
 	contextName := strcase.ToCamel(fmt.Sprintf("%sContext", config.Name))
 	hookFileName := strcase.ToKebab(fmt.Sprintf("use%s", contextName))
 
-	b := new(bytes.Buffer)
-	b1 := new(bytes.Buffer)
+	var buffers []*bytes.Buffer
+	for range 2 {
+		buffers = append(buffers, new(bytes.Buffer))
+	}
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.go.tmpl"), b)).
-			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": contextName}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(contextFileName, ".tsx", config.OutDir, false, b)),
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context.go.tmpl"), buffers[0])).
+			AddTask(task.NewTemplateRenderTask("react_context", map[string]string{"name": contextName}, buffers[0], buffers[0])).
+			AddTask(task.NewWriteFileToDiskTask(contextFileName, ".tsx", buffers[0], task.WithFolder(config.OutDir))),
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context_hook.go.tmpl"), b1)).
-			AddTask(task.NewTemplateRenderTask("react_context_hook", map[string]string{"name": contextName, "file": contextFileName}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(hookFileName, ".ts", config.OutDir, false, b1)),
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_context_hook.go.tmpl"), buffers[1])).
+			AddTask(task.NewTemplateRenderTask("react_context_hook", map[string]string{"name": contextName, "file": contextFileName}, buffers[1], buffers[1])).
+			AddTask(task.NewWriteFileToDiskTask(hookFileName, ".ts", buffers[1], task.WithFolder(config.OutDir))),
 	}
 
 	s := task.NewParallelScheduler()

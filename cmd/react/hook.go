@@ -28,21 +28,24 @@ var AddReactHook = command.InlineHandler[*ReactHookConfig](func(c *cli.Context, 
 	varName := strcase.ToCamel(config.Name)
 	filename := strcase.ToKebab(fmt.Sprintf("use%s", varName))
 
-	b1 := new(bytes.Buffer)
+	var buffers []*bytes.Buffer
+	for range 2 {
+		buffers = append(buffers, new(bytes.Buffer))
+	}
+
 	tasks := []task.Task{
 		task.NewSequentialScheduler().
-			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.go.tmpl"), b1)).
-			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, b1, b1)).
-			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", config.OutDir, false, b1)),
+			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook.go.tmpl"), buffers[0])).
+			AddTask(task.NewTemplateRenderTask("react_hook", map[string]string{"name": varName}, buffers[0], buffers[0])).
+			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", buffers[0], task.WithFolder(config.OutDir))),
 	}
 
 	if config.AddTest {
-		b2 := new(bytes.Buffer)
 		tasks = append(tasks,
 			task.NewSequentialScheduler().
-				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.go.tmpl"), b2)).
-				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, b2, b2)).
-				AddTask(task.NewWriteFileToDiskTask(filename, ".test.ts", config.OutDir, false, b2)))
+				AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_hook_test.go.tmpl"), buffers[1])).
+				AddTask(task.NewTemplateRenderTask("react_hook_test", map[string]string{"name": varName}, buffers[1], buffers[1])).
+				AddTask(task.NewWriteFileToDiskTask(filename, ".test.ts", buffers[1], task.WithFolder(config.OutDir))))
 	}
 
 	s := task.NewParallelScheduler()

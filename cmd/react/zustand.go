@@ -32,7 +32,7 @@ var AddZustandStore = command.InlineHandler[*ReactZustandConfig](func(c *cli.Con
 		task.NewSequentialScheduler().
 			AddTask(task.NewReadFromProviderTask(provider.NewEmbedFileProvider("templates/react/react_zustand.go.tmpl"), b)).
 			AddTask(task.NewTemplateRenderTask("react_zustand", map[string]string{"name": filename}, b, b)).
-			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", config.OutDir, false, b)),
+			AddTask(task.NewWriteFileToDiskTask(filename, ".ts", b, task.WithFolder(config.OutDir))),
 	}
 
 	s := task.NewParallelScheduler()
