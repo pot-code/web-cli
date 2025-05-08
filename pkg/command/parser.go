@@ -30,15 +30,16 @@ func (p *flagParser) parse(config any) error {
 		return err
 	}
 
-	rv := reflect.ValueOf(config)
-	rt := rv.Type().Elem()
-	for _, f := range reflect.VisibleFields(rt) {
-		p.parseField(&f)
+	configValue := reflect.ValueOf(config).Elem()
+	configValueType := configValue.Type()
+	for _, f := range reflect.VisibleFields(configValueType) {
+		fieldValue := configValue.FieldByName(f.Name)
+		p.parseField(&f, fieldValue)
 	}
 	return nil
 }
 
-func (p *flagParser) parseField(field *reflect.StructField) {
+func (p *flagParser) parseField(field *reflect.StructField, value reflect.Value) {
 	if _, ok := field.Tag.Lookup("flag"); !ok {
 		return
 	}
@@ -46,13 +47,13 @@ func (p *flagParser) parseField(field *reflect.StructField) {
 	fk := field.Type.Kind()
 	switch field.Type.Kind() {
 	case reflect.String:
-		p.parseString(field)
+		p.parseString(field, value)
 	case reflect.Int:
-		p.parseInt(field)
+		p.parseInt(field, value)
 	case reflect.Bool:
 		p.parseBool(field)
 	case reflect.Float64:
-		p.parseFloat(field)
+		p.parseFloat(field, value)
 	case reflect.Slice:
 		p.parseSlice(field)
 	default:
@@ -60,13 +61,17 @@ func (p *flagParser) parseField(field *reflect.StructField) {
 	}
 }
 
-func (p *flagParser) parseString(field *reflect.StructField) {
-	p.flags = append(p.flags, &cli.StringFlag{
+func (p *flagParser) parseString(field *reflect.StructField, value reflect.Value) {
+	flag := &cli.StringFlag{
 		Name:    field.Tag.Get("flag"),
 		Usage:   field.Tag.Get("usage"),
 		Aliases: []string{field.Tag.Get("alias")},
-	})
+	}
+	if !value.IsZero() {
+		flag.DefaultText = value.String()
+	}
 
+	p.flags = append(p.flags, flag)
 	p.fields = append(p.fields, &flagField{
 		fieldKind: reflect.String,
 		fieldName: field.Name,
@@ -74,13 +79,17 @@ func (p *flagParser) parseString(field *reflect.StructField) {
 	})
 }
 
-func (p *flagParser) parseInt(field *reflect.StructField) {
-	p.flags = append(p.flags, &cli.IntFlag{
+func (p *flagParser) parseInt(field *reflect.StructField, value reflect.Value) {
+	flag := &cli.IntFlag{
 		Name:    field.Tag.Get("flag"),
 		Usage:   field.Tag.Get("usage"),
 		Aliases: []string{field.Tag.Get("alias")},
-	})
+	}
+	if !value.IsZero() {
+		flag.DefaultText = strconv.FormatInt(value.Int(), 10)
+	}
 
+	p.flags = append(p.flags, flag)
 	p.fields = append(p.fields, &flagField{
 		fieldKind: reflect.Int,
 		fieldName: field.Name,
@@ -89,12 +98,12 @@ func (p *flagParser) parseInt(field *reflect.StructField) {
 }
 
 func (p *flagParser) parseBool(field *reflect.StructField) {
-	p.flags = append(p.flags, &cli.BoolFlag{
+	flag := &cli.BoolFlag{
 		Name:    field.Tag.Get("flag"),
 		Usage:   field.Tag.Get("usage"),
 		Aliases: []string{field.Tag.Get("alias")},
-	})
-
+	}
+	p.flags = append(p.flags, flag)
 	p.fields = append(p.fields, &flagField{
 		fieldKind: reflect.Bool,
 		fieldName: field.Name,
@@ -102,13 +111,17 @@ func (p *flagParser) parseBool(field *reflect.StructField) {
 	})
 }
 
-func (p *flagParser) parseFloat(field *reflect.StructField) {
-	p.flags = append(p.flags, &cli.Float64Flag{
+func (p *flagParser) parseFloat(field *reflect.StructField, value reflect.Value) {
+	flag := &cli.Float64Flag{
 		Name:    field.Tag.Get("flag"),
 		Usage:   field.Tag.Get("usage"),
 		Aliases: []string{field.Tag.Get("alias")},
-	})
+	}
+	if !value.IsZero() {
+		flag.DefaultText = strconv.FormatFloat(value.Float(), 'f', -1, 64)
+	}
 
+	p.flags = append(p.flags, flag)
 	p.fields = append(p.fields, &flagField{
 		fieldKind: reflect.Float64,
 		fieldName: field.Name,

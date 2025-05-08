@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/pot-code/web-cli/internal/validate"
+	"github.com/pot-code/web-cli/pkg/validate"
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 )

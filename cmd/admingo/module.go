@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/pot-code/web-cli/common/workflow"
-	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/gomod"
-	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/gomod"
+	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
 )
 
@@ -20,7 +20,7 @@ type CreateModuleConfig struct {
 
 var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 	&CreateModuleConfig{
-		OutDir: "app",
+		OutDir: "internal/app",
 	},
 	command.WithAlias([]string{"m"}),
 ).AddHandler(

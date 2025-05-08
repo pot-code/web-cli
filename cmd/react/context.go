@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	"github.com/iancoleman/strcase"
-	"github.com/pot-code/web-cli/internal/command"
-	"github.com/pot-code/web-cli/internal/provider"
-	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/pkg/command"
+	"github.com/pot-code/web-cli/pkg/provider"
+	"github.com/pot-code/web-cli/pkg/task"
 	"github.com/urfave/cli/v2"
 )
 

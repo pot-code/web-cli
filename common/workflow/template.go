@@ -3,8 +3,8 @@ package workflow
 import (
 	"bytes"
 
-	"github.com/pot-code/web-cli/internal/provider"
-	"github.com/pot-code/web-cli/internal/task"
+	"github.com/pot-code/web-cli/pkg/provider"
+	"github.com/pot-code/web-cli/pkg/task"
 )
 
 type RenderEmbedTemplateWorkflow struct {
