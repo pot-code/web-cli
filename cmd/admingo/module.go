@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 
+	"github.com/iancoleman/strcase"
 	"github.com/pot-code/web-cli/common/workflow"
 	"github.com/pot-code/web-cli/pkg/command"
 	"github.com/pot-code/web-cli/pkg/gomod"
@@ -36,8 +37,8 @@ var CreateModuleCmd = command.NewCommand("module", "生成业务模块",
 		}
 
 		projectName := gm.ProjectName()
-		packageName := strings.ToLower(config.Name)
-		moduleName := packageName + "s"
+		packageName := strings.ToLower(strcase.ToCamel(config.Name))
+		moduleName := packageName
 		outputDir := path.Join(cwd, config.OutDir, packageName)
 		outputPackage := path.Join(projectName, config.OutDir, packageName)
 
