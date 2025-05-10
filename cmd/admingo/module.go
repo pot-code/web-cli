@@ -15,7 +15,7 @@ import (
 )
 
 type CreateModuleConfig struct {
-	OutDir string `flag:"output" alias:"o" usage:"输出目录"`
+	OutDir string `flag:"output-dir" alias:"o" usage:"输出目录"`
 	Name   string `arg:"0" alias:"MODULE_NAME" validate:"required,identifier"`
 }
 
