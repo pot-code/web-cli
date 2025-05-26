@@ -15,7 +15,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var PinPackageCmd = command.NewCommand("pin", "pin package",
+var PinPackageCmd = command.NewCommand("pin", "根据 pnpm-lock.yaml 锁定 package.json 依赖版本",
 	any(nil),
 	command.WithAlias([]string{"p"}),
 ).AddHandler(
@@ -75,7 +75,7 @@ var PinPackageCmd = command.NewCommand("pin", "pin package",
 				return fmt.Errorf("write package.json: %w", err)
 			}
 
-			log.Info().Str("file", packageJsonFilePath).Msg("update package.json")
+			log.Info().Str("file", packageJsonFilePath).Msg("更新 package.json")
 			return nil
 		},
 	),
