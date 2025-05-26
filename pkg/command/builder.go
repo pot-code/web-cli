@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"reflect"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/pot-code/web-cli/pkg/validate"
@@ -58,12 +59,16 @@ func (cb *CommandBuilder[T]) AddHandler(h CommandHandler[T]) *CommandBuilder[T] 
 
 func (cb *CommandBuilder[T]) Create() *cli.Command {
 	config := cb.defaultConfig
-	fp := newFlagParser()
-	ap := newArgParser()
+	if err := validateConfigValue(config); err != nil {
+		panic(fmt.Errorf("validate config: %w", err))
+	}
 
+	fp := newFlagParser()
 	if err := fp.parse(config); err != nil {
 		panic(fmt.Errorf("parse flags: %w", err))
 	}
+
+	ap := newArgParser()
 	if err := ap.parse(config); err != nil {
 		panic(fmt.Errorf("parse args: %w", err))
 	}
@@ -80,6 +85,10 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 	}
 
 	cmd.Before = func(c *cli.Context) error {
+		if !isConfigRequired(config) {
+			return nil
+		}
+
 		// 从 cli 上下文中解析配置
 		cp := newConfigParser(fp.fields, ap.fields)
 		if err := cp.parseFromCliContext(c, config); err != nil {
@@ -96,8 +105,10 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 			}
 			return err
 		}
+
 		return nil
 	}
+
 	cmd.Action = func(c *cli.Context) error {
 		log.Debug().
 			Str("config", fmt.Sprintf("%+v", config)).
@@ -112,4 +123,21 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 	}
 
 	return cmd
+}
+
+func isConfigRequired(config any) bool {
+	rv := reflect.ValueOf(config)
+	return rv.Kind() == reflect.Ptr && rv.IsNil()
+}
+
+func validateConfigValue(config any) error {
+	if !isConfigRequired(config) {
+		return nil
+	}
+
+	rv := reflect.ValueOf(config)
+	if rv.Kind() != reflect.Ptr && rv.Elem().Kind() != reflect.Struct {
+		return errors.New("config must be of pointer of struct type")
+	}
+	return nil
 }

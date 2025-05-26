@@ -1,7 +1,6 @@
 package command
 
 import (
-	"errors"
 	"reflect"
 
 	"github.com/rs/zerolog/log"
@@ -20,10 +19,6 @@ func newConfigParser(flags []*flagField, args []*argField) *configParser {
 
 // parseFromCliContext 从 cli 上下文中解析配置，receiver 为指向配置的指针，用于接收解析后的值
 func (c *configParser) parseFromCliContext(ctx *cli.Context, receiver any) error {
-	if err := validateConfig(receiver); err != nil {
-		return err
-	}
-
 	configStruct := reflect.ValueOf(receiver).Elem()
 
 	for _, f := range c.flags {
@@ -44,17 +39,5 @@ func (c *configParser) parseFromCliContext(ctx *cli.Context, receiver any) error
 		configStruct.FieldByName(f.fieldName).Set(reflect.ValueOf(v))
 	}
 
-	return nil
-}
-
-func validateConfig(config any) error {
-	if config == nil {
-		return errors.New("config is nil")
-	}
-
-	rv := reflect.ValueOf(config)
-	if rv.Kind() != reflect.Ptr && rv.Elem().Kind() != reflect.Struct {
-		return errors.New("config must be of pointer of struct type")
-	}
 	return nil
 }

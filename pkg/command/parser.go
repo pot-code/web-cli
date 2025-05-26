@@ -26,8 +26,8 @@ func newFlagParser() *flagParser {
 }
 
 func (p *flagParser) parse(config any) error {
-	if err := validateConfig(config); err != nil {
-		return err
+	if config == nil {
+		return nil
 	}
 
 	configValue := reflect.ValueOf(config).Elem()
@@ -186,8 +186,8 @@ func newArgParser() *argParser {
 }
 
 func (a *argParser) parse(config any) error {
-	if err := validateConfig(config); err != nil {
-		return err
+	if config == nil {
+		return nil
 	}
 
 	rv := reflect.ValueOf(config)
