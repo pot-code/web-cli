@@ -7,18 +7,18 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-type configParser struct {
+type configReader struct {
 	flags []*flagField
 	args  []*argField
 	ap    *argValueParser
 }
 
-func newConfigParser(flags []*flagField, args []*argField) *configParser {
-	return &configParser{flags: flags, args: args, ap: newArgValueParser()}
+func newConfigReader(flags []*flagField, args []*argField) *configReader {
+	return &configReader{flags: flags, args: args, ap: newArgValueParser()}
 }
 
-// parseFromCliContext 从 cli 上下文中解析配置，receiver 为指向配置的指针，用于接收解析后的值
-func (c *configParser) parseFromCliContext(ctx *cli.Context, receiver any) error {
+// readFromCliContext 从 cli 上下文中解析配置，receiver 为指向配置的指针，用于接收解析后的值
+func (c *configReader) readFromCliContext(ctx *cli.Context, receiver any) error {
 	configStruct := reflect.ValueOf(receiver).Elem()
 
 	for _, f := range c.flags {

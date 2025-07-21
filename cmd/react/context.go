@@ -12,7 +12,7 @@ import (
 )
 
 type ReactContextConfig struct {
-	Name   string `arg:"0" alias:"CONTEXT_NAME" validate:"required,identifier"`
+	Name   string `arg:"0" alias:"CONTEXT_NAME" validate:"required,min=1,max=32,identifier"`
 	OutDir string `flag:"output" alias:"o" usage:"destination directory"`
 }
 
@@ -24,8 +24,8 @@ var ReactContextCmd = command.NewCommand("context", "add custom context",
 ).Create()
 
 var AddContextStore = command.InlineHandler[*ReactContextConfig](func(c *cli.Context, config *ReactContextConfig) error {
-	contextFileName := strcase.ToKebab(fmt.Sprintf("%sContext", config.Name))
 	contextName := strcase.ToCamel(fmt.Sprintf("%sContext", config.Name))
+	contextFileName := strcase.ToKebab(fmt.Sprintf("%sContext", config.Name))
 	hookFileName := strcase.ToKebab(fmt.Sprintf("use%s", contextName))
 
 	var buffers []*bytes.Buffer

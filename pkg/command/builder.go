@@ -31,12 +31,14 @@ type CommandBuilder[T any] struct {
 
 type commandOption func(*cli.Command)
 
+// WithAlias sets command aliases
 func WithAlias(alias []string) commandOption {
 	return func(c *cli.Command) {
 		c.Aliases = alias
 	}
 }
 
+// WithFlags add command flags
 func WithFlags(flags cli.Flag) commandOption {
 	return func(c *cli.Command) {
 		c.Flags = append(c.Flags, flags)
@@ -52,15 +54,17 @@ func NewCommand[T any](name, usage string, defaultConfig T, options ...commandOp
 	}
 }
 
+// AddHandler add command handler
 func (cb *CommandBuilder[T]) AddHandler(h CommandHandler[T]) *CommandBuilder[T] {
 	cb.handlers = append(cb.handlers, h)
 	return cb
 }
 
+// Create construct command and output as cli.Command
 func (cb *CommandBuilder[T]) Create() *cli.Command {
 	config := cb.defaultConfig
-	if err := validateConfigValue(config); err != nil {
-		panic(fmt.Errorf("validate config: %w", err))
+	if err := validateConfigValueType(config); err != nil {
+		panic(fmt.Errorf("validate config type: %w", err))
 	}
 
 	fp := newFlagParser()
@@ -90,9 +94,9 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 		}
 
 		// 从 cli 上下文中解析配置
-		cp := newConfigParser(fp.fields, ap.fields)
-		if err := cp.parseFromCliContext(c, config); err != nil {
-			log.Err(err).Msg("set config from context")
+		r := newConfigReader(fp.fields, ap.fields)
+		if err := r.readFromCliContext(c, config); err != nil {
+			log.Err(err).Msg("read config from context")
 			return err
 		}
 
@@ -127,10 +131,10 @@ func (cb *CommandBuilder[T]) Create() *cli.Command {
 
 func isConfigRequired(config any) bool {
 	rv := reflect.ValueOf(config)
-	return rv.Kind() == reflect.Ptr && rv.IsNil()
+	return rv.Kind() == reflect.Ptr && !rv.IsNil()
 }
 
-func validateConfigValue(config any) error {
+func validateConfigValueType(config any) error {
 	if !isConfigRequired(config) {
 		return nil
 	}
